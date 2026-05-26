@@ -1,0 +1,73 @@
+services:
+  backend:
+    build:
+      context: ./backend
+    container_name: familyquest-backend
+    command: ./start.sh
+    env_file:
+      - .env
+    environment:
+      TELEGRAM_TOKEN: ${TELEGRAM_TOKEN}
+    restart: unless-stopped
+    working_dir: /app
+    volumes:
+      - db_data:/app/data
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health/ready')"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 20s
+
+  telegram-bot:
+    build:
+      context: ./backend
+    container_name: familyquest-telegram-bot
+    command: python aiogram_bot.py
+    env_file:
+      - .env
+    environment:
+      TELEGRAM_TOKEN: ${TELEGRAM_TOKEN}
+    restart: unless-stopped
+    working_dir: /app
+    depends_on:
+      backend:
+        condition: service_healthy
+    volumes:
+      - db_data:/app/data
+
+  frontend:
+    build:
+      context: ./frontend
+    container_name: familyquest-frontend
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O- http://127.0.0.1/ >/dev/null 2>&1 || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 10s
+
+  caddy:
+    image: caddy:2
+    container_name: familyquest-caddy
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro,z
+      - caddy_data:/data
+      - caddy_config:/config
+    env_file:
+      - .env
+    restart: unless-stopped
+    depends_on:
+      frontend:
+        condition: service_healthy
+      backend:
+        condition: service_healthy
+
+volumes:
+  db_data:
+  caddy_data:
+  caddy_config:

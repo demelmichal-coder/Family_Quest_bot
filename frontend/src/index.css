@@ -1,0 +1,181 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color: #0f172a;
+  background: #f8fafc;
+  font-family: Poppins, Nunito, "Segoe UI", sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  min-height: 100%;
+}
+
+body {
+  background: #f8fafc;
+}
+
+.brawl-shell {
+  background-color: #12004a;
+  background-image:
+    radial-gradient(circle at 18% 22%, rgba(56, 189, 248, 0.28) 0, rgba(56, 189, 248, 0) 34%),
+    radial-gradient(circle at 82% 80%, rgba(236, 72, 153, 0.25) 0, rgba(236, 72, 153, 0) 36%),
+    radial-gradient(circle at 40% 62%, rgba(99, 102, 241, 0.22) 0, rgba(99, 102, 241, 0) 30%),
+    linear-gradient(180deg, #101852 0%, #190062 44%, #160046 100%);
+}
+
+.brawl-panel {
+  border: 3px solid #050816;
+  border-radius: 24px;
+  box-shadow: 0 8px 0 #050816, 0 18px 40px rgba(5, 8, 22, 0.45);
+}
+
+.brawl-title {
+  letter-spacing: 0.03em;
+  text-shadow:
+    0 2px 0 #060814,
+    0 -2px 0 #060814,
+    2px 0 0 #060814,
+    -2px 0 0 #060814,
+    0 6px 18px rgba(8, 12, 30, 0.45);
+}
+
+.brawl-subtitle {
+  text-shadow: 0 2px 0 rgba(5, 8, 22, 0.8);
+}
+
+.brawl-tab {
+  border: 3px solid #050816;
+  box-shadow: 0 5px 0 #050816;
+}
+
+.brawl-accent-card {
+  border: 3px solid #050816;
+  border-radius: 20px;
+  box-shadow: 0 6px 0 #050816, 0 12px 24px rgba(5, 8, 22, 0.4);
+}
+
+.brawl-shop-surface {
+  border: 3px solid #050816;
+  border-radius: 24px;
+  background: linear-gradient(180deg, rgba(63, 24, 161, 0.92), rgba(32, 10, 100, 0.95));
+  box-shadow: 0 8px 0 #050816, 0 18px 38px rgba(5, 8, 22, 0.45);
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+.shop-container {
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.shop-container .header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.shop-container .header h1 {
+  margin: 0;
+  font-size: 1.75rem;
+  font-weight: 900;
+  color: #f8fafc;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  text-shadow:
+    0 2px 0 #050816,
+    0 -2px 0 #050816,
+    2px 0 0 #050816,
+    -2px 0 0 #050816;
+}
+
+.coin-badge {
+  border-radius: 999px;
+  background: linear-gradient(180deg, #fef08a, #facc15);
+  border: 3px solid #050816;
+  padding: 0.6rem 1rem;
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #111827;
+  box-shadow: 0 5px 0 #050816;
+}
+
+.shop-container .grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+
+.shop-container .card {
+  display: flex;
+  min-height: 220px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  border-radius: 1.5rem;
+  border: 3px solid #050816;
+  background: linear-gradient(180deg, #38bdf8 0%, #2563eb 100%);
+  padding: 1rem;
+  text-align: center;
+  box-shadow: 0 6px 0 #050816, 0 16px 32px rgba(5, 8, 22, 0.35);
+}
+
+.shop-container .icon {
+  margin-bottom: 0.75rem;
+}
+
+.shop-container .title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 800;
+  color: #ffffff;
+  text-shadow: 0 2px 0 rgba(5, 8, 22, 0.7);
+}
+
+.shop-container .cost {
+  margin: 0.75rem 0 0;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #fef08a;
+  text-shadow: 0 2px 0 rgba(5, 8, 22, 0.65);
+}
+
+.btn-buy {
+  margin-top: auto;
+  width: 100%;
+  border: 3px solid #050816;
+  border-radius: 1rem;
+  background: linear-gradient(180deg, #fef08a, #facc15);
+  padding: 0.8rem 1rem;
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #111827;
+  cursor: pointer;
+  box-shadow: 0 5px 0 #050816;
+  transition: transform 0.15s ease, opacity 0.15s ease;
+}
+
+.btn-buy:hover:not(:disabled) {
+  transform: translateY(-2px);
+}
+
+.btn-buy:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+}

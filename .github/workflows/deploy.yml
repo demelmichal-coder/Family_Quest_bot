@@ -1,0 +1,57 @@
+name: Deploy
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Target environment
+        required: true
+        default: production
+        type: choice
+        options:
+          - staging
+          - production
+      ref:
+        description: Git ref to deploy
+        required: false
+        default: main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    steps:
+      - name: Deploy over SSH
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          script_stop: true
+          envs: DEPLOY_REF,DEPLOY_PATH,HEALTHCHECK_URL
+          script: |
+            set -e
+            cd "${DEPLOY_PATH}"
+            git fetch --all --tags --prune
+            git checkout "${DEPLOY_REF}"
+            git pull --ff-only origin "${DEPLOY_REF}"
+            docker compose config >/dev/null
+            docker compose up -d --build --remove-orphans
+            docker image prune -f
+            if [ -n "${HEALTHCHECK_URL}" ]; then
+              echo "Checking ${HEALTHCHECK_URL}"
+              for attempt in 1 2 3 4 5 6 7 8 9 10; do
+                if curl -fsS "${HEALTHCHECK_URL}" >/dev/null; then
+                  echo "Healthcheck passed"
+                  exit 0
+                fi
+                echo "Healthcheck attempt ${attempt}/10 failed, retrying..."
+                sleep 6
+              done
+              echo "Healthcheck failed after deploy"
+              exit 1
+            fi
+        env:
+          DEPLOY_REF: ${{ inputs.ref }}
+          DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
+          HEALTHCHECK_URL: ${{ secrets.HEALTHCHECK_URL }}

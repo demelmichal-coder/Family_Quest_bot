@@ -1,0 +1,5 @@
+steps:
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-f', 'Dockerfile.bot', '-t', 'gcr.io/family-quest-bot-2026/family-quest-bot:latest', '.']
+images:
+  - 'gcr.io/family-quest-bot-2026/family-quest-bot:latest'

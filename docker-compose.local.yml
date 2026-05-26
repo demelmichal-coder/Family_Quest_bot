@@ -1,0 +1,16 @@
+# docker-compose.local.yml
+# Pouziti: docker compose -f docker-compose.yml -f docker-compose.local.yml up --build
+#
+# Prepise Caddyfile na lokalni verzi (localhost:80 bez TLS/domeny)
+# a zapne ALLOW_INSECURE_DEMO_AUTH pro testovani bez Telegram
+
+services:
+  caddy:
+    volumes:
+      - ./Caddyfile.local:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+
+  backend:
+    environment:
+      ALLOW_INSECURE_DEMO_AUTH: "true"

@@ -1,0 +1,14 @@
+familyquestbot.duckdns.org {
+    handle /api/* {
+        uri strip_prefix /api
+        reverse_proxy backend:8000 {
+            header_up X-Telegram-Init-Data {>X-Telegram-Init-Data}
+            header_up X-Telegram-Id {>X-Telegram-Id}
+            header_up x-telegram-init-data {>x-telegram-init-data}
+            header_up x-telegram-id {>x-telegram-id}
+        }
+    }
+    handle {
+        reverse_proxy frontend:80
+    }
+}

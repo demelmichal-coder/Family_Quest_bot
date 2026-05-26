@@ -1,0 +1,35 @@
+node_modules/
+
+# Env and secrets
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+.venv-*/
+
+# Local databases and caches
+*.db
+*.sqlite
+pytest-cache-files-*/
+
+# Build and archives
+*.tgz
+*.zip
+build_output.txt
+archive/
+archiv/
+Caddyfile.local
+
+# IDE
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db
