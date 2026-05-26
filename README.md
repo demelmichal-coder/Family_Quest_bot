@@ -2,6 +2,15 @@
 
 Rodinna quest aplikace s FastAPI backendem a React/Vite frontendem.
 
+## Autorska prava a licence
+
+Tento projekt je chranen autorskym pravem a je publikovan jako proprietarni software
+("All Rights Reserved").
+
+- Neni povoleno software pouzivat, kopirovat, upravovat ani dale distribuovat bez
+	predchoziho pisemneho souhlasu autora.
+- Podrobne podminky jsou uvedeny v souboru `LICENSE`.
+
 ## Lokalni spusteni
 
 ### Backend

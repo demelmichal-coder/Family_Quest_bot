@@ -1,4 +1,6 @@
 {
+  "private": true,
+  "license": "UNLICENSED",
   "dependencies": {
     "@twa-dev/sdk": "^8.0.2"
   }
