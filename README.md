@@ -49,6 +49,39 @@ VITE_DEMO_TELEGRAM_ID=player-1
 
 Backend pro tento rezim potrebuje `ALLOW_INSECURE_DEMO_AUTH=true`.
 
+## Bezpecne prihlaseni a session (Telegram Mini App)
+
+Pro produkcni bezpecne prihlaseni je pripraveny novy API modul na endpointu `/api/*`:
+
+- `POST /api/auth` - overi Telegram `initData` HMAC podpis, nacte/vytvori uzivatele a vrati JWT token
+- `GET /api/auth/verify` - rychla kontrola platnosti JWT tokenu (auto-login)
+- `POST /api/family/create` - vytvori novou rodinu a uzivatele nastavi jako `parent`
+- `POST /api/family/join` - pripoji uzivatele do rodiny podle kodu
+
+Povinne backend promenne pro produkci:
+
+```text
+TELEGRAM_TOKEN=<token bota>
+JWT_SECRET=<silny nahodny retezec, min. 32 znaku>
+JWT_EXPIRES_MINUTES=60
+JWT_ISSUER=familyquest-api
+TELEGRAM_AUTH_MAX_AGE_SECONDS=86400
+ALLOW_INSECURE_DEMO_AUTH=false
+```
+
+Ukazkovy frontend flow (HTML5 + JavaScript pro Telegram WebApp) je v souboru:
+
+```text
+frontend/public/telegram-secure-auth.html
+```
+
+Stranka demonstruje:
+
+- nacitani `window.Telegram.WebApp.initData`
+- auto-login pres `localStorage` + `GET /api/auth/verify`
+- first-time rozhodnuti mezi vytvorenim rodiny a pripojenim kodem
+- bezpecne odhlaseni (`Odhlasit se`) s vycistenim localStorage tokenu
+
 ## Health endpointy
 
 - `GET /health/live` vraci jednoduchy liveness check

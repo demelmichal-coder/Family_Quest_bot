@@ -3,14 +3,17 @@ import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import Dashboard from "./Dashboard";
 
+const apiMock = vi.fn();
+const setUserMock = vi.fn();
+
 vi.mock("../components/ConfettiReward", () => ({
   default: ({ show }) => <div data-testid="confetti">{show ? "on" : "off"}</div>,
 }));
 
 vi.mock("../context/UserContext", () => ({
   useUser: () => ({
-    api: vi.fn(),
-    setUser: vi.fn(),
+    api: apiMock,
+    setUser: setUserMock,
   }),
 }));
 
@@ -60,6 +63,11 @@ const rewards = [
 ];
 
 const purchases = [{ id: 1, reward_name: "Zmrzlina", cost: 5 }];
+
+beforeEach(() => {
+  apiMock.mockReset();
+  setUserMock.mockReset();
+});
 
 test("zobrazi denni a mimoradne ukoly oddelene", () => {
   render(
@@ -129,4 +137,59 @@ test("prepne se do shopu", async () => {
     expect(screen.getByText("Obchod s odmenami")).toBeInTheDocument();
   });
   expect(screen.getByText("Filmovy vecer")).toBeInTheDocument();
+});
+
+test("u ukolu s dukazem umozni odeslat text dukazu a dokoncit ukol", async () => {
+  const appUser = userEvent.setup();
+  const onCompleteTask = vi.fn().mockResolvedValue({
+    detail: "Ukol byl odeslan rodici ke schvaleni.",
+    task: { approved: false },
+  });
+  apiMock.mockResolvedValue({
+    id: 4,
+    proof_submitted_at: "2026-05-27T19:00:00Z",
+  });
+
+  const tasksWithProof = [
+    ...tasks,
+    {
+      id: 4,
+      title: "Uklidit pokoj dukaz",
+      description: "Vyfotit vysledek",
+      xp: 18,
+      gold: 3,
+      is_daily: false,
+      is_completed: false,
+      approved: false,
+      requires_proof: true,
+    },
+  ];
+
+  render(
+    <Dashboard
+      user={user}
+      tasks={tasksWithProof}
+      rewards={rewards}
+      purchases={purchases}
+      onCompleteTask={onCompleteTask}
+      onBuyReward={vi.fn()}
+    />
+  );
+
+  await appUser.click(screen.getByRole("button", { name: "Odeslat dukaz a splnit" }));
+
+  expect(await screen.findByText("Dukaz splneni ukolu")).toBeInTheDocument();
+  await appUser.type(screen.getByRole("textbox", { name: "Co jsi splnil/a" }), "Pokoj je uklizeny a stul je cisty.");
+  await appUser.click(screen.getByRole("button", { name: "Odeslat dukaz a dokoncit ukol" }));
+
+  await waitFor(() => {
+    expect(apiMock).toHaveBeenCalledWith("/game/submit-proof/4", {
+      method: "POST",
+      body: {
+        proof_text: "Pokoj je uklizeny a stul je cisty.",
+        proof_media_url: null,
+      },
+    });
+  });
+  expect(onCompleteTask).toHaveBeenCalledWith(4);
 });

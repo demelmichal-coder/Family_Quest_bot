@@ -1,5 +1,6 @@
 import os
 from typing import Tuple
+import re
 
 import httpx
 
@@ -14,13 +15,42 @@ STYLE_PROMPTS = {
 }
 
 
+def _normalize_title(text: str) -> str:
+    cleaned = " ".join((text or "").strip().split())
+    return cleaned or "Rodinna mise"
+
+
+def _fallback_task(task_text: str, style: str) -> Tuple[str, int]:
+    base_title = _normalize_title(task_text)
+    prefix_map = {
+        "epicke": "Mise hrdiny",
+        "vtipne": "Vesela vyzva",
+        "kratke": "Rychla mise",
+    }
+    prefix = prefix_map.get(style, "Mise")
+    xp = max(10, min(50, 10 + len(re.sub(r"\s+", "", base_title)) // 4))
+    return f"{prefix}: {base_title}", xp
+
+
+def _fallback_reward(reward_text: str, style: str) -> Tuple[str, int]:
+    base_title = _normalize_title(reward_text)
+    prefix_map = {
+        "epicke": "Legenda odmena",
+        "vtipne": "Vesela odmena",
+        "kratke": "Bonus",
+    }
+    prefix = prefix_map.get(style, "Odmena")
+    cost = max(1, min(30, 5 + len(re.sub(r"\s+", "", base_title)) // 5))
+    return f"{prefix}: {base_title}", cost
+
+
 async def rewrite_task_to_game(task_text: str, style: str = DEFAULT_REWRITE_STYLE) -> Tuple[str, int]:
     """
     Prepise ukol do herniho jazyka a priradi XP pomoci Groq API.
     Vraci tuple: (herni_nazev, xp).
     """
     if not GROQ_API_KEY:
-        raise RuntimeError("GROQ_API_KEY neni nastaven.")
+        return _fallback_task(task_text, style)
 
     style_prompt = STYLE_PROMPTS.get(style, STYLE_PROMPTS[DEFAULT_REWRITE_STYLE])
     prompt = (
@@ -65,7 +95,7 @@ async def rewrite_reward_to_shop_item(
     Vraci tuple: (nazev_odmeny, cost).
     """
     if not GROQ_API_KEY:
-        raise RuntimeError("GROQ_API_KEY neni nastaven.")
+        return _fallback_reward(reward_text, style)
 
     style_prompt = STYLE_PROMPTS.get(style, STYLE_PROMPTS[DEFAULT_REWRITE_STYLE])
     prompt = (

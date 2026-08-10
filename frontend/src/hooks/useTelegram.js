@@ -36,6 +36,7 @@ function readSavedProfiles() {
         familyId: typeof profile?.familyId === "number" ? profile.familyId : null,
         role: profile?.role?.toString().trim() || "",
         lastUsedAt: typeof profile?.lastUsedAt === "number" ? profile.lastUsedAt : 0,
+        token: profile?.token?.toString().trim() || "",
         pinned: Boolean(profile?.pinned),
       }))
       .filter((profile) => profile.id)
@@ -70,6 +71,7 @@ function normalizeProfile(profile) {
     familyId: typeof profile?.familyId === "number" ? profile.familyId : null,
     role: profile?.role?.toString().trim() || "",
     lastUsedAt: Date.now(),
+    token: profile?.token?.toString().trim() || "",
     pinned: Boolean(profile?.pinned),
   };
 }
@@ -113,6 +115,23 @@ export function useTelegram() {
 
     function syncTelegramState() {
       const webApp = window?.Telegram?.WebApp ?? null;
+      const hasAuthData = Boolean(
+        webApp?.initData || webApp?.initDataUnsafe?.user?.id
+      );
+
+      if (hasAuthData) {
+        window.localStorage.removeItem(FORCE_LOGIN_STORAGE_KEY);
+        if (!cancelled) {
+          setState({
+            tg: webApp,
+            ready: true,
+            hasAuthData: true,
+            isDemoMode: false,
+            savedProfiles: readSavedProfiles(),
+          });
+        }
+        return true;
+      }
 
       if (isForcedLoggedOut()) {
         if (!cancelled) {
@@ -145,10 +164,6 @@ export function useTelegram() {
         webApp.ready();
         webApp.expand();
       } catch {}
-
-      const hasAuthData = Boolean(
-        webApp.initData || webApp.initDataUnsafe?.user?.id
-      );
 
       if (!cancelled) {
         setState({
@@ -281,6 +296,7 @@ export function useTelegram() {
         ...normalizedProfile,
         lastUsedAt: Date.now(),
         pinned: Boolean(normalizedProfile.pinned || existingProfile?.pinned),
+        token: normalizedProfile.token || existingProfile?.token || "",
       },
       ...existingProfiles.filter((item) => item.id !== normalizedProfile.id),
     ]).slice(0, 10);
@@ -370,14 +386,33 @@ export function useTelegram() {
     return nextProfiles;
   }
 
+  function clearSavedProfiles() {
+    window.localStorage.removeItem(SAVED_PROFILES_STORAGE_KEY);
+    window.localStorage.removeItem(DEMO_USER_STORAGE_KEY);
+    window.localStorage.removeItem(FORCE_LOGIN_STORAGE_KEY);
+
+    setState((currentState) => ({
+      ...currentState,
+      savedProfiles: [],
+      isDemoMode: false,
+    }));
+
+    return [];
+  }
+
   function useTelegramAccount() {
     const webApp = window?.Telegram?.WebApp ?? null;
     window.localStorage.removeItem(DEMO_USER_STORAGE_KEY);
     window.localStorage.removeItem(FORCE_LOGIN_STORAGE_KEY);
-    const hasAuthData = Boolean(webApp?.initData || webApp?.initDataUnsafe?.user?.id);
+    const stateHasRealTelegramAuth = Boolean(
+      !state?.isDemoMode && (state?.tg?.initData || state?.tg?.initDataUnsafe?.user?.id)
+    );
+    const hasAuthData = Boolean(
+      webApp?.initData || webApp?.initDataUnsafe?.user?.id || stateHasRealTelegramAuth
+    );
     setState({
-      tg: webApp,
-      ready: Boolean(webApp),
+      tg: webApp || (stateHasRealTelegramAuth ? state.tg : null),
+      ready: Boolean(webApp) || stateHasRealTelegramAuth,
       hasAuthData,
       isDemoMode: false,
       savedProfiles: readSavedProfiles(),
@@ -403,6 +438,7 @@ export function useTelegram() {
     removeSavedProfile,
     renameSavedProfile,
     togglePinnedProfile,
+    clearSavedProfiles,
     useTelegramAccount,
     logout,
   };

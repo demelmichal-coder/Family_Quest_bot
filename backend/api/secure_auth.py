@@ -1,0 +1,328 @@
+import base64
+import hashlib
+import hmac
+import json
+import logging
+import secrets
+import string
+import time
+from datetime import UTC, datetime
+from typing import Any
+from urllib.parse import parse_qsl
+
+from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from pydantic import BaseModel, Field
+from sqlalchemy.orm import Session
+
+from api import _get_or_create_user, get_db
+from config import settings
+from constants import FAMILY_ROLES, ROLE_PARENT
+from models import Family, User
+
+logger = logging.getLogger("secure_auth")
+router = APIRouter(prefix="/api", tags=["secure-auth"])
+bearer_scheme = HTTPBearer(auto_error=False)
+
+
+class AuthRequest(BaseModel):
+    initData: str = Field(min_length=1)
+
+
+class FamilyCreateRequest(BaseModel):
+    family_name: str = Field(min_length=2, max_length=80)
+    user_name: str = Field(default="", max_length=80)
+
+
+class FamilyJoinRequest(BaseModel):
+    family_code: str = Field(min_length=4, max_length=32)
+    role: str = Field(default="child")
+    user_name: str = Field(default="", max_length=80)
+
+
+class SessionUserRead(BaseModel):
+    id: int
+    telegram_id: str
+    name: str
+    role: str
+    family_id: int | None
+
+
+class AuthResponse(BaseModel):
+    token: str
+    token_type: str = "Bearer"
+    expires_in: int
+    user: SessionUserRead
+
+
+class FamilyResponse(BaseModel):
+    user: SessionUserRead
+    family_id: int
+    family_code: str
+
+
+class FamilyCreateResponse(FamilyResponse):
+    family_name: str
+
+
+class FamilyJoinResponse(FamilyResponse):
+    family_name: str
+
+
+def _base64url_encode(raw: bytes) -> str:
+    return base64.urlsafe_b64encode(raw).rstrip(b"=").decode("ascii")
+
+
+def _base64url_decode(value: str) -> bytes:
+    padding = "=" * ((4 - len(value) % 4) % 4)
+    return base64.urlsafe_b64decode((value + padding).encode("ascii"))
+
+
+def _encode_jwt(payload: dict[str, Any]) -> str:
+    if not settings.JWT_SECRET:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Na backendu chybi JWT_SECRET.",
+        )
+
+    header = {"alg": "HS256", "typ": "JWT"}
+    header_b64 = _base64url_encode(json.dumps(header, separators=(",", ":")).encode("utf-8"))
+    payload_b64 = _base64url_encode(json.dumps(payload, separators=(",", ":")).encode("utf-8"))
+    signing_input = f"{header_b64}.{payload_b64}".encode("ascii")
+    signature = hmac.new(
+        settings.JWT_SECRET.encode("utf-8"),
+        signing_input,
+        hashlib.sha256,
+    ).digest()
+    signature_b64 = _base64url_encode(signature)
+    return f"{header_b64}.{payload_b64}.{signature_b64}"
+
+
+def _decode_jwt(token: str) -> dict[str, Any]:
+    if not settings.JWT_SECRET:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Na backendu chybi JWT_SECRET.",
+        )
+
+    parts = token.split(".")
+    if len(parts) != 3:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Neplatny format tokenu.")
+
+    header_b64, payload_b64, signature_b64 = parts
+    signing_input = f"{header_b64}.{payload_b64}".encode("ascii")
+    expected_signature = hmac.new(
+        settings.JWT_SECRET.encode("utf-8"),
+        signing_input,
+        hashlib.sha256,
+    ).digest()
+
+    try:
+        received_signature = _base64url_decode(signature_b64)
+    except Exception as exc:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Neplatny podpis tokenu.") from exc
+
+    if not hmac.compare_digest(expected_signature, received_signature):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Neplatny podpis tokenu.")
+
+    try:
+        payload = json.loads(_base64url_decode(payload_b64).decode("utf-8"))
+    except Exception as exc:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Neplatny obsah tokenu.") from exc
+
+    now = int(time.time())
+    exp = int(payload.get("exp", 0))
+    if exp <= now:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Platnost prihlaseni vyprsela.")
+
+    if payload.get("iss") != settings.JWT_ISSUER:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Neplatny vydavatel tokenu.")
+
+    return payload
+
+
+def _parse_init_data(init_data: str) -> dict[str, str]:
+    return dict(parse_qsl(init_data, keep_blank_values=True))
+
+
+def _validate_telegram_init_data(init_data: str) -> dict[str, Any]:
+    data = _parse_init_data(init_data)
+    received_hash = data.pop("hash", None)
+    user_raw = data.get("user")
+    auth_date = data.get("auth_date")
+
+    if not received_hash or not user_raw or not auth_date:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Chybi Telegram auth data.")
+
+    if not settings.TELEGRAM_BOT_TOKEN:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Na backendu chybi TELEGRAM_TOKEN.",
+        )
+
+    data_check_string = "\n".join(f"{key}={value}" for key, value in sorted(data.items()))
+    secret_key = hmac.new(
+        b"WebAppData",
+        settings.TELEGRAM_BOT_TOKEN.encode("utf-8"),
+        hashlib.sha256,
+    ).digest()
+    computed_hash = hmac.new(
+        secret_key,
+        data_check_string.encode("utf-8"),
+        hashlib.sha256,
+    ).hexdigest()
+
+    if not hmac.compare_digest(computed_hash, received_hash):
+        logger.warning("Odmitnute prihlaseni: neplatny Telegram podpis.")
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Neplatny Telegram podpis.")
+
+    try:
+        auth_ts = int(auth_date)
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Neplatny auth_date.") from exc
+
+    age_seconds = int(time.time()) - auth_ts
+    if age_seconds < 0 or age_seconds > settings.TELEGRAM_AUTH_MAX_AGE_SECONDS:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Telegram relace je prilis stara.")
+
+    try:
+        telegram_user = json.loads(user_raw)
+    except json.JSONDecodeError as exc:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Neplatna Telegram user data.") from exc
+
+    return telegram_user
+
+
+def _map_user(user: User) -> SessionUserRead:
+    return SessionUserRead(
+        id=user.id,
+        telegram_id=user.telegram_id,
+        name=user.username or f"Uzivatel {user.telegram_id}",
+        role=user.role,
+        family_id=user.family_id,
+    )
+
+
+def _create_session_token(user: User) -> tuple[str, int]:
+    expires_in_seconds = max(300, settings.JWT_EXPIRES_MINUTES * 60)
+    now = int(time.time())
+    payload = {
+        "iss": settings.JWT_ISSUER,
+        "sub": str(user.id),
+        "tid": user.telegram_id,
+        "role": user.role,
+        "family_id": user.family_id,
+        "iat": now,
+        "exp": now + expires_in_seconds,
+    }
+    return _encode_jwt(payload), expires_in_seconds
+
+
+def _generate_family_code() -> str:
+    alphabet = string.ascii_uppercase + string.digits
+    return "".join(secrets.choice(alphabet) for _ in range(8))
+
+
+def _ensure_unique_family_code(db: Session) -> str:
+    while True:
+        candidate = _generate_family_code()
+        exists = db.query(Family).filter(Family.invite_code == candidate).first()
+        if not exists:
+            return candidate
+
+
+def get_current_session_user(
+    credentials: HTTPAuthorizationCredentials | None = Depends(bearer_scheme),
+    db: Session = Depends(get_db),
+) -> User:
+    if not credentials or credentials.scheme.lower() != "bearer":
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Chybi autorizacni token.")
+
+    payload = _decode_jwt(credentials.credentials)
+    telegram_id = str(payload.get("tid") or "").strip()
+    if not telegram_id:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token neobsahuje identitu.")
+
+    user = db.query(User).filter(User.telegram_id == telegram_id).first()
+    if not user:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Uzivatel z tokenu nebyl nalezen.")
+    return user
+
+
+@router.post("/auth", response_model=AuthResponse, summary="Prihlaseni pres Telegram initData")
+def auth_with_telegram(payload: AuthRequest, db: Session = Depends(get_db)):
+    telegram_user = _validate_telegram_init_data(payload.initData)
+    telegram_id = str(telegram_user.get("id") or "").strip()
+    if not telegram_id:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Telegram identita je neplatna.")
+
+    user = _get_or_create_user(db, telegram_id, telegram_user)
+    token, expires_in = _create_session_token(user)
+
+    logger.info("Uzivatel %s uspesne prihlasen.", telegram_id)
+    return AuthResponse(token=token, expires_in=expires_in, user=_map_user(user))
+
+
+@router.get("/auth/verify", response_model=SessionUserRead, summary="Overit platnost session tokenu")
+def verify_auth(user: User = Depends(get_current_session_user)):
+    return _map_user(user)
+
+
+@router.post("/family/create", response_model=FamilyCreateResponse, summary="Vytvorit novou rodinu")
+def create_family(payload: FamilyCreateRequest, db: Session = Depends(get_db), user: User = Depends(get_current_session_user)):
+    if user.family_id:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Uz jsi soucasti rodiny.")
+
+    family_name = payload.family_name.strip()
+    if len(family_name) < 2:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Nazev rodiny je prilis kratky.")
+
+    family = Family(name=family_name, invite_code=_ensure_unique_family_code(db))
+    db.add(family)
+    db.flush()
+
+    user.family_id = family.id
+    user.role = ROLE_PARENT
+    if payload.user_name.strip():
+        user.username = payload.user_name.strip()
+
+    db.commit()
+    db.refresh(user)
+    db.refresh(family)
+
+    return FamilyCreateResponse(
+        user=_map_user(user),
+        family_id=family.id,
+        family_name=family.name,
+        family_code=family.invite_code,
+    )
+
+
+@router.post("/family/join", response_model=FamilyJoinResponse, summary="Pripojit uzivatele do rodiny pomoci kodu")
+def join_family(payload: FamilyJoinRequest, db: Session = Depends(get_db), user: User = Depends(get_current_session_user)):
+    if user.family_id:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Uz jsi soucasti rodiny.")
+
+    role = payload.role.strip().lower()
+    if role not in FAMILY_ROLES:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Role musi byt parent nebo child.")
+
+    family_code = payload.family_code.strip().upper()
+    family = db.query(Family).filter(Family.invite_code == family_code).first()
+    if not family:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Rodinny kod nebyl nalezen.")
+
+    user.family_id = family.id
+    user.role = role
+    if payload.user_name.strip():
+        user.username = payload.user_name.strip()
+
+    db.commit()
+    db.refresh(user)
+
+    return FamilyJoinResponse(
+        user=_map_user(user),
+        family_id=family.id,
+        family_name=family.name,
+        family_code=family.invite_code,
+    )

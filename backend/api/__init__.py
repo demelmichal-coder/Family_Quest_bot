@@ -1,6 +1,8 @@
 import hashlib
 import hmac
+import base64
 import json
+import time
 from urllib.parse import parse_qsl
 
 from fastapi import Depends, Header, HTTPException
@@ -102,7 +104,54 @@ def _get_or_create_user(
     return user
 
 
+def _base64url_decode(value: str) -> bytes:
+    padding = "=" * ((4 - len(value) % 4) % 4)
+    return base64.urlsafe_b64decode((value + padding).encode("ascii"))
+
+
+def _decode_session_token(token: str) -> dict[str, object]:
+    if not settings.JWT_SECRET:
+        raise HTTPException(status_code=500, detail="Na backendu chybi JWT_SECRET.")
+
+    parts = token.split(".")
+    if len(parts) != 3:
+        raise HTTPException(status_code=401, detail="Neplatny format session tokenu.")
+
+    header_b64, payload_b64, signature_b64 = parts
+    signing_input = f"{header_b64}.{payload_b64}".encode("ascii")
+    expected_signature = hmac.new(
+        settings.JWT_SECRET.encode("utf-8"),
+        signing_input,
+        hashlib.sha256,
+    ).digest()
+
+    try:
+        received_signature = _base64url_decode(signature_b64)
+    except Exception as exc:
+        raise HTTPException(status_code=401, detail="Neplatny podpis session tokenu.") from exc
+
+    if not hmac.compare_digest(expected_signature, received_signature):
+        raise HTTPException(status_code=401, detail="Neplatny podpis session tokenu.")
+
+    try:
+        payload = json.loads(_base64url_decode(payload_b64).decode("utf-8"))
+    except Exception as exc:
+        raise HTTPException(status_code=401, detail="Neplatny obsah session tokenu.") from exc
+
+    now = int(time.time())
+    exp = int(payload.get("exp", 0))
+    if exp <= now:
+        raise HTTPException(status_code=401, detail="Session token vyprsel.")
+
+    if payload.get("iss") != settings.JWT_ISSUER:
+        raise HTTPException(status_code=401, detail="Neplatny issuer session tokenu.")
+
+    return payload
+
+
 def get_current_user(
+    authorization: Optional[str] = Header(default=None, alias="Authorization"),
+    authorization_lower: Optional[str] = Header(default=None, alias="authorization"),
     telegram_init_data: Optional[str] = Header(default=None, alias="X-Telegram-Init-Data"),
     telegram_init_data_lower: Optional[str] = Header(default=None, alias="x-telegram-init-data"),
     telegram_id: Optional[str] = Header(default=None, alias="X-Telegram-Id"),
@@ -118,6 +167,19 @@ def get_current_user(
 
     resolved_telegram_id = None
     telegram_user = None
+
+    auth_header = authorization or authorization_lower
+    if auth_header and auth_header.lower().startswith("bearer "):
+        token = auth_header[7:].strip()
+        payload = _decode_session_token(token)
+        token_telegram_id = str(payload.get("tid") or "").strip()
+        if not token_telegram_id:
+            raise HTTPException(status_code=401, detail="Session token neobsahuje identitu.")
+
+        user = db.query(User).filter(User.telegram_id == token_telegram_id).first()
+        if not user:
+            raise HTTPException(status_code=401, detail="Uzivatel ze session tokenu nebyl nalezen.")
+        return user
 
     # Prefer upper-case, fallback to lower-case if needed
     telegram_init_data_val = telegram_init_data or telegram_init_data_lower

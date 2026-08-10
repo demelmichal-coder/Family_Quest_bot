@@ -1,0 +1,323 @@
+<!doctype html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Family Quest Bot - Bezpecne prihlaseni</title>
+  <style>
+    :root {
+      --bg: #f6f8fb;
+      --panel: #ffffff;
+      --text: #1f2937;
+      --muted: #6b7280;
+      --primary: #0f766e;
+      --primary-2: #0d9488;
+      --danger: #b91c1c;
+      --border: #dbe4ef;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Segoe UI", Tahoma, sans-serif;
+      background: radial-gradient(circle at top, #d9f3ff 0%, var(--bg) 45%);
+      color: var(--text);
+    }
+    .wrap {
+      max-width: 820px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 20px;
+      box-shadow: 0 10px 24px rgba(0, 0, 0, 0.08);
+      margin-bottom: 14px;
+    }
+    h1, h2 { margin: 0 0 12px; }
+    p { margin: 8px 0; color: var(--muted); }
+    .row { display: flex; gap: 12px; flex-wrap: wrap; }
+    .row > * { flex: 1 1 220px; }
+    label { font-size: 14px; font-weight: 600; display: block; margin-bottom: 6px; }
+    input, select, button {
+      width: 100%;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      padding: 10px 12px;
+      font-size: 15px;
+    }
+    button {
+      border: none;
+      color: white;
+      background: linear-gradient(90deg, var(--primary), var(--primary-2));
+      font-weight: 700;
+      cursor: pointer;
+    }
+    button.secondary {
+      color: var(--text);
+      background: #eef2f7;
+      border: 1px solid var(--border);
+    }
+    button.danger { background: var(--danger); }
+    .hidden { display: none; }
+    .status {
+      padding: 12px;
+      border-radius: 12px;
+      border: 1px solid #bfd5ff;
+      background: #eaf2ff;
+      color: #1e3a8a;
+      margin-bottom: 12px;
+      white-space: pre-wrap;
+    }
+  </style>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <h1>Family Quest Bot</h1>
+      <p>Bezpecne prihlaseni a sprava relace pro Telegram Mini App.</p>
+      <div id="status" class="status">Inicializace...</div>
+    </div>
+
+    <div id="authView" class="card hidden">
+      <h2>Prihlaseni</h2>
+      <p>Klikni na tlacitko pro overeni pres Telegram initData.</p>
+      <button id="authBtn">Prihlasit pres Telegram</button>
+    </div>
+
+    <div id="familyView" class="card hidden">
+      <h2>Nastaveni rodiny</h2>
+      <p>Ucet nema prirazenu rodinu. Vyber jednu z moznosti:</p>
+      <div class="row">
+        <div>
+          <label for="familyName">Nazev nove rodiny</label>
+          <input id="familyName" placeholder="Napriklad Novakovi" />
+        </div>
+        <div>
+          <label for="userNameCreate">Tvoje jmeno</label>
+          <input id="userNameCreate" placeholder="Napriklad Misa" />
+        </div>
+      </div>
+      <div style="margin-top:10px">
+        <button id="createFamilyBtn">Vytvorit novou rodinu</button>
+      </div>
+
+      <hr style="margin:16px 0;border:none;border-top:1px solid var(--border)" />
+
+      <div class="row">
+        <div>
+          <label for="familyCode">Rodinny kod</label>
+          <input id="familyCode" placeholder="Napr. AB12CD34" />
+        </div>
+        <div>
+          <label for="userNameJoin">Tvoje jmeno</label>
+          <input id="userNameJoin" placeholder="Napriklad Ema" />
+        </div>
+        <div>
+          <label for="roleJoin">Role</label>
+          <select id="roleJoin">
+            <option value="child">Dite</option>
+            <option value="parent">Rodic</option>
+          </select>
+        </div>
+      </div>
+      <div style="margin-top:10px">
+        <button id="joinFamilyBtn">Pripojit se k rodine pomoci kodu</button>
+      </div>
+    </div>
+
+    <div id="dashboardView" class="card hidden">
+      <h2>Family Dashboard</h2>
+      <p id="profileInfo"></p>
+      <div class="row">
+        <button id="verifyBtn" class="secondary">Overit session token</button>
+        <button id="logoutBtn" class="danger">Odhlasit se</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const TOKEN_KEY = "fq_jwt_token";
+    const USER_KEY = "fq_user_profile";
+    const API_AUTH = "/api/auth";
+    const API_VERIFY = "/api/auth/verify";
+    const API_FAMILY_CREATE = "/api/family/create";
+    const API_FAMILY_JOIN = "/api/family/join";
+
+    const statusEl = document.getElementById("status");
+    const authView = document.getElementById("authView");
+    const familyView = document.getElementById("familyView");
+    const dashboardView = document.getElementById("dashboardView");
+    const profileInfo = document.getElementById("profileInfo");
+
+    function setStatus(message, isError = false) {
+      statusEl.textContent = message;
+      statusEl.style.background = isError ? "#fee2e2" : "#eaf2ff";
+      statusEl.style.color = isError ? "#991b1b" : "#1e3a8a";
+      statusEl.style.borderColor = isError ? "#fecaca" : "#bfd5ff";
+    }
+
+    function show(view) {
+      [authView, familyView, dashboardView].forEach((el) => el.classList.add("hidden"));
+      view.classList.remove("hidden");
+    }
+
+    function saveSession(token, user) {
+      localStorage.setItem(TOKEN_KEY, token);
+      localStorage.setItem(USER_KEY, JSON.stringify(user));
+    }
+
+    function clearSession() {
+      localStorage.removeItem(TOKEN_KEY);
+      localStorage.removeItem(USER_KEY);
+    }
+
+    function getToken() {
+      return localStorage.getItem(TOKEN_KEY) || "";
+    }
+
+    function getInitData() {
+      const tg = window.Telegram && window.Telegram.WebApp;
+      if (!tg) {
+        throw new Error("Telegram WebApp SDK nebyl nalezen.");
+      }
+      try {
+        tg.ready();
+        tg.expand();
+      } catch {}
+      const initData = tg.initData || "";
+      if (!initData) {
+        throw new Error("Telegram initData neni dostupne.");
+      }
+      return initData;
+    }
+
+    async function callApi(url, options = {}) {
+      const headers = {
+        "Content-Type": "application/json",
+        ...(options.headers || {}),
+      };
+
+      const response = await fetch(url, {
+        method: options.method || "GET",
+        headers,
+        body: options.body ? JSON.stringify(options.body) : undefined,
+      });
+
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(payload.detail || "Pozadavek selhal.");
+      }
+      return payload;
+    }
+
+    async function verifySession() {
+      const token = getToken();
+      if (!token) return null;
+      try {
+        const user = await callApi(API_VERIFY, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        return user;
+      } catch {
+        clearSession();
+        return null;
+      }
+    }
+
+    function renderDashboard(user) {
+      profileInfo.textContent = `Prihlasen: ${user.name} | role: ${user.role} | family_id: ${user.family_id || "neni"}`;
+      show(user.family_id ? dashboardView : familyView);
+    }
+
+    async function loginWithTelegram() {
+      try {
+        const initData = getInitData();
+        setStatus("Overuji Telegram podpis a vytvarim session...");
+        const result = await callApi(API_AUTH, {
+          method: "POST",
+          body: { initData },
+        });
+        saveSession(result.token, result.user);
+        setStatus("Prihlaseni probehlo uspesne.");
+        renderDashboard(result.user);
+      } catch (error) {
+        setStatus(`Prihlaseni selhalo: ${error.message}`, true);
+        show(authView);
+      }
+    }
+
+    async function createFamily() {
+      try {
+        const token = getToken();
+        const family_name = document.getElementById("familyName").value.trim();
+        const user_name = document.getElementById("userNameCreate").value.trim();
+        const result = await callApi(API_FAMILY_CREATE, {
+          method: "POST",
+          headers: { Authorization: `Bearer ${token}` },
+          body: { family_name, user_name },
+        });
+        localStorage.setItem(USER_KEY, JSON.stringify(result.user));
+        setStatus(`Rodina ${result.family_name} vytvorena. Kod rodiny: ${result.family_code}`);
+        renderDashboard(result.user);
+      } catch (error) {
+        setStatus(`Vytvoreni rodiny selhalo: ${error.message}`, true);
+      }
+    }
+
+    async function joinFamily() {
+      try {
+        const token = getToken();
+        const family_code = document.getElementById("familyCode").value.trim();
+        const role = document.getElementById("roleJoin").value;
+        const user_name = document.getElementById("userNameJoin").value.trim();
+        const result = await callApi(API_FAMILY_JOIN, {
+          method: "POST",
+          headers: { Authorization: `Bearer ${token}` },
+          body: { family_code, role, user_name },
+        });
+        localStorage.setItem(USER_KEY, JSON.stringify(result.user));
+        setStatus(`Uspesne pripojeni do rodiny ${result.family_name}.`);
+        renderDashboard(result.user);
+      } catch (error) {
+        setStatus(`Pripojeni do rodiny selhalo: ${error.message}`, true);
+      }
+    }
+
+    function logout() {
+      const confirmed = window.confirm("Opravdu se chces odhlasit?");
+      if (!confirmed) return;
+      clearSession();
+      setStatus("Byl jsi odhlasen. Muze se prihlasit jiny uzivatel.");
+      show(authView);
+    }
+
+    document.getElementById("authBtn").addEventListener("click", loginWithTelegram);
+    document.getElementById("createFamilyBtn").addEventListener("click", createFamily);
+    document.getElementById("joinFamilyBtn").addEventListener("click", joinFamily);
+    document.getElementById("logoutBtn").addEventListener("click", logout);
+    document.getElementById("verifyBtn").addEventListener("click", async () => {
+      const user = await verifySession();
+      if (user) {
+        setStatus("Session token je platny.");
+      } else {
+        setStatus("Session token je neplatny nebo vyprsel.", true);
+        show(authView);
+      }
+    });
+
+    (async function bootstrap() {
+      const user = await verifySession();
+      if (user) {
+        setStatus("Obnovena platna session, preskakuji prihlaseni.");
+        renderDashboard(user);
+        return;
+      }
+      setStatus("Nebyla nalezena platna session. Prihlas se pres Telegram.");
+      show(authView);
+    })();
+  </script>
+</body>
+</html>

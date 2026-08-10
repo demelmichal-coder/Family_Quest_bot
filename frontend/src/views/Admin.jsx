@@ -27,11 +27,6 @@ const initialRewardForm = {
   cost: 0,
 };
 
-const initialChildForm = {
-  username: "",
-  telegram_id: "",
-};
-
 const initialPlannerForm = {
   user_id: "",
   mode: "skola",
@@ -101,8 +96,6 @@ function Admin({
   user,
   tasks,
   rewards,
-  weeklyStats,
-  dailyActivity,
   engagementSummary,
   onApproveTask,
   onDataChanged,
@@ -116,7 +109,6 @@ function Admin({
   const [rewriteStyle, setRewriteStyle] = useState(getInitialRewriteStyle);
   const [rewardForm, setRewardForm] = useState(initialRewardForm);
   const [rewardSuggestion, setRewardSuggestion] = useState(null);
-  const [childForm, setChildForm] = useState(initialChildForm);
   const [plannerForm, setPlannerForm] = useState(initialPlannerForm);
   const [plannerTasks, setPlannerTasks] = useState([]);
   const [selectedPlannerTasks, setSelectedPlannerTasks] = useState(new Set());
@@ -134,9 +126,6 @@ function Admin({
   const [loading, setLoading] = useState(true);
   const [submittingTask, setSubmittingTask] = useState(false);
   const [submittingReward, setSubmittingReward] = useState(false);
-  const [submittingChild, setSubmittingChild] = useState(false);
-  const [bulkCreatingChildren, setBulkCreatingChildren] = useState(false);
-  const [runningDemoSetup, setRunningDemoSetup] = useState(false);
   const [generatingPlanner, setGeneratingPlanner] = useState(false);
   const [applyingPlanner, setApplyingPlanner] = useState(false);
   const [rewritingTask, setRewritingTask] = useState(false);
@@ -147,8 +136,6 @@ function Admin({
   const [busyTaskId, setBusyTaskId] = useState(null);
   const [busyRewardId, setBusyRewardId] = useState(null);
   const [busyMemberId, setBusyMemberId] = useState(null);
-  const [penaltyBusyUserId, setPenaltyBusyUserId] = useState(null);
-  const [penaltyByUser, setPenaltyByUser] = useState({});
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const { rewriteTask, rewriteReward } = useGroqRewrite();
@@ -303,14 +290,6 @@ function Admin({
     }));
   }
 
-  function handleChildChange(event) {
-    const { name, value } = event.target;
-    setChildForm((current) => ({
-      ...current,
-      [name]: value,
-    }));
-  }
-
   function handlePlannerChange(event) {
     const { name, value } = event.target;
     setPlannerForm((current) => ({
@@ -385,140 +364,6 @@ function Admin({
       setSelectedPlannerTasks(new Set(plannerTasks.map((_, idx) => idx)));
     } else {
       setSelectedPlannerTasks(new Set());
-    }
-  }
-
-  async function createChildProfile({ username, telegramId }) {
-    const fallbackName = `Dite ${players.length + 1}`;
-    const generatedTelegramId =
-      telegramId?.trim() || `demo-child-${Date.now()}-${Math.floor(Math.random() * 10000)}`;
-
-    await api("/users/", {
-      method: "POST",
-      body: {
-        telegram_id: generatedTelegramId,
-        username: username?.trim() || fallbackName,
-        role: ROLE_CHILD,
-        xp: 0,
-        gold: 0,
-      },
-    });
-  }
-
-  async function handleCreateChild(event) {
-    event.preventDefault();
-    setSubmittingChild(true);
-    setError("");
-    setMessage("");
-
-    try {
-      await createChildProfile({
-        username: childForm.username,
-        telegramId: childForm.telegram_id,
-      });
-
-      setChildForm(initialChildForm);
-      setMessage("Detsky profil byl vytvoren. Ted mu muzes hned priradit ukol.");
-      await loadUsers();
-      await onDataChanged();
-    } catch (createError) {
-      setError(getErrorMessage(createError, "Nepodarilo se vytvorit detsky profil."));
-    } finally {
-      setSubmittingChild(false);
-    }
-  }
-
-  async function handleCreateFourChildren() {
-    setBulkCreatingChildren(true);
-    setError("");
-    setMessage("");
-
-    try {
-      const names = ["Kuba", "Anna", "Misa", "Tereza"];
-      for (let index = 0; index < names.length; index += 1) {
-        await createChildProfile({
-          username: names[index],
-          telegramId: `demo-brawler-${Date.now()}-${index}`,
-        });
-      }
-      setMessage("Hotovo. Vytvoril jsem 4 test deti, ted jim muzes zadat mise.");
-      await loadUsers();
-      await onDataChanged();
-    } catch (createError) {
-      setError(getErrorMessage(createError, "Nepodarilo se vytvorit 4 test deti."));
-    } finally {
-      setBulkCreatingChildren(false);
-    }
-  }
-
-  async function handleRunDemoSetup() {
-    setRunningDemoSetup(true);
-    setError("");
-    setMessage("");
-
-    try {
-      const defaultChildren = ["Kuba", "Anna", "Misa", "Tereza"];
-      const userList = await api("/users/");
-      const currentChildren = userList.filter((member) => member.role === ROLE_CHILD);
-
-      for (let i = currentChildren.length; i < 4; i += 1) {
-        await createChildProfile({
-          username: defaultChildren[i] || `Dite ${i + 1}`,
-          telegramId: `demo-full-${Date.now()}-${i}`,
-        });
-      }
-
-      const refreshedUsers = await api("/users/");
-      const childUsers = refreshedUsers.filter((member) => member.role === ROLE_CHILD).slice(0, 4);
-
-      const demoTasks = [
-        { title: "Uklid pokoj", description: "Vysat, ustelet postel a uklidit hracky.", xp: 35, gold: 20, is_daily: false },
-        { title: "Ranni rutina", description: "Vyčistit zuby, obleknout se a pripravit tasku.", xp: 20, gold: 10, is_daily: true },
-        { title: "Pomoc v kuchyni", description: "Pomoc s pripravenim vecere a uklidem stolu.", xp: 30, gold: 15, is_daily: false },
-      ];
-
-      for (const child of childUsers) {
-        for (const demoTask of demoTasks) {
-          const exists = tasks.some(
-            (task) => task.user_id === child.id && task.title.toLowerCase() === demoTask.title.toLowerCase()
-          );
-          if (!exists) {
-            await api("/tasks/", {
-              method: "POST",
-              body: {
-                ...demoTask,
-                user_id: child.id,
-              },
-            });
-          }
-        }
-      }
-
-      const demoRewards = [
-        { name: "Filmovy vecer", description: "Vyber filmu a popcorn navic.", cost: 70 },
-        { name: "Zmrzlina", description: "Jedna velka porce podle vlastni volby.", cost: 45 },
-        { name: "Herni bonus", description: "30 minut navic na oblibenou hru.", cost: 90 },
-      ];
-
-      for (const reward of demoRewards) {
-        const exists = rewards.some(
-          (item) => item.name.toLowerCase() === reward.name.toLowerCase()
-        );
-        if (!exists) {
-          await api("/rewards/", {
-            method: "POST",
-            body: reward,
-          });
-        }
-      }
-
-      setMessage("Demo setup je hotovy: deti, mise i odmeny jsou pripraveny.");
-      await loadUsers();
-      await onDataChanged();
-    } catch (setupError) {
-      setError(getErrorMessage(setupError, "Demo setup se nepodarilo dokoncit."));
-    } finally {
-      setRunningDemoSetup(false);
     }
   }
 
@@ -1052,60 +897,6 @@ function Admin({
     }
   }
 
-  function handlePenaltyChange(userId, field, value) {
-    setPenaltyByUser((current) => ({
-      ...current,
-      [userId]: {
-        xp: current[userId]?.xp ?? "",
-        gold: current[userId]?.gold ?? "",
-        reason: current[userId]?.reason ?? "",
-        [field]: value,
-      },
-    }));
-  }
-
-  async function handlePenalizeChild(userId) {
-    const row = penaltyByUser[userId] || {};
-    const xp = Number(row.xp || 0);
-    const gold = Number(row.gold || 0);
-    const reason = String(row.reason || "").trim();
-
-    if (xp <= 0 && gold <= 0) {
-      setError("Zadej aspon XP nebo gold k odebrani.");
-      setMessage("");
-      return;
-    }
-
-    setPenaltyBusyUserId(userId);
-    setError("");
-    setMessage("");
-
-    try {
-      const updated = await api(`/users/${userId}/penalize`, {
-        method: "POST",
-        body: {
-          xp: Math.max(0, xp),
-          gold: Math.max(0, gold),
-          reason,
-        },
-      });
-
-      setPenaltyByUser((current) => ({
-        ...current,
-        [userId]: { xp: "", gold: "", reason: "" },
-      }));
-      setMessage(
-        `Odebrano: ${updated.username || "Dite"} ma nyni ${updated.xp} XP a ${updated.gold} gold.`
-      );
-      await loadUsers();
-      await onDataChanged();
-    } catch (penaltyError) {
-      setError(getErrorMessage(penaltyError, "Odebrani XP/gold se nepodarilo."));
-    } finally {
-      setPenaltyBusyUserId(null);
-    }
-  }
-
   return (
     <div className="min-h-screen bg-slate-950 px-4 py-6 text-slate-100">
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-6">
@@ -1133,7 +924,7 @@ function Admin({
               Reset denni ukoly
             </button>
           </div>
-          <div className="mt-6 grid gap-3 md:grid-cols-5">
+          <div className="mt-6 grid gap-3 md:grid-cols-4">
             <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
               <div className="text-xs uppercase tracking-[0.2em] text-slate-400">Deti</div>
               <div className="mt-2 text-3xl font-bold text-white">{players.length}</div>
@@ -1141,12 +932,6 @@ function Admin({
             <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
               <div className="text-xs uppercase tracking-[0.2em] text-slate-400">Aktivni ukoly</div>
               <div className="mt-2 text-3xl font-bold text-white">{tasks.length}</div>
-            </div>
-            <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-              <div className="text-xs uppercase tracking-[0.2em] text-slate-400">Denne</div>
-              <div className="mt-2 text-3xl font-bold text-white">
-                {tasks.filter((task) => task.is_daily).length}
-              </div>
             </div>
             <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
               <div className="text-xs uppercase tracking-[0.2em] text-slate-400">Ke schvaleni</div>
@@ -1166,12 +951,6 @@ function Admin({
             Rychly presun v menu
           </div>
           <div className="flex flex-wrap gap-2">
-            <a href="#daily-activity" className="rounded-full border border-violet-400/30 bg-violet-400/10 px-4 py-2 text-sm font-semibold text-violet-100 transition hover:bg-violet-400/20">
-              Dnes v rodine
-            </a>
-            <a href="#children-block" className="rounded-full border border-cyan-400/30 bg-cyan-400/10 px-4 py-2 text-sm font-semibold text-cyan-100 transition hover:bg-cyan-400/20">
-              Pridat dite
-            </a>
             <a href="#family-planner" className="rounded-full border border-fuchsia-400/30 bg-fuchsia-400/10 px-4 py-2 text-sm font-semibold text-fuchsia-100 transition hover:bg-fuchsia-400/20">
               AI denni plan
             </a>
@@ -1199,81 +978,6 @@ function Admin({
           <div className="rounded-2xl border border-emerald-400/40 bg-emerald-400/10 px-4 py-3 text-sm text-emerald-100">
             {message}
           </div>
-        ) : null}
-
-        {dailyActivity && dailyActivity.children && dailyActivity.children.length > 0 ? (
-          <section id="daily-activity" className="scroll-mt-6 rounded-3xl border border-violet-500/30 bg-gradient-to-br from-violet-950/60 to-slate-900 p-5 shadow-xl">
-            <div className="mb-4 flex items-center justify-between">
-              <div>
-                <div className="text-xs uppercase tracking-widest text-violet-300">Dnes v rodine</div>
-                <h2 className="mt-1 text-xl font-bold text-white">Co rodina dnes splnila</h2>
-              </div>
-              {dailyActivity.total_pending_approval > 0 ? (
-                <a
-                  href="#task-list"
-                  className="rounded-xl border border-amber-400/40 bg-amber-400/10 px-3 py-1 text-sm font-semibold text-amber-200 transition hover:bg-amber-400/20"
-                >
-                  {dailyActivity.total_pending_approval} ceka na schvaleni
-                </a>
-              ) : (
-                <a
-                  href="#task-list"
-                  className="rounded-xl border border-emerald-400/40 bg-emerald-400/10 px-3 py-1 text-sm font-semibold text-emerald-200 transition hover:bg-emerald-400/20"
-                >
-                  Vse schvaleno
-                </a>
-              )}
-            </div>
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              {dailyActivity.children.map((child) => (
-                <div
-                  key={child.user_id}
-                  className="rounded-2xl border border-white/10 bg-white/5 p-4"
-                >
-                  <div className="mb-3 flex items-center gap-3">
-                    {typeof child.avatar === "string" && child.avatar.startsWith("data:image") ? (
-                      <img
-                        src={child.avatar}
-                        alt={child.username || "avatar"}
-                        className="h-9 w-9 rounded-full object-cover"
-                      />
-                    ) : child.avatar ? (
-                      <span className="text-2xl">{child.avatar}</span>
-                    ) : (
-                      <div className="flex h-9 w-9 items-center justify-center rounded-full bg-violet-400/20 text-lg font-bold text-violet-200">
-                        {(child.username || "?")[0].toUpperCase()}
-                      </div>
-                    )}
-                    <div>
-                      <div className="font-semibold text-white">{child.username}</div>
-                      {child.streak > 0 ? (
-                        <div className="text-xs text-orange-300">🔥 {child.streak} denu</div>
-                      ) : null}
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-3 gap-2 text-center">
-                    <div className="rounded-xl bg-white/5 py-2">
-                      <div className="text-lg font-bold text-white">{child.tasks_done_today}</div>
-                      <div className="text-xs text-slate-400">misi</div>
-                    </div>
-                    <div className="rounded-xl bg-white/5 py-2">
-                      <div className="text-lg font-bold text-cyan-300">{child.xp_earned_today}</div>
-                      <div className="text-xs text-slate-400">XP</div>
-                    </div>
-                    <div className="rounded-xl bg-white/5 py-2">
-                      <div className="text-lg font-bold text-yellow-300">{child.gold_earned_today}</div>
-                      <div className="text-xs text-slate-400">zlata</div>
-                    </div>
-                  </div>
-                  {child.pending_approval > 0 ? (
-                    <div className="mt-2 rounded-lg border border-amber-400/30 bg-amber-400/10 px-2 py-1 text-center text-xs text-amber-200">
-                      {child.pending_approval} ceka na schvaleni
-                    </div>
-                  ) : null}
-                </div>
-              ))}
-            </div>
-          </section>
         ) : null}
 
         {engagementSummary ? (
@@ -1349,126 +1053,6 @@ function Admin({
 
         <div className="grid gap-6 xl:grid-cols-[420px_minmax(0,1fr)]">
           <div className="space-y-6">
-            <section id="children-block" className="scroll-mt-6 rounded-3xl border border-cyan-500/30 bg-gradient-to-br from-cyan-950/70 to-slate-900 p-5 shadow-xl">
-              <div className="mb-4">
-                <h2 className="text-xl font-bold text-white">Pridat dite</h2>
-                <p className="mt-1 text-sm text-cyan-100/80">
-                  Tady se pridavaji detske profily. Muzes vytvorit jedno dite, nebo jednim klikem 4 test deti.
-                </p>
-              </div>
-
-              <form className="space-y-3" onSubmit={handleCreateChild}>
-                <label className="block">
-                  <span className="mb-2 block text-sm font-medium text-slate-100">Jmeno ditete</span>
-                  <input
-                    required
-                    name="username"
-                    value={childForm.username}
-                    onChange={handleChildChange}
-                    className="w-full rounded-2xl border border-cyan-800 bg-slate-950 px-4 py-3 text-white outline-none transition focus:border-cyan-400"
-                    placeholder="Treba Eliska"
-                  />
-                </label>
-                <label className="block">
-                  <span className="mb-2 block text-sm font-medium text-slate-100">
-                    Telegram ID (volitelne)
-                  </span>
-                  <input
-                    name="telegram_id"
-                    value={childForm.telegram_id}
-                    onChange={handleChildChange}
-                    className="w-full rounded-2xl border border-cyan-800 bg-slate-950 px-4 py-3 text-white outline-none transition focus:border-cyan-400"
-                    placeholder="Kdyz nechas prazdne, vytvori se test ID"
-                  />
-                </label>
-
-                <div className="grid gap-2 sm:grid-cols-2">
-                  <button
-                    type="submit"
-                    disabled={submittingChild}
-                    className="rounded-2xl bg-cyan-400 px-4 py-3 text-sm font-bold text-slate-950 transition hover:bg-cyan-300 disabled:cursor-not-allowed disabled:opacity-60"
-                  >
-                    {submittingChild ? "Pridavam..." : "Pridat dite"}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleCreateFourChildren}
-                    disabled={bulkCreatingChildren}
-                    className="rounded-2xl border border-fuchsia-400/40 bg-fuchsia-400/10 px-4 py-3 text-sm font-bold text-fuchsia-100 transition hover:bg-fuchsia-400/20 disabled:cursor-not-allowed disabled:opacity-60"
-                  >
-                    {bulkCreatingChildren ? "Vytvarim 4 deti..." : "Vytvorit 4 test deti"}
-                  </button>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={handleRunDemoSetup}
-                  disabled={runningDemoSetup}
-                  className="w-full rounded-2xl border border-emerald-400/40 bg-emerald-400/10 px-4 py-3 text-sm font-bold text-emerald-100 transition hover:bg-emerald-400/20 disabled:cursor-not-allowed disabled:opacity-60"
-                >
-                  {runningDemoSetup
-                    ? "Pripravuji kompletni demo..."
-                    : "Spustit kompletni demo setup (4 deti + mise + odmeny)"}
-                </button>
-              </form>
-
-              <div className="mt-4 grid gap-2 sm:grid-cols-2">
-                {players.slice(0, 4).map((member) => (
-                  <div
-                    key={member.id}
-                    className="rounded-2xl border border-cyan-400/20 bg-slate-950/70 px-3 py-3 text-sm text-cyan-100"
-                  >
-                    <div className="font-bold">{member.username || "Bez jmena"}</div>
-                    <div className="text-xs text-cyan-200/80">{member.xp} XP | {member.gold} gold</div>
-                    <div className="mt-3 grid grid-cols-2 gap-2">
-                      <input
-                        type="number"
-                        min="0"
-                        value={penaltyByUser[member.id]?.xp ?? ""}
-                        onChange={(event) =>
-                          handlePenaltyChange(member.id, "xp", event.target.value)
-                        }
-                        className="w-full rounded-xl border border-cyan-800 bg-slate-950 px-2 py-1.5 text-xs text-white outline-none focus:border-cyan-400"
-                        placeholder="-XP"
-                      />
-                      <input
-                        type="number"
-                        min="0"
-                        value={penaltyByUser[member.id]?.gold ?? ""}
-                        onChange={(event) =>
-                          handlePenaltyChange(member.id, "gold", event.target.value)
-                        }
-                        className="w-full rounded-xl border border-cyan-800 bg-slate-950 px-2 py-1.5 text-xs text-white outline-none focus:border-cyan-400"
-                        placeholder="-gold"
-                      />
-                    </div>
-                    <input
-                      type="text"
-                      value={penaltyByUser[member.id]?.reason ?? ""}
-                      onChange={(event) =>
-                        handlePenaltyChange(member.id, "reason", event.target.value)
-                      }
-                      className="mt-2 w-full rounded-xl border border-cyan-800 bg-slate-950 px-2 py-1.5 text-xs text-white outline-none focus:border-cyan-400"
-                      placeholder="Duvod (volitelne)"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => handlePenalizeChild(member.id)}
-                      disabled={penaltyBusyUserId === member.id}
-                      className="mt-2 w-full rounded-xl border border-rose-400/40 bg-rose-400/10 px-2 py-1.5 text-xs font-semibold text-rose-100 transition hover:bg-rose-400/20 disabled:cursor-not-allowed disabled:opacity-60"
-                    >
-                      {penaltyBusyUserId === member.id ? "Odebiram..." : "Odebrat XP/gold"}
-                    </button>
-                  </div>
-                ))}
-                {players.length === 0 ? (
-                  <div className="rounded-2xl border border-dashed border-cyan-500/30 bg-slate-950/60 px-3 py-3 text-sm text-cyan-200/80 sm:col-span-2">
-                    Zatim tu nejsou zadne deti. Vytvor je vyse a pak jim rovnou prirad ukol v sekci Novy ukol.
-                  </div>
-                ) : null}
-              </div>
-            </section>
-
             <section id="family-planner" className="scroll-mt-6 rounded-3xl border border-fuchsia-500/30 bg-slate-900 p-5 shadow-xl">
               <div className="mb-4">
                 <h2 className="text-xl font-bold text-white">AI denni plan pro celou rodinu</h2>
@@ -1545,6 +1129,12 @@ function Admin({
                       : `Aplikovat plan (${selectedFamilyPlannerTasks.size})`}
                   </button>
                 </div>
+
+                {players.length === 0 ? (
+                  <div className="rounded-2xl border border-amber-400/40 bg-amber-400/10 px-4 py-3 text-sm text-amber-100">
+                    Nejdriv je potreba mit v rodine alespon jedno dite. Potom lze AI rodinny plan vygenerovat.
+                  </div>
+                ) : null}
 
                 {familyPlannerChildren.length > 0 ? (
                   <div className="rounded-2xl border border-fuchsia-400/30 bg-fuchsia-400/10 p-4">
@@ -2141,6 +1731,34 @@ function Admin({
                             {task.ai_review_note ? (
                               <p className="mt-2 text-xs text-fuchsia-200/80">{task.ai_review_note}</p>
                             ) : null}
+                            {task.proof_text ? (
+                              <div className="mt-3 rounded-2xl border border-fuchsia-400/30 bg-fuchsia-500/10 px-3 py-2 text-xs text-fuchsia-100">
+                                <span className="font-semibold">Dukaz (text): </span>
+                                {task.proof_text}
+                              </div>
+                            ) : null}
+                            {task.proof_media_url ? (
+                              <div className="mt-3 rounded-2xl border border-cyan-400/30 bg-cyan-500/10 p-3">
+                                <div className="text-xs font-semibold text-cyan-100">Dukaz (foto/video)</div>
+                                {String(task.proof_media_url).startsWith("data:image") ? (
+                                  <img
+                                    src={task.proof_media_url}
+                                    alt={`Dukaz k ukolu ${task.title}`}
+                                    className="mt-2 max-h-72 w-full rounded-xl object-contain"
+                                  />
+                                ) : (
+                                  <a
+                                    href={task.proof_media_url}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="mt-2 inline-block text-xs font-semibold text-cyan-200 underline"
+                                    onClick={(event) => event.stopPropagation()}
+                                  >
+                                    Otevrit prilozeny dukaz
+                                  </a>
+                                )}
+                              </div>
+                            ) : null}
                             <div className="mt-3 text-xs font-semibold uppercase tracking-[0.2em] text-cyan-300">
                               Klikni pro upravu ukolu
                             </div>
@@ -2304,48 +1922,6 @@ function Admin({
                 </div>
               )}
             </section>
-
-            {/* Tydni statistiky deti */}
-            {weeklyStats?.children?.length > 0 && (
-              <section className="overflow-hidden rounded-[28px] border border-indigo-400/30 bg-slate-900/80 p-6 shadow-xl backdrop-blur">
-                <h2 className="mb-5 text-lg font-black text-indigo-200">📊 Týdenní statistiky dětí</h2>
-                <div className="flex flex-col gap-5">
-                  {weeklyStats.children.map((child) => {
-                    const maxActivity = Math.max(...child.activity_days, 1);
-                    return (
-                      <div key={child.user_id} className="rounded-2xl border border-slate-700/50 bg-slate-800/60 p-4">
-                        <div className="flex items-center justify-between">
-                          <span className="font-bold text-white">{child.username}</span>
-                          <div className="flex gap-3 text-xs font-semibold text-slate-300">
-                            <span className="rounded-full bg-cyan-500/20 px-2 py-0.5 text-cyan-200">{child.total_xp} XP</span>
-                            <span className="rounded-full bg-violet-500/20 px-2 py-0.5 text-violet-200">{child.tasks_completed} splněno</span>
-                          </div>
-                        </div>
-                        <div className="mt-3">
-                          <div className="mb-1 text-xs text-slate-400">Aktivita za posledních 7 dní</div>
-                          <div className="flex items-end gap-1 h-10">
-                            {child.activity_days.map((count, idx) => {
-                              const dayLabels = ["Po","Út","St","Čt","Pá","So","Ne"];
-                              const dayIndex = (new Date().getDay() + 6 - (6 - idx)) % 7;
-                              return (
-                                <div key={idx} className="flex flex-col items-center flex-1">
-                                  <div
-                                    className="w-full rounded-t-sm bg-indigo-400/70 transition-all"
-                                    style={{ height: `${count === 0 ? 4 : Math.round((count / maxActivity) * 32) + 4}px` }}
-                                    title={`${count} úkolů`}
-                                  />
-                                  <span className="mt-1 text-[9px] text-slate-500">{dayLabels[dayIndex]}</span>
-                                </div>
-                              );
-                            })}
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </section>
-            )}
 
             {/* Rodinne vyzvy */}
             <section className="rounded-3xl border border-amber-500/30 bg-slate-900 p-5 shadow-xl">

@@ -150,6 +150,15 @@ function Dashboard({
   const [tab, setTab] = useState(DASHBOARD_TAB_MISSIONS);
   const [showAvatarPicker, setShowAvatarPicker] = useState(false);
   const [showLevelUpBanner, setShowLevelUpBanner] = useState(false);
+  const [proofDraft, setProofDraft] = useState({
+    taskId: null,
+    title: "",
+    text: "",
+    mediaDataUrl: "",
+    fileName: "",
+  });
+  const [proofSubmitting, setProofSubmitting] = useState(false);
+  const proofFileInputRef = useRef(null);
   const [avatar, setAvatar] = useState({
     image: user?.avatar || ":)",
     name: user?.username || "Hrac",
@@ -206,6 +215,123 @@ function Dashboard({
     return undefined;
   }, [level]);
 
+  function openProofComposer(task) {
+    setProofDraft({
+      taskId: task.id,
+      title: task.title || "Ukol",
+      text: "",
+      mediaDataUrl: "",
+      fileName: "",
+    });
+  }
+
+  function closeProofComposer() {
+    setProofDraft({
+      taskId: null,
+      title: "",
+      text: "",
+      mediaDataUrl: "",
+      fileName: "",
+    });
+    setProofSubmitting(false);
+  }
+
+  function handlePickProofPhoto() {
+    proofFileInputRef.current?.click();
+  }
+
+  function handleProofFileChange(event) {
+    const file = event.target.files?.[0];
+    if (!file) {
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (loadEvent) => {
+      const nextImage = loadEvent.target?.result;
+      if (!nextImage) {
+        return;
+      }
+      setProofDraft((current) => ({
+        ...current,
+        mediaDataUrl: String(nextImage),
+        fileName: file.name || "dukaz.jpg",
+      }));
+    };
+    reader.readAsDataURL(file);
+    event.target.value = "";
+  }
+
+  async function executeTaskCompletion(taskId) {
+    const response = await onCompleteTask(taskId);
+    setMessage(response.detail);
+
+    try {
+      const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+
+      oscillator.frequency.value = 800;
+      oscillator.type = "sine";
+
+      gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+
+      oscillator.start(audioContext.currentTime);
+      oscillator.stop(audioContext.currentTime + 0.1);
+    } catch {
+      // Ignore audio errors on unsupported browsers.
+    }
+
+    if (navigator.vibrate) {
+      navigator.vibrate([100, 50, 100]);
+    }
+
+    if (response?.task?.approved) {
+      setShowConfetti(true);
+      window.setTimeout(() => setShowConfetti(false), 1800);
+    }
+  }
+
+  async function submitProofAndComplete(taskId) {
+    const task = tasks.find((item) => item.id === taskId);
+    if (!task) {
+      setError("Ukol se nepodarilo najit.");
+      return;
+    }
+
+    const normalizedProofText = proofDraft.text.trim() || (proofDraft.mediaDataUrl ? `Fotodukaz k ukolu: ${task.title}` : "");
+    if (!normalizedProofText) {
+      setError("U tohoto ukolu vypln aspon kratky popis nebo pridej fotku dukazu.");
+      return;
+    }
+
+    setProofSubmitting(true);
+    setActiveTaskId(taskId);
+    setError("");
+    setMessage("");
+
+    try {
+      await api(`/game/submit-proof/${taskId}`, {
+        method: "POST",
+        body: {
+          proof_text: normalizedProofText,
+          proof_media_url: proofDraft.mediaDataUrl || null,
+        },
+      });
+      closeProofComposer();
+      await executeTaskCompletion(taskId);
+    } catch (proofError) {
+      setError(getErrorMessage(proofError, DASHBOARD_MESSAGES.completeTaskError));
+    } finally {
+      setProofSubmitting(false);
+      setActiveTaskId(null);
+    }
+  }
+
   async function handleCompleteTask(taskId) {
     setActiveTaskId(taskId);
     setMessage("");
@@ -215,54 +341,11 @@ function Dashboard({
       const task = tasks.find((item) => item.id === taskId);
 
       if (task?.requires_proof && !task?.proof_submitted_at) {
-        const proofText = window.prompt("Popis co jsi splnil/a (dukaz):", "");
-        if (!proofText || !proofText.trim()) {
-          setError("U tohoto ukolu je potreba vyplnit dukaz splneni.");
-          return;
-        }
-        const proofMediaUrl = window.prompt("Odkaz na foto/video dukaz (volitelne):", "");
-        await api(`/game/submit-proof/${taskId}`, {
-          method: "POST",
-          body: {
-            proof_text: proofText.trim(),
-            proof_media_url: (proofMediaUrl || "").trim() || null,
-          },
-        });
+        openProofComposer(task);
+        return;
       }
 
-      const response = await onCompleteTask(taskId);
-      setMessage(response.detail);
-      
-      // Play success sound and vibrate
-      try {
-        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        const oscillator = audioContext.createOscillator();
-        const gainNode = audioContext.createGain();
-        
-        oscillator.connect(gainNode);
-        gainNode.connect(audioContext.destination);
-        
-        oscillator.frequency.value = 800;
-        oscillator.type = 'sine';
-        
-        gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
-        
-        oscillator.start(audioContext.currentTime);
-        oscillator.stop(audioContext.currentTime + 0.1);
-      } catch (err) {
-        // Ignore audio errors on unsupported browsers
-      }
-      
-      // Vibrate pattern: 100ms, 50ms pause, 100ms
-      if (navigator.vibrate) {
-        navigator.vibrate([100, 50, 100]);
-      }
-      
-      if (response?.task?.approved) {
-        setShowConfetti(true);
-        window.setTimeout(() => setShowConfetti(false), 1800);
-      }
+      await executeTaskCompletion(taskId);
     } catch (completeError) {
       setError(getErrorMessage(completeError, DASHBOARD_MESSAGES.completeTaskError));
     } finally {
@@ -322,6 +405,77 @@ function Dashboard({
       </div>
       <ConfettiReward show={showConfetti} />
       <div className="relative z-10 mx-auto flex max-w-6xl flex-col gap-6">
+        {proofDraft.taskId ? (
+          <div className="fixed inset-0 z-30 flex items-center justify-center bg-slate-950/80 px-4 py-6 backdrop-blur-sm">
+            <div className="w-full max-w-xl rounded-3xl border border-cyan-300/60 bg-slate-900 p-5 shadow-2xl">
+              <h2 className="text-xl font-black text-cyan-100">Dukaz splneni ukolu</h2>
+              <p className="mt-1 text-sm text-slate-300">Mise: {proofDraft.title}</p>
+
+              <label className="mt-4 block text-xs font-semibold uppercase tracking-[0.2em] text-cyan-200">
+                Co jsi splnil/a
+                <textarea
+                  value={proofDraft.text}
+                  onChange={(event) =>
+                    setProofDraft((current) => ({ ...current, text: event.target.value }))
+                  }
+                  placeholder="Napis kratce, co jsi dnes udelal/a..."
+                  className="mt-2 min-h-24 w-full rounded-2xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none transition focus:border-cyan-400"
+                />
+              </label>
+
+              <input
+                ref={proofFileInputRef}
+                type="file"
+                accept="image/*"
+                capture="environment"
+                className="hidden"
+                onChange={handleProofFileChange}
+              />
+
+              <div className="mt-4 flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={handlePickProofPhoto}
+                  className="rounded-2xl border border-emerald-400/50 bg-emerald-500/20 px-4 py-2 text-sm font-semibold text-emerald-100 transition hover:bg-emerald-500/30"
+                >
+                  Otevrit fotak a vyfotit dukaz
+                </button>
+              </div>
+
+              {proofDraft.mediaDataUrl ? (
+                <div className="mt-4 rounded-2xl border border-slate-700 bg-slate-950/70 p-3">
+                  <div className="text-xs font-semibold text-slate-300">
+                    Prilozena fotka: {proofDraft.fileName || "dukaz.jpg"}
+                  </div>
+                  <img
+                    src={proofDraft.mediaDataUrl}
+                    alt="Dukaz splneni"
+                    className="mt-2 max-h-64 w-full rounded-xl object-contain"
+                  />
+                </div>
+              ) : null}
+
+              <div className="mt-5 flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() => submitProofAndComplete(proofDraft.taskId)}
+                  disabled={proofSubmitting}
+                  className="rounded-2xl border border-cyan-400/50 bg-cyan-500/20 px-4 py-2 text-sm font-semibold text-cyan-100 transition hover:bg-cyan-500/30 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {proofSubmitting ? "Odesilam dukaz..." : "Odeslat dukaz a dokoncit ukol"}
+                </button>
+                <button
+                  type="button"
+                  onClick={closeProofComposer}
+                  disabled={proofSubmitting}
+                  className="rounded-2xl border border-slate-600 bg-slate-800 px-4 py-2 text-sm font-semibold text-slate-200 transition hover:border-slate-400 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  Zrusit
+                </button>
+              </div>
+            </div>
+          </div>
+        ) : null}
         <section className="brawl-panel overflow-hidden bg-gradient-to-br from-blue-700/90 via-indigo-700/90 to-purple-800/90 p-6 backdrop-blur -skew-x-1" style={{ clipPath: "polygon(0 0, 100% 2%, 98% 100%, 0 98%)" }}>
           <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_240px] lg:items-end">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">

@@ -39,16 +39,20 @@ function FullScreenMessage({ title, detail, tone = "neutral" }) {
 
 function LoginScreen({
   onLogin,
+  onUseRememberedAccount,
   onDeleteProfile = () => {},
+  onClearProfiles = () => {},
   onRenameProfile = () => {},
   onTogglePinnedProfile = () => {},
   onUseTelegram,
+  onCancel,
   hasTelegramAccount,
   detail = "",
   savedProfiles = [],
 }) {
   const [loginId, setLoginId] = useState("");
   const [error, setError] = useState("");
+  const [notice, setNotice] = useState("");
 
   function handleSubmit(event) {
     event.preventDefault();
@@ -90,6 +94,13 @@ function LoginScreen({
     onRenameProfile(profile.id, nextLabel);
   }
 
+  function handleClearProfiles() {
+    onClearProfiles();
+    setLoginId("");
+    setError("");
+    setNotice("Ulozene profily byly vycisteny. Prihlas se znovu a zaloz rodinu.");
+  }
+
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top,#bae6fd,transparent_30%),linear-gradient(180deg,#f8fafc_0%,#fef3c7_55%,#fde68a_100%)] px-4 py-6">
       <div className="mx-auto max-w-2xl rounded-[32px] border border-slate-200 bg-white/90 p-6 shadow-2xl backdrop-blur">
@@ -107,6 +118,11 @@ function LoginScreen({
         {error ? (
           <div className="mt-4 rounded-2xl border border-rose-300 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-900">
             {error}
+          </div>
+        ) : null}
+        {notice ? (
+          <div className="mt-4 rounded-2xl border border-emerald-300 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-900">
+            {notice}
           </div>
         ) : null}
 
@@ -133,6 +149,9 @@ function LoginScreen({
             <div className="text-xs font-bold uppercase tracking-[0.25em] text-slate-500">
               Ulozene profily
             </div>
+            <div className="mt-1 text-[11px] text-slate-500">
+              Ucty, ktere lze obnovit jednim klikem.
+            </div>
             <div className="mt-3 space-y-2">
               {savedProfiles.map((profile) => (
                 <div
@@ -141,7 +160,7 @@ function LoginScreen({
                 >
                   <button
                     type="button"
-                    onClick={() => onLogin(profile.id)}
+                    onClick={() => onUseRememberedAccount(profile.id)}
                     className="flex min-w-0 flex-1 flex-col text-left"
                   >
                     <span className="truncate text-sm font-bold text-slate-950">
@@ -153,7 +172,7 @@ function LoginScreen({
                       {profile.role ? ` · ${profile.role === "parent" ? "rodic" : "dite"}` : ""}
                     </span>
                     <span className="mt-1 text-[11px] text-slate-400">
-                      {formatLastUsed(profile.lastUsedAt)}
+                      {formatLastUsed(profile.lastUsedAt)}{profile.token ? " · pripraveno k obnove" : ""}
                     </span>
                   </button>
                   <button
@@ -183,6 +202,13 @@ function LoginScreen({
                 </div>
               ))}
             </div>
+            <button
+              type="button"
+              onClick={handleClearProfiles}
+              className="mt-3 w-full rounded-2xl border border-rose-300 bg-rose-50 px-4 py-3 text-sm font-bold text-rose-800 transition hover:bg-rose-100"
+            >
+              Vycistit vsechny ulozene profily
+            </button>
           </div>
         ) : null}
 
@@ -193,6 +219,16 @@ function LoginScreen({
             className="mt-4 w-full rounded-2xl border border-cyan-300 bg-cyan-50 px-4 py-3 font-bold text-cyan-950 transition hover:bg-cyan-100"
           >
             Pokracovat jako aktualni Telegram ucet
+          </button>
+        ) : null}
+
+        {onCancel ? (
+          <button
+            type="button"
+            onClick={onCancel}
+            className="mt-3 w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 font-bold text-slate-800 transition hover:bg-slate-50"
+          >
+            Zpet na uvodni obrazovku
           </button>
         ) : null}
       </div>
@@ -211,6 +247,7 @@ function App() {
     telegramReady,
     telegramId,
     telegramInitData,
+    isDemoMode,
     tg,
     error: telegramError,
     logout,
@@ -218,9 +255,13 @@ function App() {
     removeSavedProfile,
     renameSavedProfile,
     togglePinnedProfile,
+    clearSavedProfiles,
     savedProfiles,
     useTelegramAccount,
+    useRememberedAccount,
   } = useUser();
+
+  const hasLiveTelegramAccount = Boolean(!isDemoMode && (telegramInitData || telegramId));
 
   useTelegramTheme(tg);
 
@@ -240,12 +281,44 @@ function App() {
   const [achievements, setAchievements] = useState([]);
   const [seasonProgress, setSeasonProgress] = useState(null);
   const [challenges, setChallenges] = useState([]);
-  const [weeklyStats, setWeeklyStats] = useState(null);
-  const [dailyActivity, setDailyActivity] = useState(null);
   const [engagementSummary, setEngagementSummary] = useState(null);
   const [view, setView] = useState(APP_VIEW_DASHBOARD);
+  const [showProfileLogin, setShowProfileLogin] = useState(false);
   const [dataLoading, setDataLoading] = useState(false);
   const [dataError, setDataError] = useState("");
+
+  function handleSwitchProfileMode() {
+    setShowProfileLogin(true);
+  }
+
+  function handleCloseSwitchProfileMode() {
+    setShowProfileLogin(false);
+  }
+
+  function handleLoginProfile(profileId) {
+    const switched = loginWithDemoId(profileId);
+    if (switched) {
+      setShowProfileLogin(false);
+    }
+  }
+
+  async function handleUseRememberedAccount(profileId) {
+    const switched = await useRememberedAccount(profileId);
+    if (switched) {
+      setShowProfileLogin(false);
+    }
+  }
+
+  function handleUseCurrentTelegramAccount() {
+    const switched = useTelegramAccount();
+    if (switched) {
+      setShowProfileLogin(false);
+    }
+  }
+
+  function handleClearProfiles() {
+    clearSavedProfiles();
+  }
 
   useEffect(() => {
     if (user?.role === ROLE_PARENT) {
@@ -261,8 +334,6 @@ function App() {
       setFamilyStats(null);
       setAchievements([]);
       setSeasonProgress(null);
-      setWeeklyStats(null);
-      setDailyActivity(null);
       setEngagementSummary(null);
       return;
     }
@@ -275,16 +346,9 @@ function App() {
     ];
     const [leaderboardData, familyStatsData, achievementsData, seasonData] = await Promise.all(basePromises);
 
-    let weeklyData = null;
-    let dailyData = null;
     let engagementData = null;
 
     if (user?.role === ROLE_PARENT) {
-      [weeklyData, dailyData] = await Promise.all([
-        api("/game/family-weekly-stats"),
-        api("/game/daily-activity"),
-      ]);
-
       try {
         engagementData = await api("/game/engagement-summary");
       } catch {
@@ -296,8 +360,6 @@ function App() {
     setFamilyStats(familyStatsData);
     setAchievements(achievementsData);
     setSeasonProgress(seasonData);
-    if (weeklyData) setWeeklyStats(weeklyData);
-    if (dailyData) setDailyActivity(dailyData);
     setEngagementSummary(engagementData);
   }
 
@@ -398,16 +460,23 @@ function App() {
     return response;
   }
 
-  if (!hasAuthData) {
+  if (showProfileLogin || !hasAuthData) {
     return (
       <LoginScreen
-        detail={telegramError || APP_MESSAGES.authDetail}
-        onLogin={loginWithDemoId}
+        detail={
+          showProfileLogin
+            ? "Vyber ucet, ktery se ma obnovit z ulozeneho prihlaseni."
+            : telegramError || APP_MESSAGES.authDetail
+        }
+        onLogin={handleLoginProfile}
+        onUseRememberedAccount={handleUseRememberedAccount}
         onDeleteProfile={removeSavedProfile}
+        onClearProfiles={handleClearProfiles}
         onRenameProfile={renameSavedProfile}
         onTogglePinnedProfile={togglePinnedProfile}
-        onUseTelegram={useTelegramAccount}
-        hasTelegramAccount={Boolean(tg?.initData || tg?.initDataUnsafe?.user?.id)}
+        onUseTelegram={handleUseCurrentTelegramAccount}
+        onCancel={showProfileLogin ? handleCloseSwitchProfileMode : undefined}
+        hasTelegramAccount={hasLiveTelegramAccount}
         savedProfiles={savedProfiles}
       />
     );
@@ -434,10 +503,17 @@ function App() {
 
   if (!user) {
     return (
-      <FullScreenMessage
-        title={APP_MESSAGES.missingUserTitle}
+      <LoginScreen
         detail={APP_MESSAGES.missingUserDetail}
-        tone="error"
+        onLogin={handleLoginProfile}
+        onUseRememberedAccount={handleUseRememberedAccount}
+        onDeleteProfile={removeSavedProfile}
+        onClearProfiles={handleClearProfiles}
+        onRenameProfile={renameSavedProfile}
+        onTogglePinnedProfile={togglePinnedProfile}
+        onUseTelegram={handleUseCurrentTelegramAccount}
+        hasTelegramAccount={hasLiveTelegramAccount}
+        savedProfiles={savedProfiles}
       />
     );
   }
@@ -448,7 +524,7 @@ function App() {
         user={user}
         api={api}
         onJoined={handleJoinedFamily}
-        onSwitchAccount={logout}
+        onSwitchAccount={handleSwitchProfileMode}
       />
     );
   }
@@ -497,10 +573,10 @@ function App() {
             </button>
             <button
               type="button"
-              onClick={logout}
+              onClick={handleSwitchProfileMode}
               className="rounded-full border border-slate-900/10 bg-white/90 px-3 py-2 text-xs font-bold text-slate-800 shadow-lg backdrop-blur transition hover:bg-slate-50 sm:px-4 sm:text-sm"
             >
-              Prepnout profil
+              Ulozene ucty
             </button>
           </div>
           {view === APP_VIEW_ADMIN ? (
@@ -508,8 +584,6 @@ function App() {
               user={user}
               tasks={tasks}
               rewards={rewards}
-              weeklyStats={weeklyStats}
-              dailyActivity={dailyActivity}
               engagementSummary={engagementSummary}
               onApproveTask={handleApproveTask}
               onDataChanged={loadAppData}

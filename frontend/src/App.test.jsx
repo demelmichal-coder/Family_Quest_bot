@@ -7,7 +7,9 @@ const apiMock = vi.fn();
 const refreshUserMock = vi.fn();
 const logoutMock = vi.fn();
 const loginWithDemoIdMock = vi.fn();
+const useRememberedAccountMock = vi.fn();
 const removeSavedProfileMock = vi.fn();
+const clearSavedProfilesMock = vi.fn();
 const renameSavedProfileMock = vi.fn();
 const togglePinnedProfileMock = vi.fn();
 const useTelegramAccountMock = vi.fn();
@@ -20,9 +22,13 @@ let useUserState = {
   refreshUser: refreshUserMock,
   hasAuthData: true,
   telegramReady: true,
+  telegramId: "",
+  telegramInitData: "",
   logout: logoutMock,
   loginWithDemoId: loginWithDemoIdMock,
+  useRememberedAccount: useRememberedAccountMock,
   removeSavedProfile: removeSavedProfileMock,
+  clearSavedProfiles: clearSavedProfilesMock,
   renameSavedProfile: renameSavedProfileMock,
   togglePinnedProfile: togglePinnedProfileMock,
   useTelegramAccount: useTelegramAccountMock,
@@ -60,7 +66,9 @@ beforeEach(() => {
   refreshUserMock.mockReset();
   logoutMock.mockReset();
   loginWithDemoIdMock.mockReset();
+  useRememberedAccountMock.mockReset();
   removeSavedProfileMock.mockReset();
+  clearSavedProfilesMock.mockReset();
   renameSavedProfileMock.mockReset();
   togglePinnedProfileMock.mockReset();
   useTelegramAccountMock.mockReset();
@@ -74,9 +82,13 @@ beforeEach(() => {
     refreshUser: refreshUserMock,
     hasAuthData: true,
     telegramReady: true,
+    telegramId: "",
+    telegramInitData: "",
     logout: logoutMock,
     loginWithDemoId: loginWithDemoIdMock,
+    useRememberedAccount: useRememberedAccountMock,
     removeSavedProfile: removeSavedProfileMock,
+    clearSavedProfiles: clearSavedProfilesMock,
     renameSavedProfile: renameSavedProfileMock,
     togglePinnedProfile: togglePinnedProfileMock,
     useTelegramAccount: useTelegramAccountMock,
@@ -113,6 +125,55 @@ test("zobrazi prihlasovaci stranku kdyz chybi overeni", () => {
   expect(screen.getByRole("button", { name: "Prihlasit profil" })).toBeInTheDocument();
 });
 
+test("tlacitko pokracovat jako telegram ucet zavola prepnuti", async () => {
+  const user = userEvent.setup();
+  useTelegramAccountMock.mockReturnValue(true);
+  useUserState = {
+    ...useUserState,
+    hasAuthData: false,
+    isDemoMode: false,
+    telegramReady: true,
+    telegramId: "123456",
+    telegramInitData: "telegram-auth",
+    tg: {
+      initData: "telegram-auth",
+      initDataUnsafe: {
+        user: {
+          id: 123456,
+        },
+      },
+    },
+  };
+
+  render(<App />);
+
+  await user.click(screen.getByRole("button", { name: "Pokracovat jako aktualni Telegram ucet" }));
+
+  expect(useTelegramAccountMock).toHaveBeenCalled();
+});
+
+test("tlacitko pokracovat jako telegram ucet se neskryte nezobrazi v demo modu", () => {
+  useUserState = {
+    ...useUserState,
+    hasAuthData: false,
+    isDemoMode: true,
+    tg: {
+      initData: "",
+      initDataUnsafe: {
+        user: {
+          id: "demo-1",
+        },
+      },
+    },
+  };
+
+  render(<App />);
+
+  expect(
+    screen.queryByRole("button", { name: "Pokracovat jako aktualni Telegram ucet" })
+  ).not.toBeInTheDocument();
+});
+
 test("nabidne ulozene profily pro rychly navrat do rodiny", () => {
   useUserState = {
     ...useUserState,
@@ -124,6 +185,7 @@ test("nabidne ulozene profily pro rychly navrat do rodiny", () => {
         familyName: "Demelovi",
         familyId: 12,
         role: "parent",
+        token: "jwt-token-1",
       },
     ],
   };
@@ -132,6 +194,54 @@ test("nabidne ulozene profily pro rychly navrat do rodiny", () => {
 
   expect(screen.getByText("Ulozene profily")).toBeInTheDocument();
   expect(screen.getByRole("button", { name: /Mamka.*Demelovi/i })).toBeInTheDocument();
+});
+
+test("obnovi ulozeny ucet jednim klikem", async () => {
+  const user = userEvent.setup();
+  useUserState = {
+    ...useUserState,
+    hasAuthData: false,
+    savedProfiles: [
+      {
+        id: "player-1",
+        label: "Mamka",
+        familyName: "Demelovi",
+        familyId: 12,
+        role: "parent",
+        token: "jwt-token-1",
+      },
+    ],
+  };
+
+  render(<App />);
+
+  await user.click(screen.getByRole("button", { name: /Mamka.*Demelovi/i }));
+
+  expect(useRememberedAccountMock).toHaveBeenCalledWith("player-1");
+});
+
+test("klik na ulozeny profil bez tokenu take funguje", async () => {
+  const user = userEvent.setup();
+  useUserState = {
+    ...useUserState,
+    hasAuthData: false,
+    savedProfiles: [
+      {
+        id: "player-2",
+        label: "Tata",
+        familyName: "Demelovi",
+        familyId: 12,
+        role: "parent",
+        token: "",
+      },
+    ],
+  };
+
+  render(<App />);
+
+  await user.click(screen.getByRole("button", { name: /Tata.*Demelovi/i }));
+
+  expect(useRememberedAccountMock).toHaveBeenCalledWith("player-2");
 });
 
 test("umozni smazat ulozeny profil z prihlaseni", async () => {
@@ -156,6 +266,32 @@ test("umozni smazat ulozeny profil z prihlaseni", async () => {
 
   expect(window.confirm).toHaveBeenCalled();
   expect(removeSavedProfileMock).toHaveBeenCalledWith("player-1");
+});
+
+test("umozni vycistit vsechny ulozene profily", async () => {
+  const user = userEvent.setup();
+  useUserState = {
+    ...useUserState,
+    hasAuthData: false,
+    savedProfiles: [
+      {
+        id: "player-1",
+        label: "Mamka",
+        familyName: "Demelovi",
+        familyId: 12,
+        role: "parent",
+      },
+    ],
+  };
+
+  render(<App />);
+
+  await user.click(screen.getByRole("button", { name: "Vycistit vsechny ulozene profily" }));
+
+  expect(clearSavedProfilesMock).toHaveBeenCalled();
+  expect(
+    screen.getByText("Ulozene profily byly vycisteny. Prihlas se znovu a zaloz rodinu.")
+  ).toBeInTheDocument();
 });
 
 test("umozni prejmenovat ulozeny profil", async () => {

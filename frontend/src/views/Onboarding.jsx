@@ -18,12 +18,13 @@ function Onboarding({ user, api, onJoined, onSwitchAccount }) {
     setError("");
 
     try {
-      await api("/families/create", {
+      await api("/family/create", {
         method: "POST",
         body: {
-          name: familyName.trim(),
-          username: username.trim(),
+          family_name: familyName.trim(),
+          user_name: username.trim(),
         },
+        includeTelegramHeaders: false,
       });
       await onJoined();
     } catch (joinError) {
@@ -39,13 +40,14 @@ function Onboarding({ user, api, onJoined, onSwitchAccount }) {
     setError("");
 
     try {
-      await api("/families/join", {
+      await api("/family/join", {
         method: "POST",
         body: {
-          invite_code: inviteCode.trim().toUpperCase(),
+          family_code: inviteCode.trim().toUpperCase(),
           role,
-          username: username.trim(),
+          user_name: username.trim(),
         },
+        includeTelegramHeaders: false,
       });
       await onJoined();
     } catch (joinError) {

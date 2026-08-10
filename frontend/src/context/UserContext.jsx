@@ -335,15 +335,17 @@ export function UserProvider({ children }) {
           return;
         }
 
-        try {
-          await loginWithTelegramSession();
-        } catch (authError) {
-          if (active) {
-            setUser(null);
-            setError(getErrorMessage(authError, USER_MESSAGES.loadUserError));
-            setLoading(false);
+        if (!isDemoMode && telegramInitData) {
+          try {
+            await loginWithTelegramSession();
+          } catch (authError) {
+            if (active) {
+              setUser(null);
+              setError(getErrorMessage(authError, USER_MESSAGES.loadUserError));
+              setLoading(false);
+            }
+            return;
           }
-          return;
         }
       }
 
