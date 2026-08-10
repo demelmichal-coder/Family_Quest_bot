@@ -2,6 +2,8 @@ import { useCallback } from "react";
 import { API_MESSAGES } from "../constants/messages";
 import { getErrorMessage } from "../utils/errors";
 
+const SESSION_TOKEN_KEY = "fq_jwt_token";
+
 function normalizeApiBaseUrl(rawValue) {
   const fallbackUrl = "/api";
   const value = rawValue?.toString().trim();
@@ -54,7 +56,15 @@ function normalizeApiError(payload, fallbackStatus) {
 
 export function useApi(telegramId, telegramInitData) {
   const callApi = useCallback(
-    async (endpoint, { method = "GET", body, params } = {}) => {
+    async (
+      endpoint,
+      {
+        method = "GET",
+        body,
+        params,
+        includeTelegramHeaders = true,
+      } = {}
+    ) => {
       let url = API_URL + endpoint;
       if (params) {
         const query = new URLSearchParams(params).toString();
@@ -65,11 +75,18 @@ export function useApi(telegramId, telegramInitData) {
         "Content-Type": "application/json",
       };
 
-      if (telegramInitData) {
+      const sessionToken =
+        typeof window !== "undefined"
+          ? window.localStorage.getItem(SESSION_TOKEN_KEY)?.trim()
+          : "";
+
+      if (sessionToken) {
+        headers.Authorization = `Bearer ${sessionToken}`;
+      } else if (includeTelegramHeaders && telegramInitData) {
         headers["X-Telegram-Init-Data"] = telegramInitData;
       }
 
-      if (telegramId) {
+      if (includeTelegramHeaders && telegramId && !sessionToken) {
         headers["X-Telegram-Id"] = telegramId;
       }
 
