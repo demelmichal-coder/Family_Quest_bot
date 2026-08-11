@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { ADMIN_MESSAGES, AI_REWRITE_STYLES } from "../constants/messages";
 import { ROLE_CHILD } from "../constants/roles";
 import { useUser } from "../context/UserContext";
@@ -101,6 +101,7 @@ function Admin({
   onDataChanged,
 }) {
   const { api } = useUser();
+  const loadUsersRequestIdRef = useRef(0);
   const [users, setUsers] = useState([]);
   const [family, setFamily] = useState(null);
   const [taskForm, setTaskForm] = useState(initialTaskForm);
@@ -194,6 +195,7 @@ function Admin({
   }
 
   async function loadUsers() {
+    const requestId = ++loadUsersRequestIdRef.current;
     setLoading(true);
     setError("");
 
@@ -203,6 +205,10 @@ function Admin({
         api("/families/me"),
         api("/challenges/all"),
       ]);
+      if (requestId !== loadUsersRequestIdRef.current) {
+        // Novejsi pozadavek (napr. rychle prepnuti profilu) uz mezitim prevzal prioritu.
+        return;
+      }
       setUsers(userList);
       setFamily(familyData);
       setChallenges(challengeList || []);
@@ -222,9 +228,13 @@ function Admin({
         return firstPlayer ? { ...current, user_id: String(firstPlayer.id) } : current;
       });
     } catch (loadError) {
-      setError(getErrorMessage(loadError, ADMIN_MESSAGES.loadError));
+      if (requestId === loadUsersRequestIdRef.current) {
+        setError(getErrorMessage(loadError, ADMIN_MESSAGES.loadError));
+      }
     } finally {
-      setLoading(false);
+      if (requestId === loadUsersRequestIdRef.current) {
+        setLoading(false);
+      }
     }
   }
 
@@ -593,6 +603,11 @@ function Admin({
   }
 
   async function handleDeleteChallenge(challengeId) {
+    const challenge = challenges.find((item) => item.id === challengeId);
+    const challengeName = challenge?.title || "tuto vyzvu";
+    if (!window.confirm(`Opravdu smazat vyzvu "${challengeName}"?`)) {
+      return;
+    }
     setDeletingChallengeId(challengeId);
     setError("");
     setMessage("");
@@ -676,6 +691,7 @@ function Admin({
     try {
       const response = await rewriteTask(description, rewriteStyle);
       if (!response) {
+        setError(ADMIN_MESSAGES.rewriteTaskError);
         return;
       }
 
@@ -729,6 +745,7 @@ function Admin({
     try {
       const response = await rewriteReward(description, rewriteStyle);
       if (!response) {
+        setError(ADMIN_MESSAGES.rewriteRewardError);
         return;
       }
 
@@ -792,6 +809,11 @@ function Admin({
   }
 
   async function handleDeleteTask(taskId) {
+    const task = tasks.find((item) => item.id === taskId);
+    const taskName = task?.title || "tento ukol";
+    if (!window.confirm(`Opravdu smazat ukol "${taskName}"?`)) {
+      return;
+    }
     setBusyTaskId(taskId);
     setError("");
     setMessage("");
@@ -809,6 +831,11 @@ function Admin({
   }
 
   async function handleDeleteReward(rewardId) {
+    const reward = rewards.find((item) => item.id === rewardId);
+    const rewardName = reward?.name || "tuto odmenu";
+    if (!window.confirm(`Opravdu smazat odmenu "${rewardName}"?`)) {
+      return;
+    }
     setBusyRewardId(rewardId);
     setError("");
     setMessage("");
@@ -881,6 +908,11 @@ function Admin({
   }
 
   async function handleDeleteMember(memberId) {
+    const member = users.find((item) => item.id === memberId);
+    const memberName = member?.username || "tohoto clena";
+    if (!window.confirm(`Opravdu odebrat "${memberName}" z rodiny? Smazou se tim vsechna jeho data (XP, zlato, historie ukolu) a jde to vratit jen znovupripojenim.`)) {
+      return;
+    }
     setBusyMemberId(memberId);
     setError("");
     setMessage("");

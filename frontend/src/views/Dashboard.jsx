@@ -93,13 +93,6 @@ function getAvatarRarity(avatarValue) {
   return "common";
 }
 
-function getRankDecoration(rank) {
-  if (rank === 1) return "🏆";
-  if (rank === 2) return "🥈";
-  if (rank === 3) return "🥉";
-  return "🎯";
-}
-
 function StatCard({ label, value, tone = "yellow" }) {
   const tones = {
     yellow: "border-yellow-400/85 bg-yellow-900/70 text-yellow-50 shadow-lg shadow-yellow-500/40 -skew-x-2",
@@ -134,7 +127,6 @@ function Dashboard({
   tasks,
   rewards,
   purchases,
-  leaderboard = [],
   familyStats = null,
   achievements = [],
   seasonProgress = null,
@@ -180,7 +172,6 @@ function Dashboard({
     [tasks]
   );
   const completedTasks = useMemo(() => tasks.filter((task) => task.approved), [tasks]);
-  const topPerformers = useMemo(() => leaderboard.slice(0, 3), [leaderboard]);
   const myLeagueKey = getLeagueByXp(user?.xp || 0);
   const myLeague = LEAGUE_STYLES[myLeagueKey];
   const myRarityKey = getAvatarRarity(avatar.image);
@@ -725,27 +716,7 @@ function Dashboard({
             </div>
 
             <aside className="brawl-panel rounded-[32px] border-yellow-300/60 bg-gradient-to-b from-violet-800/90 to-indigo-900/95 p-5 shadow-xl">
-              <div className="brawl-accent-card rounded-2xl border-fuchsia-300/60 bg-fuchsia-900/70 px-4 py-3">
-                <h3 className="brawl-subtitle text-lg font-black text-fuchsia-100">Hall of fame</h3>
-                {topPerformers.length > 0 ? (
-                  <div className="mt-3 space-y-2">
-                    {topPerformers.map((entry) => (
-                      <div key={entry.id} className="flex items-center justify-between rounded-xl border-2 border-slate-900 bg-indigo-950/75 px-3 py-2">
-                        <div className="font-bold text-fuchsia-100">
-                          {getRankDecoration(entry.rank)} #{entry.rank} {entry.is_me ? "Ty" : entry.username}
-                        </div>
-                        <div className="text-xs font-semibold text-fuchsia-200">
-                          {entry.xp} XP | {entry.gold} G
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="mt-2 text-sm text-fuchsia-200/85">Zatim bez poradi.</div>
-                )}
-              </div>
-
-              <div className="brawl-accent-card mt-4 rounded-2xl border-cyan-300/60 bg-cyan-900/70 px-4 py-3">
+              <div className="brawl-accent-card rounded-2xl border-cyan-300/60 bg-cyan-900/70 px-4 py-3">
                 <h3 className="brawl-subtitle text-lg font-black text-cyan-100">Boss tydne</h3>
                 <p className="mt-1 text-xs font-semibold text-cyan-200/90">Nejtezsi mise s nejlepsim lootem.</p>
                 {bossTask ? (
@@ -875,86 +846,7 @@ function Dashboard({
             </aside>
 
             <div className="rounded-[32px] border border-cyan-300 bg-white/85 p-5 shadow-xl">
-              <div className="flex flex-wrap items-center justify-between gap-4">
-                <div>
-                  <h2 className="text-2xl font-black text-cyan-950">Rodinny zebricek</h2>
-                  <p className="mt-1 text-sm text-cyan-900/70">
-                    Poradi podle XP, pri shode rozhoduje zlato.
-                  </p>
-                </div>
-                <div className="rounded-full bg-cyan-950 px-3 py-1 text-sm font-bold text-cyan-100">
-                  {leaderboard.length} hracu
-                </div>
-              </div>
-
-              <div className="mt-5 space-y-3">
-                {leaderboard.length > 0 ? (
-                  leaderboard.map((entry) => (
-                    (() => {
-                      const leagueKey = getLeagueByXp(entry.xp);
-                      const league = LEAGUE_STYLES[leagueKey];
-                      const rarity = AVATAR_RARITY_STYLES[getAvatarRarity(entry.avatar)];
-                      return (
-                    <article
-                      key={entry.id}
-                      className={`flex items-start gap-4 rounded-3xl border px-4 py-4 shadow-sm sm:items-center ${
-                        entry.is_me
-                          ? "border-cyan-500 bg-cyan-50 text-slate-950"
-                          : `${league.rankCard} text-slate-100`
-                      }`}
-                    >
-                      <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-cyan-950 text-lg font-black text-cyan-100">
-                        {getRankDecoration(entry.rank)}
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <div className={`truncate text-lg font-black ${entry.is_me ? "text-slate-950" : "text-slate-100"}`}>
-                            {entry.is_me ? "Ty" : entry.username}
-                          </div>
-                          <span
-                            className={`rounded-full px-2 py-1 text-xs font-bold uppercase tracking-[0.2em] ${
-                              entry.is_me
-                                ? "bg-slate-900/5 text-slate-600"
-                                : "bg-slate-800 text-slate-100"
-                            }`}
-                          >
-                            {entry.role}
-                          </span>
-                          <span
-                            className={`rounded-full border px-2 py-1 text-xs font-bold uppercase tracking-[0.2em] ${league.rankBadge}`}
-                          >
-                            {league.name}
-                          </span>
-                          <span
-                            className={`rounded-full border px-2 py-1 text-xs font-bold uppercase tracking-[0.2em] ${rarity.rankBadge}`}
-                          >
-                            {rarity.name}
-                          </span>
-                        </div>
-                        <div className="mt-2 flex flex-wrap gap-2 text-xs font-semibold">
-                          <span className={`rounded-full px-3 py-1 ${entry.is_me ? "bg-cyan-400/10 text-cyan-800" : "bg-cyan-500/25 text-cyan-100"}`}>
-                            {entry.xp} XP
-                          </span>
-                          <span className={`rounded-full px-3 py-1 ${entry.is_me ? "bg-amber-400/15 text-amber-900" : "bg-amber-500/25 text-amber-100"}`}>
-                            {entry.gold} zlata
-                          </span>
-                          <span className={`rounded-full px-3 py-1 ${entry.is_me ? "bg-emerald-400/15 text-emerald-900" : "bg-emerald-500/25 text-emerald-100"}`}>
-                            {entry.completed_tasks} dokonceno
-                          </span>
-                        </div>
-                      </div>
-                    </article>
-                      );
-                    })()
-                  ))
-                ) : (
-                  <div className="rounded-2xl border border-dashed border-cyan-300 px-4 py-8 text-center text-cyan-900/70">
-                    Zebricek bude dostupny, jakmile bude v rodine vic dat.
-                  </div>
-                )}
-              </div>
-
-              <div className="mt-6 rounded-3xl border border-fuchsia-300 bg-fuchsia-50/70 p-4">
+              <div className="rounded-3xl border border-fuchsia-300 bg-fuchsia-50/70 p-4">
                 <h3 className="text-xl font-black text-fuchsia-950">Achievementy</h3>
                 <p className="mt-1 text-sm text-fuchsia-900/70">
                   Dlouhodobe cile, ktere odemykas plnenim misi.

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 // Telegram Web Apps API integration
 function useTelegramTheme(tg) {
   useEffect(() => {
@@ -276,7 +276,6 @@ function App() {
   const [tasks, setTasks] = useState([]);
   const [rewards, setRewards] = useState([]);
   const [purchases, setPurchases] = useState([]);
-  const [leaderboard, setLeaderboard] = useState([]);
   const [familyStats, setFamilyStats] = useState(null);
   const [achievements, setAchievements] = useState([]);
   const [seasonProgress, setSeasonProgress] = useState(null);
@@ -286,6 +285,8 @@ function App() {
   const [showProfileLogin, setShowProfileLogin] = useState(false);
   const [dataLoading, setDataLoading] = useState(false);
   const [dataError, setDataError] = useState("");
+  const appDataRequestIdRef = useRef(0);
+  const insightsRequestIdRef = useRef(0);
 
   function handleSwitchProfileMode() {
     setShowProfileLogin(true);
@@ -329,22 +330,24 @@ function App() {
   }, [user?.role]);
 
   async function loadInsights() {
+    const requestId = ++insightsRequestIdRef.current;
+
     if (!user?.family_id) {
-      setLeaderboard([]);
-      setFamilyStats(null);
-      setAchievements([]);
-      setSeasonProgress(null);
-      setEngagementSummary(null);
+      if (requestId === insightsRequestIdRef.current) {
+        setFamilyStats(null);
+        setAchievements([]);
+        setSeasonProgress(null);
+        setEngagementSummary(null);
+      }
       return;
     }
 
     const basePromises = [
-      api("/game/leaderboard"),
       api("/game/family-stats"),
       api("/game/achievements"),
       api("/game/season-progress"),
     ];
-    const [leaderboardData, familyStatsData, achievementsData, seasonData] = await Promise.all(basePromises);
+    const [familyStatsData, achievementsData, seasonData] = await Promise.all(basePromises);
 
     let engagementData = null;
 
@@ -356,7 +359,10 @@ function App() {
       }
     }
 
-    setLeaderboard(leaderboardData);
+    if (requestId !== insightsRequestIdRef.current) {
+      // Novejsi pozadavek (napr. rychle prepnuti profilu) uz mezitim prevzal prioritu.
+      return;
+    }
     setFamilyStats(familyStatsData);
     setAchievements(achievementsData);
     setSeasonProgress(seasonData);
@@ -364,16 +370,19 @@ function App() {
   }
 
   async function loadAppData() {
+    const requestId = ++appDataRequestIdRef.current;
+
     if (!user?.family_id) {
-      setTasks([]);
-      setRewards([]);
-      setPurchases([]);
-      setLeaderboard([]);
-      setFamilyStats(null);
-      setAchievements([]);
-      setChallenges([]);
-      setSeasonProgress(null);
-      setDataError("");
+      if (requestId === appDataRequestIdRef.current) {
+        setTasks([]);
+        setRewards([]);
+        setPurchases([]);
+        setFamilyStats(null);
+        setAchievements([]);
+        setChallenges([]);
+        setSeasonProgress(null);
+        setDataError("");
+      }
       return;
     }
 
@@ -392,15 +401,23 @@ function App() {
       } catch {
         challengeList = [];
       }
+      if (requestId !== appDataRequestIdRef.current) {
+        // Novejsi pozadavek (napr. rychle prepnuti profilu) uz mezitim prevzal prioritu.
+        return;
+      }
       setTasks(taskList);
       setRewards(rewardList);
       setPurchases(purchaseHistory);
       setChallenges(challengeList);
       await loadInsights();
     } catch (loadError) {
-      setDataError(getErrorMessage(loadError, APP_MESSAGES.loadError));
+      if (requestId === appDataRequestIdRef.current) {
+        setDataError(getErrorMessage(loadError, APP_MESSAGES.loadError));
+      }
     } finally {
-      setDataLoading(false);
+      if (requestId === appDataRequestIdRef.current) {
+        setDataLoading(false);
+      }
     }
   }
 
@@ -594,7 +611,6 @@ function App() {
               tasks={tasks}
               rewards={rewards}
               purchases={purchases}
-              leaderboard={leaderboard}
               familyStats={familyStats}
               achievements={achievements}
               seasonProgress={seasonProgress}
@@ -611,7 +627,6 @@ function App() {
             tasks={tasks}
             rewards={rewards}
             purchases={purchases}
-            leaderboard={leaderboard}
             familyStats={familyStats}
             achievements={achievements}
             seasonProgress={seasonProgress}
