@@ -335,13 +335,25 @@ export function UserProvider({ children }) {
           return;
         }
 
-        if (!isDemoMode && telegramInitData) {
-          try {
-            await loginWithTelegramSession();
-          } catch (authError) {
+        if (!isDemoMode) {
+          if (telegramInitData) {
+            try {
+              await loginWithTelegramSession();
+            } catch (authError) {
+              if (active) {
+                setUser(null);
+                setError(getErrorMessage(authError, USER_MESSAGES.loadUserError));
+                setLoading(false);
+              }
+              return;
+            }
+          } else {
+            // hasAuthData je true (napr. mame jen initDataUnsafe.user.id), ale chybi
+            // podepsany retezec initData potreby pro bezpecne overeni na backendu.
+            // Bez nej by dalsi volani (refreshUser) tise selhalo bez jasne chyby.
             if (active) {
               setUser(null);
-              setError(getErrorMessage(authError, USER_MESSAGES.loadUserError));
+              setError(USER_MESSAGES.missingAuthData);
               setLoading(false);
             }
             return;

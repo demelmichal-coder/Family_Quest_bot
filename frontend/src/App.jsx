@@ -46,6 +46,7 @@ function LoginScreen({
   onTogglePinnedProfile = () => {},
   onUseTelegram,
   onCancel,
+  onRetry,
   hasTelegramAccount,
   detail = "",
   savedProfiles = [],
@@ -219,6 +220,16 @@ function LoginScreen({
             className="mt-4 w-full rounded-2xl border border-cyan-300 bg-cyan-50 px-4 py-3 font-bold text-cyan-950 transition hover:bg-cyan-100"
           >
             Pokracovat jako aktualni Telegram ucet
+          </button>
+        ) : null}
+
+        {onRetry ? (
+          <button
+            type="button"
+            onClick={onRetry}
+            className="mt-3 w-full rounded-2xl border border-cyan-300 bg-white px-4 py-3 font-bold text-cyan-950 transition hover:bg-cyan-50"
+          >
+            Zkusit znovu
           </button>
         ) : null}
 
@@ -529,6 +540,7 @@ function App() {
         onRenameProfile={renameSavedProfile}
         onTogglePinnedProfile={togglePinnedProfile}
         onUseTelegram={handleUseCurrentTelegramAccount}
+        onRetry={() => window.location.reload()}
         hasTelegramAccount={hasLiveTelegramAccount}
         savedProfiles={savedProfiles}
       />
