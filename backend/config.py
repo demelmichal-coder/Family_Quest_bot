@@ -21,7 +21,7 @@ class Settings:
     JWT_ISSUER = os.getenv("JWT_ISSUER", "familyquest-api")
     TELEGRAM_AUTH_MAX_AGE_SECONDS = int(os.getenv("TELEGRAM_AUTH_MAX_AGE_SECONDS", "86400"))
     ALLOWED_ORIGINS = _parse_csv(os.getenv("ALLOWED_ORIGINS", "http://localhost:5173"))
-    ALLOW_INSECURE_DEMO_AUTH = os.getenv("ALLOW_INSECURE_DEMO_AUTH", "true").lower() == "true"
+    ALLOW_INSECURE_DEMO_AUTH = os.getenv("ALLOW_INSECURE_DEMO_AUTH", "false").lower() == "true"
 
 
 settings = Settings()

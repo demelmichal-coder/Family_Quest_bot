@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
-from api import get_db, require_role
+from api import get_current_user, get_db, require_role
 from ai.groq_client import (
     DEFAULT_REWRITE_STYLE,
     STYLE_PROMPTS,
@@ -36,9 +36,10 @@ def _check_ai_rate_limit(telegram_id: str):
 
 
 @router.post("/comment", summary="Vygeneruj AI komentar k situaci")
-async def ai_comment(data: dict):
+async def ai_comment(data: dict, current_user=Depends(get_current_user)):
     if generate_ai_comment is None:
         raise HTTPException(status_code=501, detail="AI komentare nejsou v tomto nasazeni dostupne.")
+    _check_ai_rate_limit(current_user.telegram_id)
     context = data.get("context", "")
     prompt = data.get("prompt")
     comment = generate_ai_comment(context, prompt)

@@ -6,6 +6,9 @@ from alembic.config import Config
 from fastapi.testclient import TestClient
 
 os.environ["DB_URL"] = "sqlite:///./test_familyquest.db"
+os.environ["ALLOW_INSECURE_DEMO_AUTH"] = "true"
+os.environ.setdefault("TELEGRAM_TOKEN", "test-telegram-token")
+os.environ.setdefault("JWT_SECRET", "test-jwt-secret-very-long")
 
 BACKEND_DIR = Path(__file__).resolve().parents[1]
 

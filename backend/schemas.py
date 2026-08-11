@@ -2,7 +2,7 @@
 from datetime import date, datetime
 from typing import Optional, List
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class ORMModel(BaseModel):
@@ -250,8 +250,8 @@ class FamilyChallengeSeasonalCreate(BaseModel):
 class TaskCreate(BaseModel):
     title: str
     description: str = ""
-    xp: int = 10
-    gold: int = 0
+    xp: int = Field(default=10, ge=0)
+    gold: int = Field(default=0, ge=0)
     is_daily: bool = False
     user_id: Optional[int] = None
     recurrence: Optional[str] = None        # 'daily' | 'weekly' | 'custom'

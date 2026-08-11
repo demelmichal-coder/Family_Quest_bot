@@ -13,6 +13,9 @@ from fastapi.testclient import TestClient
 from sqlalchemy.exc import IntegrityError
 
 os.environ["DB_URL"] = "sqlite:///./test_familyquest.db"
+os.environ["ALLOW_INSECURE_DEMO_AUTH"] = "true"
+os.environ.setdefault("TELEGRAM_TOKEN", "test-telegram-token")
+os.environ.setdefault("JWT_SECRET", "test-jwt-secret-very-long")
 
 BACKEND_DIR = Path(__file__).resolve().parents[1]
 
@@ -785,6 +788,70 @@ def test_player_cannot_buy_reward_without_gold():
 
     assert response.status_code == 400
     assert "zlata" in response.json()["detail"].lower()
+
+
+def test_player_cannot_buy_reward_from_other_family():
+    family_a = seed_family("Family A", "AAA111")
+    family_b = seed_family("Family B", "BBB222")
+    seed_user("player-1", "child", "Kid", gold=999, family_id=family_a)
+    reward_id = seed_reward("Secret reward", 5, family_id=family_b)
+
+    response = client.post(
+        f"/game/buy-reward/{reward_id}",
+        headers={"X-Telegram-Id": "player-1"},
+    )
+
+    assert response.status_code == 403
+    assert "mimo vlastni rodinu" in response.json()["detail"].lower()
+
+
+def test_reset_daily_only_resets_own_family_tasks():
+    family_a = seed_family("Family A", "AAA111")
+    family_b = seed_family("Family B", "BBB222")
+    parent_a_id = seed_user("admin-1", "parent", "Parent A", family_id=family_a)
+    child_a_id = seed_user("player-1", "child", "Kid A", family_id=family_a)
+    child_b_id = seed_user("player-2", "child", "Kid B", family_id=family_b)
+
+    task_a_id = seed_task(child_a_id, "Daily A", is_daily=True, approved=True)
+    task_b_id = seed_task(child_b_id, "Daily B", is_daily=True, approved=True)
+    client.post(f"/game/complete-task/{task_a_id}", headers={"X-Telegram-Id": "player-1"})
+    client.post(f"/game/complete-task/{task_b_id}", headers={"X-Telegram-Id": "player-2"})
+
+    response = client.post("/game/reset-daily", headers={"X-Telegram-Id": "admin-1"})
+
+    assert response.status_code == 200
+    assert "1" in response.json()["detail"]
+
+    task_a = client.get(f"/tasks/{task_a_id}", headers={"X-Telegram-Id": "admin-1"}).json()
+    task_b = client.get(f"/tasks/{task_b_id}", headers={"X-Telegram-Id": "player-2"}).json()
+    assert task_a["is_completed"] is False
+    assert task_b["is_completed"] is True
+
+
+def test_task_create_rejects_negative_xp_and_gold():
+    family_id = seed_family()
+    seed_user("admin-1", "parent", "Parent", family_id=family_id)
+
+    response = client.post(
+        "/tasks/",
+        headers={"X-Telegram-Id": "admin-1"},
+        json={"title": "Sneaky task", "xp": -50, "gold": 0},
+    )
+
+    assert response.status_code == 422
+
+
+def test_reward_create_rejects_negative_cost():
+    family_id = seed_family()
+    seed_user("admin-1", "parent", "Parent", family_id=family_id)
+
+    response = client.post(
+        "/rewards/",
+        headers={"X-Telegram-Id": "admin-1"},
+        json={"name": "Sneaky reward", "cost": -10},
+    )
+
+    assert response.status_code == 422
 
 
 def test_family_leaderboard_returns_ranked_family_members():

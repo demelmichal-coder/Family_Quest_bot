@@ -175,7 +175,13 @@ def reset_daily(
     db: Session = Depends(get_db),
     current_user=Depends(require_role(ROLE_PARENT)),
 ):
-    updated = db.query(Task).filter(Task.is_daily.is_(True)).update(
+    family_member_ids = [
+        u.id for u in db.query(User.id).filter(User.family_id == current_user.family_id).all()
+    ]
+    updated = db.query(Task).filter(
+        Task.is_daily.is_(True),
+        Task.user_id.in_(family_member_ids),
+    ).update(
         {
             Task.is_completed: False,
             Task.approved: False,
@@ -427,6 +433,8 @@ def buy_reward(
     reward = db.query(Reward).filter(Reward.id == reward_id).first()
     if not reward:
         raise HTTPException(status_code=404, detail="Odmena nenalezena.")
+    if reward.family_id != db_user.family_id:
+        raise HTTPException(status_code=403, detail="Nelze koupit odmenu mimo vlastni rodinu.")
     if db_user.gold < reward.cost:
         raise HTTPException(status_code=400, detail="Nedostatek zlata.")
 

@@ -4,7 +4,7 @@ from datetime import date, datetime, timezone
 from zoneinfo import ZoneInfo
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
@@ -41,8 +41,8 @@ def _ensure_task_family_access(task: Task, family_id: int, detail: str) -> None:
 class TaskUpdate(BaseModel):
     title: str | None = None
     description: str | None = None
-    xp: int | None = None
-    gold: int | None = None
+    xp: int | None = Field(default=None, ge=0)
+    gold: int | None = Field(default=None, ge=0)
     user_id: int | None = None
     is_daily: bool | None = None
     is_completed: bool | None = None

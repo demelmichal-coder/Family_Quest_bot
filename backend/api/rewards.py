@@ -1,7 +1,7 @@
 # rewards.py - API endpointy pro odmeny
 
 from fastapi import APIRouter, Depends, HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 from api import get_current_user, get_db, require_role
@@ -27,13 +27,13 @@ def _ensure_reward_family_access(reward: Reward, family_id: int, detail: str) ->
 
 class RewardCreate(BaseModel):
     name: str
-    cost: int = 0
+    cost: int = Field(default=0, ge=0)
     description: str = ""
 
 
 class RewardUpdate(BaseModel):
     name: str | None = None
-    cost: int | None = None
+    cost: int | None = Field(default=None, ge=0)
     description: str | None = None
 
 
