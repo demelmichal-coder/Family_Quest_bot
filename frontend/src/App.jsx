@@ -495,8 +495,7 @@ function App() {
     !user &&
     !userLoading &&
     !hasLiveTelegramAccount &&
-    !isDemoMode &&
-    savedProfiles.length === 0
+    !isDemoMode
   ) {
     return (
       <PinLoginScreen

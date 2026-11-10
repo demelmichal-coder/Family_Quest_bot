@@ -11,20 +11,45 @@ from datetime import UTC, datetime, timedelta
 from typing import Any
 from urllib.parse import parse_qsl
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 from api import _get_or_create_user, get_db
 from config import settings
-from constants import FAMILY_ROLES, ROLE_PARENT
+from constants import ROLE_CHILD, ROLE_PARENT
 from models import Family, User
 from pin_auth import hash_pin, validate_pin_format, verify_pin
 
 PIN_MAX_FAILED_ATTEMPTS = 5
 PIN_LOCKOUT_MINUTES = 15
 GENERIC_PIN_LOGIN_ERROR = "Neplatne prihlasovaci udaje."
+FAMILY_CREATE_LIMIT = 5
+FAMILY_CREATE_WINDOW_SECONDS = 3600
+_family_create_attempts: dict[str, list[float]] = {}
+
+
+def _client_ip(request: Request) -> str:
+    forwarded = request.headers.get("x-forwarded-for", "")
+    if forwarded:
+        return forwarded.split(",")[0].strip()
+    return request.client.host if request.client else "unknown"
+
+
+def _check_family_create_limit(request: Request) -> None:
+    """Jednoducha ochrana proti hromadnemu zakladani rodin z jedne adresy."""
+    ip = _client_ip(request)
+    now = time.time()
+    recent = [t for t in _family_create_attempts.get(ip, []) if now - t < FAMILY_CREATE_WINDOW_SECONDS]
+    if len(recent) >= FAMILY_CREATE_LIMIT:
+        _family_create_attempts[ip] = recent
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail="Prilis mnoho novych rodin z jedne adresy, zkus to pozdeji.",
+        )
+    recent.append(now)
+    _family_create_attempts[ip] = recent
 
 logger = logging.getLogger("secure_auth")
 router = APIRouter(prefix="/api", tags=["secure-auth"])
@@ -84,7 +109,19 @@ class PinRegisterRequest(BaseModel):
     family_code: str = Field(min_length=4, max_length=32)
     name: str = Field(min_length=1, max_length=80)
     pin: str = Field(min_length=4, max_length=6)
-    role: str = Field(default="child")
+    role: str = Field(default="child")  # ignorovano: novy clen je vzdy dite
+
+
+class PinCreateFamilyRequest(BaseModel):
+    family_name: str = Field(min_length=2, max_length=80)
+    name: str = Field(min_length=1, max_length=80)
+    pin: str = Field(min_length=4, max_length=6)
+
+
+class PinCreateFamilyResponse(AuthResponse):
+    family_id: int
+    family_name: str
+    family_code: str
 
 
 class PinLoginRequest(BaseModel):
@@ -336,9 +373,9 @@ def join_family(payload: FamilyJoinRequest, db: Session = Depends(get_db), user:
     if user.family_id:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Uz jsi soucasti rodiny.")
 
-    role = payload.role.strip().lower()
-    if role not in FAMILY_ROLES:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Role musi byt parent nebo child.")
+    # Kod rodiny sam o sobe nesmi nikomu dat rodicovska prava: novy clen je vzdy dite
+    # a rodicem ho muze udelat jen stavajici rodic v administraci.
+    role = ROLE_CHILD
 
     family_code = payload.family_code.strip().upper()
     family = db.query(Family).filter(Family.invite_code == family_code).first()
@@ -406,15 +443,11 @@ def register_with_pin(payload: PinRegisterRequest, db: Session = Depends(get_db)
 
     family = _find_family_by_code(db, payload.family_code)
 
-    role = payload.role.strip().lower()
-    if role not in FAMILY_ROLES:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Role musi byt parent nebo child.")
-
     pepper = _require_pin_pepper()
     user = User(
         telegram_id=f"pwa-{uuid.uuid4()}",
         username=payload.name.strip(),
-        role=role,
+        role=ROLE_CHILD,
         family_id=family.id,
         auth_kind="pwa",
         pin_hash=hash_pin(payload.pin, pepper),
@@ -427,6 +460,52 @@ def register_with_pin(payload: PinRegisterRequest, db: Session = Depends(get_db)
     token, expires_in = _create_session_token(user)
     logger.info("Novy PWA uzivatel %s zalozen v rodine %s.", user.id, family.id)
     return AuthResponse(token=token, expires_in=expires_in, user=_map_user(user))
+
+
+@router.post(
+    "/auth/pin/create-family",
+    response_model=PinCreateFamilyResponse,
+    summary="Zalozeni nove rodiny a rodicovskeho uctu s PINem (bez Telegramu)",
+)
+def create_family_with_pin(payload: PinCreateFamilyRequest, request: Request, db: Session = Depends(get_db)):
+    if not validate_pin_format(payload.pin):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="PIN musi mit 4 az 6 cislic.")
+    family_name = payload.family_name.strip()
+    user_name = payload.name.strip()
+    if len(family_name) < 2 or not user_name:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Vypln nazev rodiny a sve jmeno.")
+
+    pepper = _require_pin_pepper()
+    _check_family_create_limit(request)
+
+    family = Family(name=family_name, invite_code=_ensure_unique_family_code(db))
+    db.add(family)
+    db.flush()
+
+    user = User(
+        telegram_id=f"pwa-{uuid.uuid4()}",
+        username=user_name,
+        role=ROLE_PARENT,
+        family_id=family.id,
+        auth_kind="pwa",
+        pin_hash=hash_pin(payload.pin, pepper),
+        pin_set_at=datetime.now(UTC),
+    )
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+    db.refresh(family)
+
+    token, expires_in = _create_session_token(user)
+    logger.info("Nova rodina %s zalozena pres PWA.", family.id)
+    return PinCreateFamilyResponse(
+        token=token,
+        expires_in=expires_in,
+        user=_map_user(user),
+        family_id=family.id,
+        family_name=family.name,
+        family_code=family.invite_code,
+    )
 
 
 @router.post(
@@ -447,7 +526,11 @@ def login_with_pin(payload: PinLoginRequest, db: Session = Depends(get_db)):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=GENERIC_PIN_LOGIN_ERROR)
 
     now = datetime.now(UTC)
-    if user.pin_locked_until and user.pin_locked_until > now:
+    locked_until = user.pin_locked_until
+    if locked_until and locked_until.tzinfo is None:
+        # SQLite vraci cas bez zony; ukladame vzdy UTC.
+        locked_until = locked_until.replace(tzinfo=UTC)
+    if locked_until and locked_until > now:
         raise HTTPException(
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,
             detail="Ucet je docasne zamceny, zkus to pozdeji.",

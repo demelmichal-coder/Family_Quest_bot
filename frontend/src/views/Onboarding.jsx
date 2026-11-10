@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { ONBOARDING_MESSAGES } from "../constants/messages";
-import { ROLE_CHILD, ROLE_PARENT } from "../constants/roles";
+import { ROLE_CHILD } from "../constants/roles";
 import { getErrorMessage } from "../utils/errors";
 
 function Onboarding({ user, api, onJoined, onSwitchAccount }) {
@@ -8,7 +8,6 @@ function Onboarding({ user, api, onJoined, onSwitchAccount }) {
   const [familyName, setFamilyName] = useState("");
   const [username, setUsername] = useState(user?.username || "");
   const [inviteCode, setInviteCode] = useState("");
-  const [role, setRole] = useState(ROLE_CHILD);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
 
@@ -44,7 +43,7 @@ function Onboarding({ user, api, onJoined, onSwitchAccount }) {
         method: "POST",
         body: {
           family_code: inviteCode.trim().toUpperCase(),
-          role,
+          role: ROLE_CHILD,
           user_name: username.trim(),
         },
         includeTelegramHeaders: false,
@@ -173,17 +172,10 @@ function Onboarding({ user, api, onJoined, onSwitchAccount }) {
                 placeholder="ABC123"
               />
             </label>
-            <label className="block">
-              <span className="mb-2 block text-sm font-semibold text-slate-700">Role</span>
-              <select
-                value={role}
-                onChange={(event) => setRole(event.target.value)}
-                className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-slate-950"
-              >
-                <option value={ROLE_CHILD}>Dite</option>
-                <option value={ROLE_PARENT}>Rodic</option>
-              </select>
-            </label>
+            <p className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
+              Pripojis se jako dite. Druheho rodice povysi stavajici rodic v administraci
+              (Clenove rodiny).
+            </p>
             <button
               type="submit"
               disabled={busy}

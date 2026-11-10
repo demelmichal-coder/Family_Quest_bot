@@ -1,50 +1,55 @@
-﻿#!/usr/bin/env pwsh
+#!/usr/bin/env pwsh
+# Build + deploy backendu a frontendu na Cloud Run.
+#
+# Tajne hodnoty (TELEGRAM_TOKEN, JWT_SECRET, DB_URL, PIN_PEPPER, VAPID_*) se sem NEZAPISUJI.
+# Jsou ulozene primo na sluzbe family-quest-backend a deploy je zachovava beze zmeny
+# (nepouziva se --set-env-vars, ktere by vsechny promenne prepsalo).
+# Zmena jedne hodnoty:
+#   gcloud run services update family-quest-backend --region europe-west1 --update-env-vars "NAZEV=hodnota"
 Set-StrictMode -Version Latest
+$ErrorActionPreference = "Stop"
 
 $ProjectId = "family-quest-bot-2026"
 $Region = "europe-west1"
-$JwtSecret = "9J5dn84IOUpaZsgGhVTB7NtEFPkC6XYW2lyMf0cv"
-$TelegramToken = "8552899429:AAEULEKoCj-tDRA2t_nWPM-8UjL6idSf_iM"
+$RepoRoot = $PSScriptRoot
 
 gcloud config set project $ProjectId
 
-Write-Host "🔨 Building backend..." -ForegroundColor Cyan
-cd backend
-$image = "gcr.io/$ProjectId/family-quest-backend:latest"
-gcloud builds submit . --tag $image
+Write-Host "Building backend..." -ForegroundColor Cyan
+$backendImage = "gcr.io/$ProjectId/family-quest-backend:latest"
+gcloud builds submit (Join-Path $RepoRoot "backend") --tag $backendImage
 if ($LASTEXITCODE -ne 0) { exit 1 }
 
-Write-Host "`n📤 Deploying backend..." -ForegroundColor Cyan
+Write-Host "Deploying backend..." -ForegroundColor Cyan
 gcloud run deploy family-quest-backend `
-  --image $image `
+  --image $backendImage `
   --platform managed --region $Region --allow-unauthenticated --port 8000 `
-  --set-env-vars="TELEGRAM_TOKEN=$TelegramToken,JWT_SECRET=$JwtSecret,JWT_ISSUER=familyquest-api,ALLOW_INSECURE_DEMO_AUTH=false" `
   --memory 1Gi
+if ($LASTEXITCODE -ne 0) { exit 1 }
 
 $backendUrl = (gcloud run services describe family-quest-backend --region $Region --format="value(status.url)").Trim()
-Write-Host "✅ Backend: $backendUrl" -ForegroundColor Green
+Write-Host "Backend: $backendUrl" -ForegroundColor Green
 
-Write-Host "`n🔨 Building frontend..." -ForegroundColor Cyan
-cd ../frontend
+Write-Host "Building frontend..." -ForegroundColor Cyan
+$frontendDir = Join-Path $RepoRoot "frontend"
+"VITE_API_URL=$backendUrl/api" | Out-File (Join-Path $frontendDir ".env.production") -Encoding utf8
 
-# Update frontend env
-@"
-VITE_API_URL=$backendUrl/api
-"@ | Out-File ".env.production" -Encoding utf8
-
+Push-Location $frontendDir
 npm run build
-if ($LASTEXITCODE -ne 0) { exit 1 }
+$buildExit = $LASTEXITCODE
+Pop-Location
+if ($buildExit -ne 0) { exit 1 }
 
-Write-Host "`n📤 Deploying frontend..." -ForegroundColor Cyan
-cd ..
-gcloud builds submit frontend --tag "gcr.io/$ProjectId/family-quest-frontend:latest"
+Write-Host "Deploying frontend..." -ForegroundColor Cyan
+$frontendImage = "gcr.io/$ProjectId/family-quest-frontend:latest"
+gcloud builds submit $frontendDir --tag $frontendImage
 if ($LASTEXITCODE -ne 0) { exit 1 }
 
 gcloud run deploy family-quest-frontend `
-  --image "gcr.io/$ProjectId/family-quest-frontend:latest" `
+  --image $frontendImage `
   --platform managed --region $Region --allow-unauthenticated --port 80
+if ($LASTEXITCODE -ne 0) { exit 1 }
 
 $frontendUrl = (gcloud run services describe family-quest-frontend --region $Region --format="value(status.url)").Trim()
-Write-Host "✅ Frontend: $frontendUrl" -ForegroundColor Green
-
-Write-Host "`n✨ Deploy finished!" -ForegroundColor Green
+Write-Host "Frontend: $frontendUrl" -ForegroundColor Green
+Write-Host "Deploy finished." -ForegroundColor Green

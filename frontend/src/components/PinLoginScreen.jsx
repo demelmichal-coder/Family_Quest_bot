@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import InstallAppButton from "./InstallAppButton";
 import { useUser } from "../context/UserContext";
 import { getErrorMessage } from "../utils/errors";
 
@@ -6,6 +7,24 @@ const STEP_FAMILY_CODE = "family_code";
 const STEP_MEMBER_PICKER = "member_picker";
 const STEP_PIN_ENTRY = "pin_entry";
 const STEP_REGISTER = "register";
+const STEP_CREATE_FAMILY = "create_family";
+const LAST_FAMILY_CODE_KEY = "fq_last_family_code";
+
+function readLastFamilyCode() {
+  try {
+    return window.localStorage.getItem(LAST_FAMILY_CODE_KEY) || "";
+  } catch {
+    return "";
+  }
+}
+
+function rememberFamilyCode(code) {
+  try {
+    window.localStorage.setItem(LAST_FAMILY_CODE_KEY, code);
+  } catch {
+    // bez localStorage se kod jen nepredvyplni
+  }
+}
 
 function normalizePin(value) {
   return value.replace(/\D/g, "").slice(0, 6);
@@ -14,12 +33,12 @@ function normalizePin(value) {
 export default function PinLoginScreen({ onShowSavedProfiles, hasSavedProfiles }) {
   const { api, loginWithPinToken } = useUser();
   const [step, setStep] = useState(STEP_FAMILY_CODE);
-  const [familyCode, setFamilyCode] = useState("");
+  const [familyCode, setFamilyCode] = useState(readLastFamilyCode);
+  const [newFamilyName, setNewFamilyName] = useState("");
   const [members, setMembers] = useState([]);
   const [selectedMember, setSelectedMember] = useState(null);
   const [pin, setPin] = useState("");
   const [registerName, setRegisterName] = useState("");
-  const [registerRole, setRegisterRole] = useState("child");
   const [registerPin, setRegisterPin] = useState("");
   const [registerPinConfirm, setRegisterPinConfirm] = useState("");
   const [loading, setLoading] = useState(false);
@@ -39,6 +58,7 @@ export default function PinLoginScreen({ onShowSavedProfiles, hasSavedProfiles }
         includeTelegramHeaders: false,
       });
       setFamilyCode(code);
+      rememberFamilyCode(code);
       setMembers(Array.isArray(list) ? list : []);
       setStep(STEP_MEMBER_PICKER);
     } catch (submitError) {
@@ -102,7 +122,6 @@ export default function PinLoginScreen({ onShowSavedProfiles, hasSavedProfiles }
           family_code: familyCode,
           name: registerName.trim(),
           pin: registerPin,
-          role: registerRole,
         },
       });
       await loginWithPinToken(authResponse);
@@ -113,8 +132,53 @@ export default function PinLoginScreen({ onShowSavedProfiles, hasSavedProfiles }
     }
   }
 
+  async function handleCreateFamilySubmit(event) {
+    event.preventDefault();
+    if (newFamilyName.trim().length < 2) {
+      setError("Zadej nazev rodiny.");
+      return;
+    }
+    if (!registerName.trim()) {
+      setError("Zadej sve jmeno.");
+      return;
+    }
+    if (registerPin.length < 4) {
+      setError("PIN musi mit alespon 4 cislice.");
+      return;
+    }
+    if (registerPin !== registerPinConfirm) {
+      setError("PINy se neshoduji.");
+      return;
+    }
+    setLoading(true);
+    setError("");
+    try {
+      const authResponse = await api("/auth/pin/create-family", {
+        method: "POST",
+        includeTelegramHeaders: false,
+        body: {
+          family_name: newFamilyName.trim(),
+          name: registerName.trim(),
+          pin: registerPin,
+        },
+      });
+      if (authResponse?.family_code) {
+        rememberFamilyCode(authResponse.family_code);
+      }
+      await loginWithPinToken(authResponse);
+    } catch (submitError) {
+      setError(getErrorMessage(submitError, "Rodinu se nepodarilo zalozit."));
+    } finally {
+      setLoading(false);
+    }
+  }
+
   function handleBack() {
     setError("");
+    if (step === STEP_CREATE_FAMILY) {
+      setStep(STEP_FAMILY_CODE);
+      return;
+    }
     if (step === STEP_MEMBER_PICKER) {
       setStep(STEP_FAMILY_CODE);
       return;
@@ -131,7 +195,7 @@ export default function PinLoginScreen({ onShowSavedProfiles, hasSavedProfiles }
         <div className="text-sm font-bold uppercase tracking-[0.35em] text-cyan-700">Family Quest</div>
         <h1 className="mt-3 text-3xl font-black text-slate-950">Prihlaseni</h1>
         <p className="mt-3 text-sm text-slate-700">
-          Aplikace bezi mimo Telegram. Zadej kod rodiny a prihlas se jmenem a PINem.
+          Zadej kod rodiny a prihlas se jmenem a PINem. Jeste rodinu nemas? Zaloz novou.
         </p>
 
         {error ? (
@@ -158,6 +222,16 @@ export default function PinLoginScreen({ onShowSavedProfiles, hasSavedProfiles }
               className="w-full rounded-2xl bg-slate-950 px-4 py-3 font-bold text-white transition hover:bg-slate-800 disabled:opacity-60"
             >
               {loading ? "Hledam rodinu..." : "Pokracovat"}
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setError("");
+                setStep(STEP_CREATE_FAMILY);
+              }}
+              className="w-full rounded-2xl border border-cyan-300 bg-cyan-50 px-4 py-3 font-bold text-cyan-950 transition hover:bg-cyan-100"
+            >
+              Zalozit novou rodinu
             </button>
           </form>
         ) : null}
@@ -189,7 +263,7 @@ export default function PinLoginScreen({ onShowSavedProfiles, hasSavedProfiles }
               }}
               className="w-full rounded-2xl border border-cyan-300 bg-cyan-50 px-4 py-3 font-bold text-cyan-950 transition hover:bg-cyan-100"
             >
-              Zalozit novy profil
+              Jsem tu novy - zalozit profil ditete
             </button>
 
             <button
@@ -247,17 +321,9 @@ export default function PinLoginScreen({ onShowSavedProfiles, hasSavedProfiles }
                 placeholder="Napr. Anicka"
               />
             </label>
-            <label className="block">
-              <span className="mb-2 block text-sm font-semibold text-slate-700">Role</span>
-              <select
-                value={registerRole}
-                onChange={(event) => setRegisterRole(event.target.value)}
-                className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-slate-950 shadow-sm outline-none transition focus:border-cyan-400"
-              >
-                <option value="child">Dite</option>
-                <option value="parent">Rodic</option>
-              </select>
-            </label>
+            <p className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
+              Novy profil je vzdy dite. Druheho rodice povysi stavajici rodic v administraci.
+            </p>
             <label className="block">
               <span className="mb-2 block text-sm font-semibold text-slate-700">Novy PIN</span>
               <input
@@ -296,6 +362,71 @@ export default function PinLoginScreen({ onShowSavedProfiles, hasSavedProfiles }
             </button>
           </form>
         ) : null}
+
+        {step === STEP_CREATE_FAMILY ? (
+          <form className="mt-6 space-y-4" onSubmit={handleCreateFamilySubmit}>
+            <p className="rounded-2xl border border-cyan-200 bg-cyan-50 px-4 py-3 text-sm text-cyan-950">
+              Zalozis rodinu a stanes se jejim rodicem. Kod rodiny pro deti najdes potom v
+              administraci.
+            </p>
+            <label className="block">
+              <span className="mb-2 block text-sm font-semibold text-slate-700">Nazev rodiny</span>
+              <input
+                value={newFamilyName}
+                onChange={(event) => setNewFamilyName(event.target.value)}
+                className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-slate-950 shadow-sm outline-none transition focus:border-cyan-400"
+                placeholder="Napr. Demelovi"
+              />
+            </label>
+            <label className="block">
+              <span className="mb-2 block text-sm font-semibold text-slate-700">Tvoje jmeno</span>
+              <input
+                value={registerName}
+                onChange={(event) => setRegisterName(event.target.value)}
+                className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-slate-950 shadow-sm outline-none transition focus:border-cyan-400"
+                placeholder="Napr. Mamka"
+              />
+            </label>
+            <label className="block">
+              <span className="mb-2 block text-sm font-semibold text-slate-700">Novy PIN</span>
+              <input
+                value={registerPin}
+                onChange={(event) => setRegisterPin(normalizePin(event.target.value))}
+                type="password"
+                inputMode="numeric"
+                className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-center text-2xl tracking-[0.5em] text-slate-950 shadow-sm outline-none transition focus:border-cyan-400"
+                placeholder="••••"
+              />
+            </label>
+            <label className="block">
+              <span className="mb-2 block text-sm font-semibold text-slate-700">Potvrd PIN</span>
+              <input
+                value={registerPinConfirm}
+                onChange={(event) => setRegisterPinConfirm(normalizePin(event.target.value))}
+                type="password"
+                inputMode="numeric"
+                className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-center text-2xl tracking-[0.5em] text-slate-950 shadow-sm outline-none transition focus:border-cyan-400"
+                placeholder="••••"
+              />
+            </label>
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full rounded-2xl bg-slate-950 px-4 py-3 font-bold text-white transition hover:bg-slate-800 disabled:opacity-60"
+            >
+              {loading ? "Zakladam rodinu..." : "Zalozit rodinu"}
+            </button>
+            <button
+              type="button"
+              onClick={handleBack}
+              className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 font-bold text-slate-800 transition hover:bg-slate-50"
+            >
+              Zpet
+            </button>
+          </form>
+        ) : null}
+
+        <InstallAppButton className="mt-4" />
 
         {hasSavedProfiles ? (
           <button

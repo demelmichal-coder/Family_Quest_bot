@@ -6,6 +6,12 @@ import App from "./App";
 import { UserProvider } from "./context/UserContext";
 import "./index.css";
 
+window.addEventListener("beforeinstallprompt", (event) => {
+  event.preventDefault();
+  window.__fqInstallPrompt = event;
+  window.dispatchEvent(new Event("fq-install-available"));
+});
+
 if ("serviceWorker" in navigator) {
   registerSW({ immediate: true });
 }

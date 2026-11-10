@@ -221,6 +221,20 @@ export function useTelegram() {
       return undefined;
     }
 
+    // Mimo Telegram (bezny prohlizec / nainstalovana PWA) hlasi Telegram SDK platformu
+    // "unknown" a auth data uz nikdy neprijdou - neni na co cekat.
+    const sdk = window?.Telegram?.WebApp ?? null;
+    if (sdk && (!sdk.platform || sdk.platform === "unknown") && !isForcedLoggedOut()) {
+      setState({
+        tg: sdk,
+        ready: true,
+        hasAuthData: false,
+        isDemoMode: false,
+        savedProfiles: readSavedProfiles(),
+      });
+      return undefined;
+    }
+
     const intervalId = window.setInterval(() => {
       attempts += 1;
 

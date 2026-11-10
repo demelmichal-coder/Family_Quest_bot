@@ -934,6 +934,35 @@ function Admin({
     }
   }
 
+  async function handleToggleMemberRole(memberId) {
+    const member = users.find((item) => item.id === memberId);
+    if (!member) {
+      return;
+    }
+    const memberName = member.username || "tohoto clena";
+    const nextRole = member.role === "parent" ? "child" : "parent";
+    const question =
+      nextRole === "parent"
+        ? `Udelat z "${memberName}" rodice? Ziska plny pristup k administraci rodiny.`
+        : `Zmenit "${memberName}" zpet na dite? Prijde o pristup k administraci.`;
+    if (!window.confirm(question)) {
+      return;
+    }
+    setBusyMemberId(memberId);
+    setError("");
+    setMessage("");
+    try {
+      await api(`/users/${memberId}`, { method: "PUT", body: { role: nextRole } });
+      setMessage(nextRole === "parent" ? `"${memberName}" je ted rodic.` : `"${memberName}" je ted dite.`);
+      await loadUsers();
+      await onDataChanged();
+    } catch (roleError) {
+      setError(getErrorMessage(roleError, "Roli se nepodarilo zmenit."));
+    } finally {
+      setBusyMemberId(null);
+    }
+  }
+
   async function handleDeleteMember(memberId) {
     const member = users.find((item) => item.id === memberId);
     const memberName = member?.username || "tohoto clena";
@@ -1962,7 +1991,7 @@ function Admin({
                           </div>
                         </div>
                       </div>
-                      <div className="flex flex-shrink-0 items-center gap-2">
+                      <div className="flex flex-shrink-0 flex-wrap items-center justify-end gap-2">
                         <button
                           type="button"
                           onClick={() => handleSetMemberPin(member.id)}
@@ -1971,6 +2000,16 @@ function Admin({
                         >
                           {busyMemberId === member.id ? "..." : "Nastavit PIN"}
                         </button>
+                        {member.id !== user?.id ? (
+                          <button
+                            type="button"
+                            onClick={() => handleToggleMemberRole(member.id)}
+                            disabled={busyMemberId === member.id}
+                            className="rounded-2xl border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-sm font-semibold text-amber-100 transition hover:bg-amber-500/20 disabled:cursor-not-allowed disabled:opacity-60"
+                          >
+                            {member.role === "parent" ? "Zmenit na dite" : "Udelat rodicem"}
+                          </button>
+                        ) : null}
                         {member.id !== user?.id ? (
                           <button
                             type="button"

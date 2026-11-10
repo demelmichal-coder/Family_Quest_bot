@@ -5,7 +5,7 @@ from pydantic import BaseModel, Field, model_validator
 from sqlalchemy.orm import Session
 
 from api import get_current_user, get_db, require_role
-from constants import ROLE_PARENT, USER_ROLES
+from constants import FAMILY_ROLES, ROLE_PARENT, USER_ROLES
 from messages import (
     OUTSIDE_FAMILY,
     OWN_PROFILE_ONLY,
@@ -159,6 +159,23 @@ def update_user(
                     status_code=403,
                     detail=OWN_PROFILE_ONLY,
                 )
+
+    new_role = updates.get("role")
+    if new_role is not None and new_role != db_user.role:
+        if new_role not in FAMILY_ROLES:
+            raise HTTPException(status_code=400, detail="Role musi byt parent nebo child.")
+        if db_user.role == ROLE_PARENT:
+            other_parents = (
+                db.query(User)
+                .filter(
+                    User.family_id == db_user.family_id,
+                    User.role == ROLE_PARENT,
+                    User.id != db_user.id,
+                )
+                .count()
+            )
+            if other_parents == 0:
+                raise HTTPException(status_code=400, detail="Rodina musi mit alespon jednoho rodice.")
 
     for key, value in updates.items():
         setattr(db_user, key, value)
