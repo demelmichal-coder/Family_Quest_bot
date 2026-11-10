@@ -125,6 +125,21 @@ test("zobrazi prihlasovaci stranku kdyz chybi overeni", () => {
   expect(screen.getByRole("button", { name: "Prihlasit profil" })).toBeInTheDocument();
 });
 
+test("zobrazi prihlasovaci stranku misto slepe cesty kdyz Telegram posle jen id bez podepsaneho initData", () => {
+  useUserState = {
+    ...useUserState,
+    hasAuthData: true,
+    isDemoMode: false,
+    telegramId: "123456",
+    error: "Telegram neposlal auth data miniaplikaci.",
+  };
+
+  render(<App />);
+
+  expect(screen.getByText("Prihlaseni")).toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "Prihlasit profil" })).toBeInTheDocument();
+});
+
 test("tlacitko pokracovat jako telegram ucet zavola prepnuti", async () => {
   const user = userEvent.setup();
   useTelegramAccountMock.mockReturnValue(true);

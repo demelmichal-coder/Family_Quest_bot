@@ -12,6 +12,7 @@ function useTelegramTheme(tg) {
 }
 import Admin from "./views/Admin";
 import Dashboard from "./views/Dashboard";
+import PinLoginScreen from "./components/PinLoginScreen";
 import { APP_MESSAGES } from "./constants/messages";
 import { APP_VIEW_ADMIN, APP_VIEW_DASHBOARD } from "./constants/ui";
 import Onboarding from "./views/Onboarding";
@@ -488,24 +489,19 @@ function App() {
     return response;
   }
 
-  if (showProfileLogin || !hasAuthData) {
+  if (
+    !showProfileLogin &&
+    !hasAuthData &&
+    !user &&
+    !userLoading &&
+    !hasLiveTelegramAccount &&
+    !isDemoMode &&
+    savedProfiles.length === 0
+  ) {
     return (
-      <LoginScreen
-        detail={
-          showProfileLogin
-            ? "Vyber ucet, ktery se ma obnovit z ulozeneho prihlaseni."
-            : telegramError || APP_MESSAGES.authDetail
-        }
-        onLogin={handleLoginProfile}
-        onUseRememberedAccount={handleUseRememberedAccount}
-        onDeleteProfile={removeSavedProfile}
-        onClearProfiles={handleClearProfiles}
-        onRenameProfile={renameSavedProfile}
-        onTogglePinnedProfile={togglePinnedProfile}
-        onUseTelegram={handleUseCurrentTelegramAccount}
-        onCancel={showProfileLogin ? handleCloseSwitchProfileMode : undefined}
-        hasTelegramAccount={hasLiveTelegramAccount}
-        savedProfiles={savedProfiles}
+      <PinLoginScreen
+        onShowSavedProfiles={() => setShowProfileLogin(true)}
+        hasSavedProfiles={savedProfiles.length > 0}
       />
     );
   }
@@ -519,12 +515,28 @@ function App() {
     );
   }
 
-  if (userError) {
+  // Necháme LoginScreen jako univerzální fallback pro jakýkoli stav "nemáme přihlášeného
+  // uživatele", ne jen když hasAuthData chybí úplně. Telegram totiž občas pošle jen
+  // initDataUnsafe.user.id bez podepsaného initData (hasAuthData=true), auth pak na
+  // backendu selže a bez tohoto fallbacku by uživatel skončil na needcestě bez tlačítek.
+  if (showProfileLogin || !user) {
     return (
-      <FullScreenMessage
-        title={APP_MESSAGES.authTitle}
-        detail={userError}
-        tone="error"
+      <LoginScreen
+        detail={
+          showProfileLogin
+            ? "Vyber ucet, ktery se ma obnovit z ulozeneho prihlaseni."
+            : userError || telegramError || APP_MESSAGES.authDetail
+        }
+        onLogin={handleLoginProfile}
+        onUseRememberedAccount={handleUseRememberedAccount}
+        onDeleteProfile={removeSavedProfile}
+        onClearProfiles={handleClearProfiles}
+        onRenameProfile={renameSavedProfile}
+        onTogglePinnedProfile={togglePinnedProfile}
+        onUseTelegram={handleUseCurrentTelegramAccount}
+        onCancel={showProfileLogin ? handleCloseSwitchProfileMode : undefined}
+        hasTelegramAccount={hasLiveTelegramAccount}
+        savedProfiles={savedProfiles}
       />
     );
   }

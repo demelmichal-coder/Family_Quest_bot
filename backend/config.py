@@ -22,6 +22,10 @@ class Settings:
     TELEGRAM_AUTH_MAX_AGE_SECONDS = int(os.getenv("TELEGRAM_AUTH_MAX_AGE_SECONDS", "86400"))
     ALLOWED_ORIGINS = _parse_csv(os.getenv("ALLOWED_ORIGINS", "http://localhost:5173"))
     ALLOW_INSECURE_DEMO_AUTH = os.getenv("ALLOW_INSECURE_DEMO_AUTH", "false").lower() == "true"
+    PIN_PEPPER = os.getenv("PIN_PEPPER", "")
+    VAPID_PUBLIC_KEY = os.getenv("VAPID_PUBLIC_KEY", "")
+    VAPID_PRIVATE_KEY = os.getenv("VAPID_PRIVATE_KEY", "")
+    VAPID_SUBJECT = os.getenv("VAPID_SUBJECT", "mailto:demel.michal@gmail.com")
 
 
 settings = Settings()

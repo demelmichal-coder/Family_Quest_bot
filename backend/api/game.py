@@ -14,6 +14,7 @@ from constants import ROLE_CHILD, ROLE_PARENT
 from database import SessionLocal
 from models import ChallengeProgress, Family, FamilyChallenge, Reward, RewardPurchase, Task, User
 from notify import send_telegram_message
+from push_notify import send_push_to_user_by_id
 from schemas import (
     AchievementRead,
     BuyRewardResponse,
@@ -34,6 +35,10 @@ from schemas import (
     TaskRead,
 )
 
+def _strip_html(text: str) -> str:
+    return text.replace("<b>", "").replace("</b>", "")
+
+
 router = APIRouter(prefix="/game", tags=["game"])
 APP_TIMEZONE = ZoneInfo("Europe/Prague")
 
@@ -41,16 +46,23 @@ STREAK_BONUSES = {3: 10, 7: 25, 14: 50, 30: 100}
 PARENT_CHAT_ID = os.getenv("PARENT_CHAT_ID", "").strip()
 
 
-def _notify_family_parents(db: Session, family_id: int | None, message: str, background_tasks: BackgroundTasks) -> None:
+def _notify_family_parents(
+    db: Session,
+    family_id: int | None,
+    message: str,
+    background_tasks: BackgroundTasks,
+    push_title: str = "Ceka na schvaleni",
+) -> None:
     if family_id:
-        parent_ids = (
-            db.query(User.telegram_id)
+        parents = (
+            db.query(User.id, User.telegram_id)
             .filter(User.family_id == family_id, User.role == ROLE_PARENT)
             .all()
         )
-        for (telegram_id,) in parent_ids:
+        for parent_id, telegram_id in parents:
             if telegram_id:
                 background_tasks.add_task(asyncio.run, send_telegram_message(telegram_id, message))
+            background_tasks.add_task(send_push_to_user_by_id, parent_id, push_title, _strip_html(message), "/")
         return
     if PARENT_CHAT_ID:
         background_tasks.add_task(asyncio.run, send_telegram_message(PARENT_CHAT_ID, message))
@@ -244,6 +256,9 @@ def approve_task(
         f"Pripsano +{task.xp} XP a +{task.gold} gold."
     )
     background_tasks.add_task(asyncio.run, send_telegram_message(user.telegram_id, child_message))
+    background_tasks.add_task(
+        send_push_to_user_by_id, user.id, "Ukol schvalen!", _strip_html(child_message), "/"
+    )
     return {"detail": detail}
 
 

@@ -4,7 +4,7 @@
     {
       "name": "backend",
       "runtimeExecutable": "powershell",
-      "runtimeArgs": ["-NoExit", "-Command", "$env:JWT_SECRET='dev-secret-key-minimum-32-characters-long-!@#'; $env:JWT_ISSUER='familyquest-api'; $env:TELEGRAM_TOKEN='123456:test-token'; $env:ALLOWED_ORIGINS='http://localhost:5173'; $env:ALLOW_INSECURE_DEMO_AUTH='true'; .venv\\Scripts\\python.exe -m uvicorn backend.main:app --reload --host 127.0.0.1"],
+      "runtimeArgs": ["-NoExit", "-Command", "$env:JWT_SECRET='dev-secret-key-minimum-32-characters-long-!@#'; $env:JWT_ISSUER='familyquest-api'; $env:TELEGRAM_TOKEN='123456:test-token'; $env:ALLOWED_ORIGINS='http://localhost:5173'; $env:ALLOW_INSECURE_DEMO_AUTH='true'; $env:PIN_PEPPER='dev-pin-pepper-change-me'; Set-Location backend; ..\\.venv\\Scripts\\python.exe -m uvicorn main:app --reload --host 127.0.0.1"],
       "port": 8000
     },
     {

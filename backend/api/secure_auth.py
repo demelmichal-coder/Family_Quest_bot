@@ -6,7 +6,8 @@ import logging
 import secrets
 import string
 import time
-from datetime import UTC, datetime
+import uuid
+from datetime import UTC, datetime, timedelta
 from typing import Any
 from urllib.parse import parse_qsl
 
@@ -19,6 +20,11 @@ from api import _get_or_create_user, get_db
 from config import settings
 from constants import FAMILY_ROLES, ROLE_PARENT
 from models import Family, User
+from pin_auth import hash_pin, validate_pin_format, verify_pin
+
+PIN_MAX_FAILED_ATTEMPTS = 5
+PIN_LOCKOUT_MINUTES = 15
+GENERIC_PIN_LOGIN_ERROR = "Neplatne prihlasovaci udaje."
 
 logger = logging.getLogger("secure_auth")
 router = APIRouter(prefix="/api", tags=["secure-auth"])
@@ -67,6 +73,33 @@ class FamilyCreateResponse(FamilyResponse):
 
 class FamilyJoinResponse(FamilyResponse):
     family_name: str
+
+
+class FamilyMemberOption(BaseModel):
+    id: int
+    name: str
+
+
+class PinRegisterRequest(BaseModel):
+    family_code: str = Field(min_length=4, max_length=32)
+    name: str = Field(min_length=1, max_length=80)
+    pin: str = Field(min_length=4, max_length=6)
+    role: str = Field(default="child")
+
+
+class PinLoginRequest(BaseModel):
+    family_code: str = Field(min_length=4, max_length=32)
+    user_id: int
+    pin: str = Field(min_length=4, max_length=6)
+
+
+class PinSetRequest(BaseModel):
+    member_user_id: int
+    pin: str = Field(min_length=4, max_length=6)
+
+
+class PinSetOwnRequest(BaseModel):
+    pin: str = Field(min_length=4, max_length=6)
 
 
 def _base64url_encode(raw: bytes) -> str:
@@ -326,3 +359,170 @@ def join_family(payload: FamilyJoinRequest, db: Session = Depends(get_db), user:
         family_name=family.name,
         family_code=family.invite_code,
     )
+
+
+def _find_family_by_code(db: Session, family_code: str) -> Family:
+    family = db.query(Family).filter(Family.invite_code == family_code.strip().upper()).first()
+    if not family:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Rodina nenalezena.")
+    return family
+
+
+def _require_pin_pepper() -> str:
+    if not settings.PIN_PEPPER:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Na backendu chybi PIN_PEPPER.",
+        )
+    return settings.PIN_PEPPER
+
+
+@router.get(
+    "/auth/pin/family-members",
+    response_model=list[FamilyMemberOption],
+    summary="Seznam clenu rodiny s nastavenym PINem (pro PWA vyber profilu)",
+)
+def list_pin_family_members(family_code: str, db: Session = Depends(get_db)):
+    family = _find_family_by_code(db, family_code)
+    members = (
+        db.query(User)
+        .filter(User.family_id == family.id, User.pin_hash.isnot(None))
+        .all()
+    )
+    return [
+        FamilyMemberOption(id=member.id, name=member.username or f"Uzivatel {member.id}")
+        for member in members
+    ]
+
+
+@router.post(
+    "/auth/pin/register",
+    response_model=AuthResponse,
+    summary="Zalozeni noveho clena rodiny s PINem (PWA, bez Telegramu)",
+)
+def register_with_pin(payload: PinRegisterRequest, db: Session = Depends(get_db)):
+    if not validate_pin_format(payload.pin):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="PIN musi mit 4 az 6 cislic.")
+
+    family = _find_family_by_code(db, payload.family_code)
+
+    role = payload.role.strip().lower()
+    if role not in FAMILY_ROLES:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Role musi byt parent nebo child.")
+
+    pepper = _require_pin_pepper()
+    user = User(
+        telegram_id=f"pwa-{uuid.uuid4()}",
+        username=payload.name.strip(),
+        role=role,
+        family_id=family.id,
+        auth_kind="pwa",
+        pin_hash=hash_pin(payload.pin, pepper),
+        pin_set_at=datetime.now(UTC),
+    )
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+
+    token, expires_in = _create_session_token(user)
+    logger.info("Novy PWA uzivatel %s zalozen v rodine %s.", user.id, family.id)
+    return AuthResponse(token=token, expires_in=expires_in, user=_map_user(user))
+
+
+@router.post(
+    "/auth/pin/login",
+    response_model=AuthResponse,
+    summary="Prihlaseni jmenem a PINem (PWA)",
+)
+def login_with_pin(payload: PinLoginRequest, db: Session = Depends(get_db)):
+    pepper = _require_pin_pepper()
+    family = _find_family_by_code(db, payload.family_code)
+
+    user = (
+        db.query(User)
+        .filter(User.id == payload.user_id, User.family_id == family.id)
+        .first()
+    )
+    if not user or not user.pin_hash:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=GENERIC_PIN_LOGIN_ERROR)
+
+    now = datetime.now(UTC)
+    if user.pin_locked_until and user.pin_locked_until > now:
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail="Ucet je docasne zamceny, zkus to pozdeji.",
+        )
+
+    if not verify_pin(payload.pin, pepper, user.pin_hash):
+        user.pin_failed_attempts = (user.pin_failed_attempts or 0) + 1
+        if user.pin_failed_attempts >= PIN_MAX_FAILED_ATTEMPTS:
+            user.pin_locked_until = now + timedelta(minutes=PIN_LOCKOUT_MINUTES)
+        db.commit()
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=GENERIC_PIN_LOGIN_ERROR)
+
+    user.pin_failed_attempts = 0
+    user.pin_locked_until = None
+    db.commit()
+    db.refresh(user)
+
+    token, expires_in = _create_session_token(user)
+    return AuthResponse(token=token, expires_in=expires_in, user=_map_user(user))
+
+
+@router.post(
+    "/auth/pin/set",
+    response_model=SessionUserRead,
+    summary="Rodic nastavi/resetuje PIN jinemu clenu rodiny",
+)
+def set_member_pin(
+    payload: PinSetRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_session_user),
+):
+    if current_user.role != ROLE_PARENT:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Pouze rodic muze nastavit PIN.")
+    if not validate_pin_format(payload.pin):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="PIN musi mit 4 az 6 cislic.")
+
+    member = (
+        db.query(User)
+        .filter(User.id == payload.member_user_id, User.family_id == current_user.family_id)
+        .first()
+    )
+    if not member:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Clen rodiny nenalezen.")
+
+    pepper = _require_pin_pepper()
+    member.pin_hash = hash_pin(payload.pin, pepper)
+    member.pin_set_at = datetime.now(UTC)
+    member.pin_failed_attempts = 0
+    member.pin_locked_until = None
+    member.auth_kind = "both" if member.auth_kind == "telegram" else member.auth_kind
+    db.commit()
+    db.refresh(member)
+    return _map_user(member)
+
+
+@router.post(
+    "/auth/pin/set-own",
+    response_model=SessionUserRead,
+    summary="Uzivatel si sam nastavi PIN (aby mohl pouzit i PWA)",
+)
+def set_own_pin(
+    payload: PinSetOwnRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_session_user),
+):
+    if not validate_pin_format(payload.pin):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="PIN musi mit 4 az 6 cislic.")
+
+    pepper = _require_pin_pepper()
+    current_user.pin_hash = hash_pin(payload.pin, pepper)
+    current_user.pin_set_at = datetime.now(UTC)
+    current_user.pin_failed_attempts = 0
+    current_user.pin_locked_until = None
+    if current_user.auth_kind == "telegram":
+        current_user.auth_kind = "both"
+    db.commit()
+    db.refresh(current_user)
+    return _map_user(current_user)

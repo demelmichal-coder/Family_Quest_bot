@@ -10,6 +10,7 @@ import { useUser } from "../context/UserContext";
 import Avatar from "../components/Avatar";
 import ConfettiReward from "../components/ConfettiReward";
 import ProgressBar from "../components/ProgressBar";
+import PushSubscribeButton from "../components/PushSubscribeButton";
 import TaskCard from "../components/TaskCard";
 import Shop from "./Shop";
 import { getErrorMessage } from "../utils/errors";
@@ -384,7 +385,7 @@ function Dashboard({
   }
 
   return (
-    <div className="brawl-shell relative min-h-screen overflow-hidden px-4 py-6">
+    <div className="brawl-shell relative min-h-screen overflow-hidden px-4 pb-6 pt-20">
       <div className="pointer-events-none absolute -left-12 top-12 hidden text-6xl blur-3xl opacity-20 md:block">
         ⚡
       </div>
@@ -396,6 +397,7 @@ function Dashboard({
       </div>
       <ConfettiReward show={showConfetti} />
       <div className="relative z-10 mx-auto flex max-w-6xl flex-col gap-6">
+        <PushSubscribeButton className="flex justify-end" />
         {proofDraft.taskId ? (
           <div className="fixed inset-0 z-30 flex items-center justify-center bg-slate-950/80 px-4 py-6 backdrop-blur-sm">
             <div className="w-full max-w-xl rounded-3xl border border-cyan-300/60 bg-slate-900 p-5 shadow-2xl">

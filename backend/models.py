@@ -27,9 +27,16 @@ class User(Base):
     current_streak = Column(Integer, default=0, nullable=False)
     last_active_date = Column(Date, nullable=True)
 
+    pin_hash = Column(String, nullable=True)
+    pin_set_at = Column(DateTime(timezone=True), nullable=True)
+    pin_failed_attempts = Column(Integer, default=0, nullable=False)
+    pin_locked_until = Column(DateTime(timezone=True), nullable=True)
+    auth_kind = Column(String, nullable=False, default="telegram")
+
     family = relationship("Family", back_populates="members")
     tasks = relationship("Task", back_populates="user", cascade="all, delete-orphan")
     purchases = relationship("RewardPurchase", back_populates="user", cascade="all, delete-orphan")
+    push_subscriptions = relationship("PushSubscription", back_populates="user", cascade="all, delete-orphan")
 
 
 class Family(Base):
@@ -128,6 +135,21 @@ class FamilyChallenge(Base):
 
     family = relationship("Family", back_populates="challenges")
     progress_entries = relationship("ChallengeProgress", back_populates="challenge", cascade="all, delete-orphan")
+
+
+class PushSubscription(Base):
+    __tablename__ = "push_subscriptions"
+
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    endpoint = Column(String, unique=True, nullable=False)
+    p256dh = Column(String, nullable=False)
+    auth = Column(String, nullable=False)
+    user_agent = Column(String, nullable=True)
+    created_at = Column(DateTime(timezone=True), default=utc_now)
+    last_used_at = Column(DateTime(timezone=True), nullable=True)
+
+    user = relationship("User", back_populates="push_subscriptions")
 
 
 class ChallengeProgress(Base):

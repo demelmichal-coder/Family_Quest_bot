@@ -16,8 +16,8 @@ async def send_telegram_message(chat_id: str, text: str) -> None:
     if not TELEGRAM_TOKEN or not chat_id:
         return
 
-    # Demo telegram_id nemají reálný chat – přeskočíme
-    if chat_id.startswith("demo-"):
+    # Demo a PWA-only telegram_id nemají reálný Telegram chat – přeskočíme
+    if chat_id.startswith("demo-") or chat_id.startswith("pwa-"):
         return
 
     url = f"{_BASE}{TELEGRAM_TOKEN}/sendMessage"

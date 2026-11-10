@@ -100,6 +100,14 @@ function isForcedLoggedOut() {
   return window.localStorage.getItem(FORCE_LOGIN_STORAGE_KEY) === "1";
 }
 
+export function isRunningInsideTelegram() {
+  if (typeof window === "undefined") {
+    return false;
+  }
+  const webApp = window.Telegram?.WebApp;
+  return Boolean(webApp?.initData || webApp?.initDataUnsafe?.user?.id);
+}
+
 export function useTelegram() {
   const [state, setState] = useState({
     tg: null,
@@ -226,7 +234,7 @@ export function useTelegram() {
         return;
       }
 
-      if (attempts >= 150) {
+      if (attempts >= 30) {
         window.clearInterval(intervalId);
         if (!cancelled) {
           setState({
@@ -234,6 +242,7 @@ export function useTelegram() {
             ready: true,
             hasAuthData: false,
             isDemoMode: false,
+            savedProfiles: readSavedProfiles(),
           });
         }
       }

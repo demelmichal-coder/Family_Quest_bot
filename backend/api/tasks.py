@@ -13,6 +13,7 @@ from constants import ROLE_PARENT
 from messages import TASK_DELETED, TASK_NOT_FOUND
 from models import Task, User
 from notify import send_telegram_message
+from push_notify import send_push_to_user_by_id
 from schemas import MessageResponse, TaskCreate, TaskFeedbackWrite, TaskRead
 
 router = APIRouter(prefix="/tasks", tags=["tasks"])
@@ -139,6 +140,9 @@ def create_task(
                 f"(+{new_task.xp} XP, +{new_task.gold} gold)"
             )
             background_tasks.add_task(send_telegram_message, assignee.telegram_id, msg)
+            background_tasks.add_task(
+                send_push_to_user_by_id, assignee.id, "Nova mise!", new_task.title, "/"
+            )
 
     return new_task
 
@@ -180,6 +184,9 @@ def create_tasks_bulk(
             timed_suffix = " vcetne naplanovanych pripominek." if timed_count else "."
             msg = f"🎯 Mas {len(titles)} novych misi: <b>{preview}</b>{timed_suffix}"
             background_tasks.add_task(send_telegram_message, assignee.telegram_id, msg)
+            background_tasks.add_task(
+                send_push_to_user_by_id, assignee.id, "Nove mise!", preview, "/"
+            )
 
     return created_tasks
 

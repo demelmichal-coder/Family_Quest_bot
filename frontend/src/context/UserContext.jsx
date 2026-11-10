@@ -29,6 +29,7 @@ const defaultContextValue = {
   renameSavedProfile: () => [],
   togglePinnedProfile: () => [],
   useTelegramAccount: () => false,
+  loginWithPinToken: async () => {},
 };
 
 function readRememberedAccounts() {
@@ -252,6 +253,14 @@ export function UserProvider({ children }) {
     return authResponse;
   }
 
+  async function loginWithPinToken(authResponse) {
+    storeSessionToken(authResponse?.token || "");
+    if (authResponse?.user) {
+      rememberAccount(authResponse.user, authResponse?.token || "");
+    }
+    await refreshUser();
+  }
+
   async function verifySessionToken() {
     if (!hasSessionToken()) {
       return false;
@@ -406,6 +415,7 @@ export function UserProvider({ children }) {
         togglePinnedProfile,
         rememberProfile,
         useTelegramAccount,
+        loginWithPinToken,
       }}
     >
       {children}

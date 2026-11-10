@@ -907,6 +907,33 @@ function Admin({
     }
   }
 
+  async function handleSetMemberPin(memberId) {
+    const member = users.find((item) => item.id === memberId);
+    const memberName = member?.username || "tohoto clena";
+    const pin = window.prompt(`Zadej novy PIN (4-6 cislic) pro "${memberName}". Pouzije se pro prihlaseni v prohlizeci/PWA bez Telegramu.`);
+    if (pin === null) {
+      return;
+    }
+    if (!/^\d{4,6}$/.test(pin.trim())) {
+      setError("PIN musi mit 4 az 6 cislic.");
+      return;
+    }
+    setBusyMemberId(memberId);
+    setError("");
+    setMessage("");
+    try {
+      await api("/auth/pin/set", {
+        method: "POST",
+        body: { member_user_id: memberId, pin: pin.trim() },
+      });
+      setMessage(`PIN pro "${memberName}" byl nastaven.`);
+    } catch (pinError) {
+      setError(getErrorMessage(pinError, "PIN se nepodarilo nastavit."));
+    } finally {
+      setBusyMemberId(null);
+    }
+  }
+
   async function handleDeleteMember(memberId) {
     const member = users.find((item) => item.id === memberId);
     const memberName = member?.username || "tohoto clena";
@@ -930,7 +957,7 @@ function Admin({
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 px-4 py-6 text-slate-100">
+    <div className="min-h-screen bg-slate-950 px-4 pb-6 pt-20 text-slate-100">
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-6">
         <section className="rounded-3xl border border-cyan-500/30 bg-gradient-to-br from-slate-900 via-slate-900 to-cyan-950 p-6 shadow-2xl">
           <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
@@ -1935,20 +1962,30 @@ function Admin({
                           </div>
                         </div>
                       </div>
-                      {member.id !== user?.id ? (
+                      <div className="flex flex-shrink-0 items-center gap-2">
                         <button
                           type="button"
-                          onClick={() => handleDeleteMember(member.id)}
+                          onClick={() => handleSetMemberPin(member.id)}
                           disabled={busyMemberId === member.id}
-                          className="rounded-2xl border border-rose-500/40 bg-rose-500/10 px-3 py-2 text-sm font-semibold text-rose-100 transition hover:bg-rose-500/20 disabled:cursor-not-allowed disabled:opacity-60"
+                          className="rounded-2xl border border-cyan-500/40 bg-cyan-500/10 px-3 py-2 text-sm font-semibold text-cyan-100 transition hover:bg-cyan-500/20 disabled:cursor-not-allowed disabled:opacity-60"
                         >
-                          {busyMemberId === member.id ? "Odebírám..." : "Odebrat"}
+                          {busyMemberId === member.id ? "..." : "Nastavit PIN"}
                         </button>
-                      ) : (
-                        <span className="rounded-2xl border border-cyan-500/30 bg-cyan-500/10 px-3 py-2 text-xs font-semibold text-cyan-300">
-                          Ty
-                        </span>
-                      )}
+                        {member.id !== user?.id ? (
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteMember(member.id)}
+                            disabled={busyMemberId === member.id}
+                            className="rounded-2xl border border-rose-500/40 bg-rose-500/10 px-3 py-2 text-sm font-semibold text-rose-100 transition hover:bg-rose-500/20 disabled:cursor-not-allowed disabled:opacity-60"
+                          >
+                            {busyMemberId === member.id ? "Odebírám..." : "Odebrat"}
+                          </button>
+                        ) : (
+                          <span className="rounded-2xl border border-cyan-500/30 bg-cyan-500/10 px-3 py-2 text-xs font-semibold text-cyan-300">
+                            Ty
+                          </span>
+                        )}
+                      </div>
                     </article>
                   ))}
                 </div>
