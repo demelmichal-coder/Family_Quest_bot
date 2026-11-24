@@ -280,7 +280,8 @@ function App() {
   // Example: add a button to close the miniapp if running in Telegram
   const [showClose, setShowClose] = useState(false);
   useEffect(() => {
-    if (tg && typeof tg.close === "function") {
+    // Telegram SDK existuje i v beznem prohlizeci (bez initData) - tam tlacitko nedava smysl.
+    if (tg && typeof tg.close === "function" && tg.initData) {
       setShowClose(true);
     }
   }, [tg]);
@@ -317,7 +318,8 @@ function App() {
 
   async function handleUseRememberedAccount(profileId) {
     const switched = await useRememberedAccount(profileId);
-    if (switched) {
+    if (switched || profileId?.toString().startsWith("pwa-")) {
+      // Webovy profil s proslym prihlasenim -> zpet na PIN prihlaseni.
       setShowProfileLogin(false);
     }
   }
@@ -618,6 +620,15 @@ function App() {
             >
               Ulozene ucty
             </button>
+            {!tg?.initData ? (
+              <button
+                type="button"
+                onClick={logout}
+                className="rounded-full border border-rose-300 bg-rose-50 px-3 py-2 text-xs font-bold text-rose-800 shadow-lg backdrop-blur transition hover:bg-rose-100 sm:px-4 sm:text-sm"
+              >
+                Odhlasit
+              </button>
+            ) : null}
           </div>
           {view === APP_VIEW_ADMIN ? (
             <Admin

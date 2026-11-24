@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 const DEMO_USER_STORAGE_KEY = "familyquest_demo_user_id";
 const FORCE_LOGIN_STORAGE_KEY = "familyquest_force_login";
 const SAVED_PROFILES_STORAGE_KEY = "familyquest_saved_profiles";
+const PWA_ID_PREFIX = "pwa-";
 
 function sortProfiles(profiles) {
   return [...profiles].sort((first, second) => {
@@ -91,6 +92,11 @@ function readDemoTelegramId() {
 
   if (queryId) {
     window.localStorage.setItem(DEMO_USER_STORAGE_KEY, queryId);
+  }
+
+  // Ucty z webu (PIN) se prihlasuji jen tokenem nebo PINem, nikdy pres demo ID.
+  if (demoId.startsWith(PWA_ID_PREFIX)) {
+    return "";
   }
 
   return demoId;
@@ -224,7 +230,7 @@ export function useTelegram() {
     // Mimo Telegram (bezny prohlizec / nainstalovana PWA) hlasi Telegram SDK platformu
     // "unknown" a auth data uz nikdy neprijdou - neni na co cekat.
     const sdk = window?.Telegram?.WebApp ?? null;
-    if (sdk && (!sdk.platform || sdk.platform === "unknown") && !isForcedLoggedOut()) {
+    if (sdk && (!sdk.platform || sdk.platform === "unknown")) {
       setState({
         tg: sdk,
         ready: true,

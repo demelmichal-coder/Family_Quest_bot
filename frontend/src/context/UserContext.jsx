@@ -6,6 +6,7 @@ import { getErrorMessage } from "../utils/errors";
 
 const SESSION_TOKEN_KEY = "fq_jwt_token";
 const ACCOUNT_VAULT_KEY = "familyquest_saved_profiles";
+const FORCE_LOGIN_KEY = "familyquest_force_login";
 
 const defaultContextValue = {
   user: null,
@@ -171,6 +172,7 @@ export function UserProvider({ children }) {
       }
 
       await refreshUser();
+      window.localStorage.removeItem(FORCE_LOGIN_KEY);
       return true;
     } catch {
       clearSessionToken();
@@ -196,6 +198,13 @@ export function UserProvider({ children }) {
       } catch {
         // Telegram auth selhalo – padneme na demo fallback níže.
       }
+    }
+
+    // Webove (PIN) ucty nemaji demo fallback - po vyprseni tokenu je potreba zadat PIN znovu.
+    if (accountId?.toString().startsWith("pwa-")) {
+      clearSessionToken();
+      setUser(null);
+      return false;
     }
 
     // Fallback pro demo mode (žádný Telegram initData není dostupný): přihlásíme přes ID profilu.
@@ -254,6 +263,7 @@ export function UserProvider({ children }) {
   }
 
   async function loginWithPinToken(authResponse) {
+    window.localStorage.removeItem(FORCE_LOGIN_KEY);
     storeSessionToken(authResponse?.token || "");
     if (authResponse?.user) {
       rememberAccount(authResponse.user, authResponse?.token || "");
@@ -324,7 +334,12 @@ export function UserProvider({ children }) {
       const hasValidSession = await verifySessionToken();
 
       if (!hasValidSession) {
-        const rememberedAccount = readRememberedAccounts().find((item) => item.token);
+        // Po vyslovnem odhlaseni se ucet automaticky neobnovuje - jinak by tlacitko
+        // Odhlasit nemelo zadny efekt. Ulozeny ucet si uzivatel muze vybrat rucne.
+        const forcedLogout = window.localStorage.getItem(FORCE_LOGIN_KEY) === "1";
+        const rememberedAccount = forcedLogout
+          ? null
+          : readRememberedAccounts().find((item) => item.token);
         if (rememberedAccount) {
           const restored = await restoreRememberedAccount(rememberedAccount.id);
           if (restored) {
