@@ -12,6 +12,7 @@ from sqlalchemy.orm import Session
 from database import SessionLocal
 from models import FamilyChallenge, Task, User
 from notify import send_telegram_message
+from push_notify import send_push_to_user_by_id
 
 logger = logging.getLogger(__name__)
 APP_TIMEZONE = ZoneInfo(os.getenv("TASK_TIMEZONE", "Europe/Prague"))
@@ -130,11 +131,17 @@ async def send_due_task_reminders(now_utc: datetime | None = None):
             if not _reminder_due(task, now_local):
                 continue
             user = db.query(User).filter(User.id == task.user_id).first()
-            if not user or not user.telegram_id:
+            if not user:
                 continue
-            await send_telegram_message(
-                user.telegram_id,
-                f"⏰ Pripominka: v {task.due_time} mas ukol <b>{task.title}</b>",
+            reminder_text = f"Pripominka: v {task.due_time} mas ukol {task.title}"
+            if user.telegram_id and not user.telegram_id.startswith("pwa-"):
+                await send_telegram_message(
+                    user.telegram_id,
+                    f"⏰ Pripominka: v {task.due_time} mas ukol <b>{task.title}</b>",
+                )
+            # Web Push jde i uzivatelum bez Telegramu (PWA ucty).
+            await asyncio.to_thread(
+                send_push_to_user_by_id, user.id, "Family Quest", reminder_text, "/"
             )
             task.last_reminded_at = current_utc
             sent_any = True
