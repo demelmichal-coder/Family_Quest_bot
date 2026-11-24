@@ -1023,7 +1023,7 @@ function Admin({
               Reset denni ukoly
             </button>
           </div>
-          <div className="mt-6 grid gap-3 md:grid-cols-4">
+          <div className="mt-6 grid grid-cols-2 gap-3 md:grid-cols-4">
             <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
               <div className="text-xs uppercase tracking-[0.2em] text-slate-400">Deti</div>
               <div className="mt-2 text-3xl font-bold text-white">{players.length}</div>

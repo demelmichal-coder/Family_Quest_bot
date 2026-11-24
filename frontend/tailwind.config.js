@@ -1,4 +1,6 @@
 // tailwind.config.js
+const palette = require('tailwindcss/colors');
+
 module.exports = {
   content: [
     "./index.html",
@@ -9,10 +11,10 @@ module.exports = {
       colors: {
         primary: '#6fd3f7', // pastelová modrá
         secondary: '#1e293b', // tmavě modrá
-        green: '#7be495', // pastelová zelená
-        orange: '#ffb86b', // pastelová oranžová
-        pink: '#ffb6b9', // pastelová růžová
-        yellow: '#ffe066', // pastelová žlutá
+        green: { DEFAULT: '#7be495', ...palette.green }, // pastelová zelená
+        orange: { DEFAULT: '#ffb86b', ...palette.orange }, // pastelová oranžová
+        pink: { DEFAULT: '#ffb6b9', ...palette.pink }, // pastelová růžová
+        yellow: { DEFAULT: '#ffe066', ...palette.yellow }, // pastelová žlutá
         graybg: '#f6f8fa', // světlé pozadí
       },
       fontFamily: {

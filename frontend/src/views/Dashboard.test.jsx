@@ -83,8 +83,8 @@ test("zobrazi denni a mimoradne ukoly oddelene", () => {
 
   expect(screen.getByRole("heading", { name: "Dnesni ukoly" })).toBeInTheDocument();
   expect(screen.getByRole("heading", { name: "Mimoradne ukoly" })).toBeInTheDocument();
-  expect(screen.getByText("Level 2")).toBeInTheDocument();
-  expect(screen.getByText("135")).toBeInTheDocument();
+  expect(screen.getByText(/Level 2/)).toBeInTheDocument();
+  expect(screen.getByText("35/100 XP")).toBeInTheDocument();
   expect(screen.getByText("12")).toBeInTheDocument();
   expect(screen.getAllByText("Uklidit pokoj").length).toBeGreaterThan(0);
   expect(screen.getByText("Precist knihu")).toBeInTheDocument();
@@ -131,7 +131,7 @@ test("prepne se do shopu", async () => {
     />
   );
 
-  await appUser.click(screen.getByRole("button", { name: "Obchod" }));
+  await appUser.click(screen.getByRole("button", { name: "Zalozka Obchod" }));
 
   await waitFor(() => {
     expect(screen.getByText("Obchod s odmenami")).toBeInTheDocument();

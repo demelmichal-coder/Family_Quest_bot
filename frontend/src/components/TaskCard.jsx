@@ -32,7 +32,7 @@ function TaskCard({
   const state = approved ? "done" : isCompleted ? "waiting" : "ready";
 
   return (
-    <article className="brawl-panel rounded-[28px] border-amber-300/70 bg-gradient-to-br from-indigo-700 via-blue-700 to-violet-800 p-5 text-slate-100 shadow-xl transition hover:-translate-y-1">
+    <article className="brawl-panel rounded-3xl border-amber-300/70 bg-gradient-to-br from-indigo-700 via-blue-700 to-violet-800 p-4 text-slate-100 shadow-xl">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="flex-1">
           <div className="flex flex-wrap items-center gap-2">
@@ -43,9 +43,7 @@ function TaskCard({
               </span>
             ) : null}
           </div>
-          <p className="mt-2 text-sm text-slate-200/90">
-            {description || "Bez dalsiho popisu."}
-          </p>
+          {description ? <p className="mt-1 text-sm text-slate-200/90">{description}</p> : null}
           {isCompleted && feedback && (
             <div className="mt-3 rounded-xl border-2 border-slate-950 bg-emerald-300 px-3 py-2 text-sm text-emerald-950">
               <span className="font-semibold">💬 Zpetna vazba: </span>
@@ -88,7 +86,7 @@ function TaskCard({
         </div>
       </div>
 
-      <div className="mt-5 flex flex-wrap gap-2 text-sm font-semibold">
+      <div className="mt-3 flex flex-wrap items-center gap-2 text-sm font-semibold">
         <span className="rounded-full border-2 border-slate-950 bg-yellow-300 px-3 py-2 text-yellow-950">
           {xp} XP
         </span>
@@ -97,12 +95,12 @@ function TaskCard({
         </span>
       </div>
 
-      <div className="mt-5">
+      <div className="mt-3">
         <button
           type="button"
           disabled={busy || isCompleted}
           onClick={onComplete}
-          className="w-full rounded-2xl border-2 border-slate-950 bg-gradient-to-b from-yellow-300 to-yellow-500 px-4 py-3 text-sm font-black text-yellow-950 shadow-[0_4px_0_#020617] transition hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-60"
+          className="w-full rounded-2xl border-2 border-slate-950 bg-gradient-to-b from-yellow-300 to-yellow-500 px-4 py-2.5 text-sm font-black text-yellow-950 shadow-[0_4px_0_#020617] transition hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-60"
         >
           {approved
             ? "Uz splneno"

@@ -97,17 +97,17 @@ function getAvatarRarity(avatarValue) {
 
 function StatCard({ label, value, tone = "yellow" }) {
   const tones = {
-    yellow: "border-yellow-400/85 bg-yellow-900/70 text-yellow-50 shadow-lg shadow-yellow-500/40 -skew-x-2",
-    cyan: "border-cyan-400/85 bg-cyan-900/70 text-cyan-50 shadow-lg shadow-cyan-500/40 -skew-x-2",
-    emerald: "border-lime-400/85 bg-lime-900/70 text-lime-50 shadow-lg shadow-lime-500/40 -skew-x-2",
-    amber: "border-orange-400/85 bg-orange-900/70 text-orange-50 shadow-lg shadow-orange-500/40 -skew-x-2",
-    violet: "border-fuchsia-400/85 bg-fuchsia-900/70 text-fuchsia-50 shadow-lg shadow-fuchsia-500/40 -skew-x-2",
+    yellow: "border-yellow-400/85 bg-yellow-900/70 text-yellow-50 shadow-lg shadow-yellow-500/40",
+    cyan: "border-cyan-400/85 bg-cyan-900/70 text-cyan-50 shadow-lg shadow-cyan-500/40",
+    emerald: "border-lime-400/85 bg-lime-900/70 text-lime-50 shadow-lg shadow-lime-500/40",
+    amber: "border-orange-400/85 bg-orange-900/70 text-orange-50 shadow-lg shadow-orange-500/40",
+    violet: "border-fuchsia-400/85 bg-fuchsia-900/70 text-fuchsia-50 shadow-lg shadow-fuchsia-500/40",
   };
 
   return (
-    <div className={`rounded-2xl border p-5 font-black uppercase tracking-wider transform transition-transform hover:scale-105 ${tones[tone]}`}>
-      <div className="text-xs font-bold uppercase tracking-[0.2em] opacity-70">{label}</div>
-      <div className="mt-2 text-4xl font-black">{value}</div>
+    <div className={`rounded-2xl border p-3 font-black uppercase tracking-wider ${tones[tone]}`}>
+      <div className="text-[11px] font-bold uppercase tracking-[0.16em] opacity-70">{label}</div>
+      <div className="mt-1 text-2xl font-black">{value}</div>
     </div>
   );
 }
@@ -386,16 +386,7 @@ function Dashboard({
   }
 
   return (
-    <div className="brawl-shell relative min-h-screen overflow-hidden px-4 pb-6 pt-20">
-      <div className="pointer-events-none absolute -left-12 top-12 hidden text-6xl blur-3xl opacity-20 md:block">
-        ⚡
-      </div>
-      <div className="pointer-events-none absolute right-0 top-64 hidden text-7xl blur-3xl opacity-20 md:block">
-        💥
-      </div>
-      <div className="pointer-events-none absolute bottom-32 left-10 hidden text-6xl blur-3xl opacity-15 md:block">
-        🎮
-      </div>
+    <div className="brawl-shell relative min-h-screen overflow-hidden px-4 pb-28 pt-20">
       <ConfettiReward show={showConfetti} />
       <div className="relative z-10 mx-auto flex max-w-6xl flex-col gap-6">
         <div className="flex flex-wrap items-start justify-end gap-2">
@@ -473,136 +464,70 @@ function Dashboard({
             </div>
           </div>
         ) : null}
-        <section className="brawl-panel overflow-hidden bg-gradient-to-br from-blue-700/90 via-indigo-700/90 to-purple-800/90 p-6 backdrop-blur -skew-x-1" style={{ clipPath: "polygon(0 0, 100% 2%, 98% 100%, 0 98%)" }}>
-          <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_240px] lg:items-end">
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <div className="brawl-subtitle text-sm font-black uppercase tracking-[0.35em] text-cyan-200 animate-pulse">
-                  Family Quest
-                </div>
-                <h1 className="brawl-title mt-3 text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-200 via-yellow-300 to-pink-300">MISSION CONTROL</h1>
-                <p className="mt-3 max-w-2xl text-sm text-slate-200/80">
-                  Jed kazdou misi naplno, sbirej XP, navyšuj streak a odemykej lepsi odmeny.
-                </p>
-                <div className="mt-4 grid gap-2 sm:grid-cols-3">
-                  <QuestChip icon="🎯" label="Aktivni mise" value={`${totalOpenTasks}`} accent="border-cyan-300/80 bg-cyan-900/70 text-cyan-50 shadow-lg shadow-cyan-500/40 -skew-x-1" />
-                  <QuestChip icon="🔥" label="Combo" value={`${user?.current_streak || 0} dnu`} accent="border-orange-300/80 bg-orange-900/70 text-orange-50 shadow-lg shadow-orange-500/40 -skew-x-1" />
-                  <QuestChip icon="🚀" label="Progress" value={`${completionPercent}%`} accent="border-lime-300/80 bg-lime-900/70 text-lime-50 shadow-lg shadow-lime-500/40 -skew-x-1" />
-                </div>
-                <div className="mt-6">
-                  <div className="mb-2 flex items-center justify-between text-sm font-semibold text-cyan-100">
-                    <span>Level {level}</span>
-                    <span>{currentLevelXp}/100 XP</span>
-                  </div>
-                  <ProgressBar value={currentLevelXp} max={100} />
-                </div>
-              </div>
-
-              <div className={`brawl-accent-card rounded-3xl bg-gradient-to-br ${myLeague.heroGlow} p-4`}>
-                <div className="flex items-center justify-between gap-3 -skew-x-1">
-                  <div
-                    className={`rounded-lg border px-3 py-1 text-xs font-black uppercase tracking-wider ${myLeague.heroBadge}`}
-                  >
-                    {myLeague.name}
-                  </div>
-                  <div className="rounded-lg bg-yellow-500/30 border border-yellow-400/60 px-3 py-1 text-xs font-black text-yellow-200 shadow-lg shadow-yellow-500/30">
-                    {user?.gold || 0} Gold
-                  </div>
-                </div>
-                <div className="mt-3 flex flex-col items-center gap-2">
-                  <Avatar name={avatar.name} image={avatar.image} />
-                  <div
-                    className={`rounded-lg border px-3 py-1 text-[11px] font-black uppercase tracking-wider ${myRarity.heroBadge}`}
-                  >
-                    Avatar {myRarity.name}
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  className="mt-3 w-full rounded-lg border-2 border-slate-950 bg-gradient-to-b from-yellow-300 to-yellow-500 px-3 py-2 text-xs font-black text-slate-950 shadow-[0_4px_0_#020617] transition hover:scale-105 -skew-x-1"
-                  onClick={() => setShowAvatarPicker((value) => !value)}
-                >
-                  Zmenit avatar
-                </button>
-                {showAvatarPicker ? (
-                  <div className="mt-2 flex flex-col items-center gap-2 rounded-xl border border-cyan-400/40 bg-slate-900 p-3 shadow-xl">
-                    <div className="flex flex-wrap justify-center gap-2">
-                      {["😀", "😎", "🤖", "🐶", "🐱", "🦊", "🐼", "🦁"].map((emoji) => (
-                        <button
-                          key={emoji}
-                          type="button"
-                          className="text-2xl transition hover:scale-125"
-                          onClick={() => handleEmojiPick(emoji)}
-                        >
-                          {emoji}
-                        </button>
-                      ))}
-                    </div>
-                    <label className="mt-2 block text-xs font-semibold text-cyan-100">
-                      Nebo vlastni obrazek
-                      <input
-                        type="file"
-                        accept="image/*"
-                        className="mt-1 block"
-                        onChange={handleAvatarChange}
-                      />
-                    </label>
-                    <button
-                      type="button"
-                      className="mt-2 text-xs text-cyan-300 underline"
-                      onClick={() => setShowAvatarPicker(false)}
-                    >
-                      Zavrit
-                    </button>
-                  </div>
-                ) : null}
+        <section className="rounded-3xl border border-white/10 bg-slate-950/55 p-4 text-slate-100 shadow-xl backdrop-blur">
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => setShowAvatarPicker((value) => !value)}
+              aria-label="Zmenit avatar"
+              className="shrink-0 rounded-full transition hover:scale-105"
+            >
+              <Avatar name={avatar.name} image={avatar.image} />
+            </button>
+            <div className="min-w-0 flex-1">
+              <div className="truncate text-lg font-black text-white">{avatar.name}</div>
+              <div className="text-xs font-semibold text-cyan-200">
+                {myLeague.name} · Level {level}
               </div>
             </div>
-
-            <div className="grid gap-3">
-              <StatCard label="Celkem XP" value={user?.xp || 0} tone="cyan" />
-              <StatCard label="Zlato" value={user?.gold || 0} tone="amber" />
-              <StatCard label="Hotove mise" value={completedTasks.length} tone="violet" />
-              <div className="rounded-2xl border border-orange-400/40 bg-orange-950/40 p-3 text-center">
-                <div className="text-2xl">🔥</div>
-                <div className="mt-1 text-xl font-black text-orange-300">{user?.current_streak || 0}</div>
-                <div className="text-xs font-semibold text-orange-200/70">combo dni v rade</div>
-                {daysToGoal > 0 ? (
-                  <div className="mt-1 text-[11px] font-semibold text-orange-100/80">
-                    Do dalsiho bonusu chybi {daysToGoal} d
-                  </div>
-                ) : null}
-                {user?.current_streak >= 3 && (
-                  <div className="mt-1 rounded-full bg-orange-400/20 px-2 py-0.5 text-xs font-bold text-orange-200">
-                    {user.current_streak >= 30 ? "+100 XP" : user.current_streak >= 14 ? "+50 XP" : user.current_streak >= 7 ? "+25 XP" : "+10 XP"} bonus!
-                  </div>
-                )}
-              </div>
+            <div className="shrink-0 rounded-xl border border-yellow-400/50 bg-yellow-400/15 px-3 py-1.5 text-sm font-black text-yellow-200">
+              <strong className="text-white">{user?.gold || 0}</strong> zlata
             </div>
           </div>
+          <div className="mt-3">
+            <div className="mb-1 flex items-center justify-between text-xs font-semibold text-slate-200">
+              <span>{currentLevelXp}/100 XP</span>
+              <span><strong className="text-white">{user?.current_streak || 0}</strong> dni v rade</span>
+            </div>
+            <ProgressBar value={currentLevelXp} max={100} />
+            <div className="mt-2 flex items-center gap-4 text-xs font-semibold text-slate-200">
+              <span>Hotove mise <strong className="text-white">{completedTasks.length}</strong></span>
+              <span>Celkem XP <strong className="text-white">{user?.xp || 0}</strong></span>
+            </div>
+            {daysToGoal > 0 ? (
+              <div className="mt-2 text-[11px] font-semibold text-orange-200/80">
+                Do dalsiho bonusu chybi {daysToGoal} d
+              </div>
+            ) : null}
+          </div>
+          {showAvatarPicker ? (
+            <div className="mt-3 flex flex-col items-center gap-2 rounded-2xl border border-cyan-400/40 bg-slate-900 p-3">
+              <div className="flex flex-wrap justify-center gap-2">
+                {["😀", "😎", "🤖", "🐶", "🐱", "🦊", "🐼", "🦁"].map((emoji) => (
+                  <button
+                    key={emoji}
+                    type="button"
+                    className="text-2xl transition hover:scale-125"
+                    onClick={() => handleEmojiPick(emoji)}
+                  >
+                    {emoji}
+                  </button>
+                ))}
+              </div>
+              <label className="mt-2 block text-xs font-semibold text-cyan-100">
+                Nebo vlastni obrazek
+                <input type="file" accept="image/*" className="mt-1 block" onChange={handleAvatarChange} />
+              </label>
+              <button
+                type="button"
+                className="mt-2 text-xs text-cyan-300 underline"
+                onClick={() => setShowAvatarPicker(false)}
+              >
+                Zavrit
+              </button>
+            </div>
+          ) : null}
         </section>
-
-        <div className="-mx-1 flex gap-3 overflow-x-auto px-1 pb-1 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0 sm:pb-0">
-          {DASHBOARD_TABS.map((item) => (
-            <button
-              key={item.id}
-              type="button"
-              onClick={() => setTab(item.id)}
-              className={`brawl-tab shrink-0 rounded-lg px-4 py-3 text-sm font-black uppercase tracking-wider transition -skew-x-1 ${
-                tab === item.id
-                  ? `${item.active} shadow-lg scale-105 ring-2 ring-cyan-300/50`
-                  : `${item.idle} shadow hover:scale-[1.02]`
-              }`}
-            >
-              <span className="flex items-center gap-2">
-                <span aria-hidden="true">
-                  {item.id === DASHBOARD_TAB_MISSIONS ? "🎯" : item.id === DASHBOARD_TAB_SHOP ? "🎁" : "🛡️"}
-                </span>
-                {item.label}
-              </span>
-            </button>
-          ))}
-        </div>
 
         {message ? (
           <div className="rounded-2xl border border-yellow-400/60 bg-yellow-100/80 px-4 py-3 text-sm font-semibold text-yellow-950">
@@ -623,7 +548,7 @@ function Dashboard({
         {tab === DASHBOARD_TAB_MISSIONS ? (
           <section className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
             <div className="space-y-4">
-              <div className="grid gap-4 md:grid-cols-3">
+              <div className="grid grid-cols-3 gap-2 md:gap-4">
                 <StatCard label="Ceka na schvaleni" value={waitingApprovalTasks.length} tone="amber" />
                 <StatCard label="Dnesni ukoly" value={todayDailyTasks.length} tone="emerald" />
                 <StatCard label="Mimoradne ukoly" value={extraTasks.length} tone="cyan" />
@@ -910,7 +835,28 @@ function Dashboard({
           </section>
         ) : null}
       </div>
-    </div>
+      <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-white/10 bg-slate-950/95 px-2 pb-[env(safe-area-inset-bottom)] pt-2 backdrop-blur">
+      <div className="mx-auto grid max-w-3xl grid-cols-3 gap-1">
+        {DASHBOARD_TABS.map((item) => (
+          <button
+            key={item.id}
+            type="button"
+            onClick={() => setTab(item.id)}
+            aria-label={`Zalozka ${item.label}`}
+            aria-current={tab === item.id ? "page" : undefined}
+            className={`flex min-h-[56px] flex-col items-center justify-center rounded-2xl text-xs font-bold transition ${
+              tab === item.id ? "bg-cyan-500/20 text-cyan-100" : "text-slate-400 hover:bg-slate-900"
+            }`}
+          >
+            <span className="text-xl leading-none" aria-hidden="true">
+              {item.id === DASHBOARD_TAB_MISSIONS ? "🎯" : item.id === DASHBOARD_TAB_SHOP ? "🎁" : "🛡️"}
+            </span>
+            <span className="mt-1">{item.label}</span>
+          </button>
+        ))}
+      </div>
+    </nav>
+  </div>
   );
 }
 
