@@ -92,6 +92,14 @@ function getPlanningWeek(dateKey) {
   });
 }
 
+
+const ADMIN_TABS = [
+  { id: "overview", label: "Prehled", icon: "📊" },
+  { id: "tasks", label: "Ukoly", icon: "🎯" },
+  { id: "rewards", label: "Odmeny", icon: "🎁" },
+  { id: "family", label: "Rodina", icon: "🛡️" },
+];
+
 function Admin({
   user,
   tasks,
@@ -102,6 +110,7 @@ function Admin({
 }) {
   const { api } = useUser();
   const loadUsersRequestIdRef = useRef(0);
+  const [adminTab, setAdminTab] = useState("overview");
   const [users, setUsers] = useState([]);
   const [family, setFamily] = useState(null);
   const [taskForm, setTaskForm] = useState(initialTaskForm);
@@ -986,7 +995,7 @@ function Admin({
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 px-4 pb-6 pt-20 text-slate-100">
+    <div className="min-h-screen bg-slate-950 px-4 pb-28 pt-20 text-slate-100">
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-6">
         <section className="rounded-3xl border border-cyan-500/30 bg-gradient-to-br from-slate-900 via-slate-900 to-cyan-950 p-6 shadow-2xl">
           <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
@@ -1068,7 +1077,7 @@ function Admin({
           </div>
         ) : null}
 
-        {engagementSummary ? (
+        {adminTab === "overview" && engagementSummary ? (
           <section className="rounded-3xl border border-cyan-500/30 bg-gradient-to-br from-cyan-950/60 to-slate-900 p-5 shadow-xl">
             <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
               <div>
@@ -1141,6 +1150,7 @@ function Admin({
 
         <div className="grid gap-6 xl:grid-cols-[420px_minmax(0,1fr)]">
           <div className="space-y-6">
+            {adminTab === "family" && (
             <section id="family-planner" className="scroll-mt-6 rounded-3xl border border-fuchsia-500/30 bg-slate-900 p-5 shadow-xl">
               <div className="mb-4">
                 <h2 className="text-xl font-bold text-white">AI denni plan pro celou rodinu</h2>
@@ -1304,7 +1314,9 @@ function Admin({
                 ) : null}
               </div>
             </section>
+              )}
 
+            {adminTab === "tasks" && (
             <section id="task-create" className="scroll-mt-6 rounded-3xl border border-slate-800 bg-slate-900 p-5 shadow-xl">
               <div className="mb-4">
                 <h2 className="text-xl font-bold text-white">{editingTaskId ? "Upravit ukol" : "Novy ukol"}</h2>
@@ -1531,7 +1543,9 @@ function Admin({
                 </div>
               </form>
             </section>
+              )}
 
+            {adminTab === "rewards" && (
             <section id="reward-create" className="scroll-mt-6 rounded-3xl border border-slate-800 bg-slate-900 p-5 shadow-xl">
               <div className="mb-4">
                 <h2 className="text-xl font-bold text-white">Nova odmena</h2>
@@ -1640,9 +1654,11 @@ function Admin({
                 </button>
               </form>
             </section>
+              )}
           </div>
 
           <div className="space-y-6">
+            {adminTab === "tasks" && (
             <section id="task-list" className="scroll-mt-6 rounded-3xl border border-slate-800 bg-slate-900 p-5 shadow-xl">
               <div className="mb-4 flex items-center justify-between gap-4">
                 <div>
@@ -1910,7 +1926,9 @@ function Admin({
                 </div>
               )}
             </section>
+              )}
 
+            {adminTab === "rewards" && (
             <section id="reward-list" className="scroll-mt-6 rounded-3xl border border-slate-800 bg-slate-900 p-5 shadow-xl">
               <div className="mb-4">
                 <h2 className="text-xl font-bold text-white">Odmeny v obchodu</h2>
@@ -1953,7 +1971,9 @@ function Admin({
                 </div>
               )}
             </section>
+              )}
 
+            {adminTab === "family" && (
             <section className="rounded-3xl border border-slate-800 bg-slate-900 p-5 shadow-xl">
               <div className="mb-4">
                 <h2 className="text-xl font-bold text-white">Clenove rodiny</h2>
@@ -2030,8 +2050,10 @@ function Admin({
                 </div>
               )}
             </section>
+              )}
 
             {/* Rodinne vyzvy */}
+            {adminTab === "family" && (
             <section className="rounded-3xl border border-amber-500/30 bg-slate-900 p-5 shadow-xl">
               <h2 className="mb-4 text-lg font-black text-amber-200">🏆 Rodinne vyzvy a sezonni eventy</h2>
 
@@ -2148,9 +2170,29 @@ function Admin({
                 )}
               </div>
             </section>
+              )}
           </div>
         </div>
       </div>
+      <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-800 bg-slate-950/95 px-2 pb-[env(safe-area-inset-bottom)] pt-2 backdrop-blur">
+        <div className="mx-auto grid max-w-3xl grid-cols-4 gap-1">
+          {ADMIN_TABS.map((item) => (
+            <button
+              key={item.id}
+              type="button"
+              onClick={() => setAdminTab(item.id)}
+              aria-label={`Zalozka ${item.label}`}
+              aria-current={adminTab === item.id ? "page" : undefined}
+              className={`flex min-h-[56px] flex-col items-center justify-center rounded-2xl text-xs font-bold transition ${
+                adminTab === item.id ? "bg-cyan-500/20 text-cyan-100" : "text-slate-400 hover:bg-slate-900"
+              }`}
+            >
+              <span className="text-xl leading-none">{item.icon}</span>
+              <span className="mt-1">{item.label}</span>
+            </button>
+          ))}
+        </div>
+      </nav>
     </div>
   );
 }

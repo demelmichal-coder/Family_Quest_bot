@@ -60,8 +60,11 @@ test("zobrazi tasky a rewardy po nacteni", async () => {
       onDataChanged={vi.fn()}
     />
   );
+  const user = userEvent.setup();
+  await user.click(screen.getByRole("button", { name: "Zalozka Ukoly" }));
 
   expect(await screen.findByText("Extra cteni")).toBeInTheDocument();
+  await userEvent.setup().click(screen.getByRole("button", { name: "Zalozka Odmeny" }));
   expect(screen.getByText("Film")).toBeInTheDocument();
 });
 
@@ -78,6 +81,7 @@ test("schvali mimoradny ukol", async () => {
       onDataChanged={vi.fn()}
     />
   );
+  await user.click(screen.getByRole("button", { name: "Zalozka Ukoly" }));
 
   await screen.findByText("Extra cteni");
   await user.click(screen.getByRole("button", { name: "Schvalit" }));
@@ -101,6 +105,7 @@ test("klik na ukol otevre upravu a ulozi zmeny", async () => {
       onDataChanged={onDataChanged}
     />
   );
+  await user.click(screen.getByRole("button", { name: "Zalozka Ukoly" }));
 
   await screen.findByText("Extra cteni");
   await user.click(screen.getByRole("button", { name: /extra cteni/i }));
@@ -150,6 +155,7 @@ test("vytvori novou odmenu", async () => {
       onDataChanged={onDataChanged}
     />
   );
+  await user.click(screen.getByRole("button", { name: "Zalozka Odmeny" }));
 
   await screen.findByText("Nova odmena");
   const rewardSection = screen.getByText("Nova odmena").closest("section");
@@ -188,6 +194,7 @@ test("vygeneruje navrh ukolu pomoci AI", async () => {
       onDataChanged={vi.fn()}
     />
   );
+  await user.click(screen.getByRole("button", { name: "Zalozka Ukoly" }));
 
   await screen.findByText("Novy ukol");
   const descriptionFields = screen.getAllByRole("textbox", { name: /popis/i });
@@ -227,6 +234,7 @@ test("umi prevzit jen nazev nebo cele AI doporuceni", async () => {
       onDataChanged={vi.fn()}
     />
   );
+  await user.click(screen.getByRole("button", { name: "Zalozka Ukoly" }));
 
   await screen.findByText("Novy ukol");
   const descriptionFields = screen.getAllByRole("textbox", { name: /popis/i });
@@ -258,6 +266,7 @@ test("posila zvoleny styl a umi zkusit navrh znovu", async () => {
       onDataChanged={vi.fn()}
     />
   );
+  await user.click(screen.getByRole("button", { name: "Zalozka Ukoly" }));
 
   await screen.findByText("Novy ukol");
   const descriptionFields = screen.getAllByRole("textbox", { name: /popis/i });
@@ -287,6 +296,7 @@ test("ukaze chybu kdyz chybi popis pro AI navrh", async () => {
       onDataChanged={vi.fn()}
     />
   );
+  await user.click(screen.getByRole("button", { name: "Zalozka Ukoly" }));
 
   await screen.findByText("Novy ukol");
   await user.click(screen.getByRole("button", { name: "Navrhnout herni ukol pomoci AI" }));
@@ -308,6 +318,7 @@ test("pamatuje si posledni zvoleny AI styl", async () => {
     />
   );
 
+  await user.click(screen.getByRole("button", { name: "Zalozka Ukoly" }));
   await screen.findByText("Novy ukol");
   const styleSelect = screen.getByRole("combobox", { name: /styl ai navrhu/i });
   await user.selectOptions(styleSelect, "vtipne");
@@ -326,6 +337,7 @@ test("pamatuje si posledni zvoleny AI styl", async () => {
       onDataChanged={vi.fn()}
     />
   );
+  await user.click(screen.getByRole("button", { name: "Zalozka Ukoly" }));
 
   expect(await screen.findByRole("combobox", { name: /styl ai navrhu/i })).toHaveValue("vtipne");
 });
@@ -347,10 +359,11 @@ test("vygeneruje navrh odmeny pomoci AI a umi ho prevzit", async () => {
       onDataChanged={vi.fn()}
     />
   );
+  await user.click(screen.getByRole("button", { name: "Zalozka Odmeny" }));
 
   await screen.findByText("Nova odmena");
-  const descriptionFields = screen.getAllByRole("textbox", { name: /popis/i });
-  await user.type(descriptionFields[1], "Vecer s filmem a popcornem");
+  const rewardSection = screen.getByText("Nova odmena").closest("section");
+  await user.type(within(rewardSection).getByRole("textbox", { name: /popis/i }), "Vecer s filmem a popcornem");
   await user.click(screen.getByRole("button", { name: "Navrhnout odmenu pomoci AI" }));
 
   expect(rewriteMock).toHaveBeenCalledWith("Vecer s filmem a popcornem", "epicke");
@@ -402,6 +415,7 @@ test("rodinny AI plan umi naplanovat den a rozkopirovat stejne ukoly na cely tyd
       onDataChanged={onDataChanged}
     />
   );
+  await user.click(screen.getByRole("button", { name: "Zalozka Rodina" }));
 
   await screen.findByText("AI denni plan pro celou rodinu");
   const plannerSection = screen.getByText("AI denni plan pro celou rodinu").closest("section");
