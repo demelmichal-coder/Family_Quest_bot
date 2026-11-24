@@ -7,7 +7,8 @@
 # Zmena jedne hodnoty:
 #   gcloud run services update family-quest-backend --region europe-west1 --update-env-vars "NAZEV=hodnota"
 Set-StrictMode -Version Latest
-$ErrorActionPreference = "Stop"
+# Bez $ErrorActionPreference = "Stop": Windows PowerShell 5.1 by jinak ukoncil skript uz na
+# varovanich, ktera gcloud vypisuje na stderr. Chyby kontrolujeme pres $LASTEXITCODE.
 
 $ProjectId = "family-quest-bot-2026"
 $Region = "europe-west1"
