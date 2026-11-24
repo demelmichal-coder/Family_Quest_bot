@@ -195,6 +195,7 @@ test("vygeneruje navrh ukolu pomoci AI", async () => {
     />
   );
   await user.click(screen.getByRole("button", { name: "Zalozka Ukoly" }));
+  await user.click(screen.getByRole("button", { name: "+ Pridat ukol" }));
 
   await screen.findByText("Novy ukol");
   const descriptionFields = screen.getAllByRole("textbox", { name: /popis/i });
@@ -235,6 +236,7 @@ test("umi prevzit jen nazev nebo cele AI doporuceni", async () => {
     />
   );
   await user.click(screen.getByRole("button", { name: "Zalozka Ukoly" }));
+  await user.click(screen.getByRole("button", { name: "+ Pridat ukol" }));
 
   await screen.findByText("Novy ukol");
   const descriptionFields = screen.getAllByRole("textbox", { name: /popis/i });
@@ -267,6 +269,7 @@ test("posila zvoleny styl a umi zkusit navrh znovu", async () => {
     />
   );
   await user.click(screen.getByRole("button", { name: "Zalozka Ukoly" }));
+  await user.click(screen.getByRole("button", { name: "+ Pridat ukol" }));
 
   await screen.findByText("Novy ukol");
   const descriptionFields = screen.getAllByRole("textbox", { name: /popis/i });
@@ -297,6 +300,7 @@ test("ukaze chybu kdyz chybi popis pro AI navrh", async () => {
     />
   );
   await user.click(screen.getByRole("button", { name: "Zalozka Ukoly" }));
+  await user.click(screen.getByRole("button", { name: "+ Pridat ukol" }));
 
   await screen.findByText("Novy ukol");
   await user.click(screen.getByRole("button", { name: "Navrhnout herni ukol pomoci AI" }));
@@ -319,6 +323,7 @@ test("pamatuje si posledni zvoleny AI styl", async () => {
   );
 
   await user.click(screen.getByRole("button", { name: "Zalozka Ukoly" }));
+  await user.click(screen.getByRole("button", { name: "+ Pridat ukol" }));
   await screen.findByText("Novy ukol");
   const styleSelect = screen.getByRole("combobox", { name: /styl ai navrhu/i });
   await user.selectOptions(styleSelect, "vtipne");
@@ -338,6 +343,7 @@ test("pamatuje si posledni zvoleny AI styl", async () => {
     />
   );
   await user.click(screen.getByRole("button", { name: "Zalozka Ukoly" }));
+  await user.click(screen.getByRole("button", { name: "+ Pridat ukol" }));
 
   expect(await screen.findByRole("combobox", { name: /styl ai navrhu/i })).toHaveValue("vtipne");
 });

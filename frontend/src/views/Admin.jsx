@@ -115,6 +115,7 @@ function Admin({
   const [family, setFamily] = useState(null);
   const [taskForm, setTaskForm] = useState(initialTaskForm);
   const [editingTaskId, setEditingTaskId] = useState(null);
+  const [taskFormOpen, setTaskFormOpen] = useState(false);
   const [taskSuggestion, setTaskSuggestion] = useState(null);
   const [rewriteStyle, setRewriteStyle] = useState(getInitialRewriteStyle);
   const [rewardForm, setRewardForm] = useState(initialRewardForm);
@@ -277,6 +278,7 @@ function Admin({
   }
 
   function handleStartTaskEdit(task) {
+    setTaskFormOpen(true);
     setEditingTaskId(task.id);
     setTaskSuggestion(null);
     setTaskForm({
@@ -1318,14 +1320,27 @@ function Admin({
 
             {adminTab === "tasks" && (
             <section id="task-create" className="scroll-mt-6 rounded-3xl border border-slate-800 bg-slate-900 p-5 shadow-xl">
-              <div className="mb-4">
-                <h2 className="text-xl font-bold text-white">{editingTaskId ? "Upravit ukol" : "Novy ukol"}</h2>
-                <p className="mt-1 text-sm text-slate-400">
-                  {editingTaskId
-                    ? "Kliknuty ukol muzes upravit a znovu ulozit."
-                    : "Prirad konkretni ukol vybranemu diteti."}
-                </p>
+              <div className="mb-4 flex items-start justify-between gap-3">
+                <div>
+                  <h2 className="text-xl font-bold text-white">{editingTaskId ? "Upravit ukol" : "Novy ukol"}</h2>
+                  <p className="mt-1 text-sm text-slate-400">
+                    {editingTaskId
+                      ? "Kliknuty ukol muzes upravit a znovu ulozit."
+                      : "Prirad konkretni ukol vybranemu diteti."}
+                  </p>
+                </div>
+                {!editingTaskId ? (
+                  <button
+                    type="button"
+                    onClick={() => setTaskFormOpen((open) => !open)}
+                    aria-expanded={taskFormOpen}
+                    className="shrink-0 rounded-2xl border border-cyan-500/40 bg-cyan-500/10 px-4 py-2 text-sm font-bold text-cyan-100 transition hover:bg-cyan-500/20"
+                  >
+                    {taskFormOpen ? "Zavrit" : "+ Pridat ukol"}
+                  </button>
+                ) : null}
               </div>
+              {taskFormOpen || editingTaskId ? (
               <form className="space-y-4" onSubmit={handleCreateTask}>
                 <label className="block">
                   <span className="mb-2 block text-sm font-medium text-slate-200">Nazev</span>
@@ -1542,6 +1557,7 @@ function Admin({
                   ) : null}
                 </div>
               </form>
+              ) : null}
             </section>
               )}
 
