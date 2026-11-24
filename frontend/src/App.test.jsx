@@ -1,5 +1,5 @@
 import React from "react";
-import { render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import App from "./App";
 
@@ -122,7 +122,7 @@ test("zobrazi prihlasovaci stranku kdyz chybi overeni", () => {
   render(<App />);
 
   expect(screen.getByText("Prihlaseni")).toBeInTheDocument();
-  expect(screen.getByRole("button", { name: "Prihlasit profil" })).toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "Zalozit novou rodinu" })).toBeInTheDocument();
 });
 
 test("zobrazi prihlasovaci stranku misto slepe cesty kdyz Telegram posle jen id bez podepsaneho initData", () => {
@@ -206,6 +206,7 @@ test("nabidne ulozene profily pro rychly navrat do rodiny", () => {
   };
 
   render(<App />);
+  fireEvent.click(screen.getByRole("button", { name: "Mam ulozeny profil" }));
 
   expect(screen.getByText("Ulozene profily")).toBeInTheDocument();
   expect(screen.getByRole("button", { name: /Mamka.*Demelovi/i })).toBeInTheDocument();
@@ -229,6 +230,7 @@ test("obnovi ulozeny ucet jednim klikem", async () => {
   };
 
   render(<App />);
+  fireEvent.click(screen.getByRole("button", { name: "Mam ulozeny profil" }));
 
   await user.click(screen.getByRole("button", { name: /Mamka.*Demelovi/i }));
 
@@ -253,6 +255,7 @@ test("klik na ulozeny profil bez tokenu take funguje", async () => {
   };
 
   render(<App />);
+  fireEvent.click(screen.getByRole("button", { name: "Mam ulozeny profil" }));
 
   await user.click(screen.getByRole("button", { name: /Tata.*Demelovi/i }));
 
@@ -276,6 +279,7 @@ test("umozni smazat ulozeny profil z prihlaseni", async () => {
   };
 
   render(<App />);
+  fireEvent.click(screen.getByRole("button", { name: "Mam ulozeny profil" }));
 
   await user.click(screen.getByRole("button", { name: /Smazat profil Mamka/i }));
 
@@ -300,6 +304,7 @@ test("umozni vycistit vsechny ulozene profily", async () => {
   };
 
   render(<App />);
+  fireEvent.click(screen.getByRole("button", { name: "Mam ulozeny profil" }));
 
   await user.click(screen.getByRole("button", { name: "Vycistit vsechny ulozene profily" }));
 
@@ -326,6 +331,7 @@ test("umozni prejmenovat ulozeny profil", async () => {
   };
 
   render(<App />);
+  fireEvent.click(screen.getByRole("button", { name: "Mam ulozeny profil" }));
 
   await user.click(screen.getByRole("button", { name: /Prejmenovat profil Mamka/i }));
 
@@ -350,6 +356,7 @@ test("umozni pripnout ulozeny profil", async () => {
   };
 
   render(<App />);
+  fireEvent.click(screen.getByRole("button", { name: "Mam ulozeny profil" }));
 
   await user.click(screen.getByRole("button", { name: /Pripnout profil Mamka/i }));
 

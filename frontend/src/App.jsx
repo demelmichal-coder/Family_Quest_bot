@@ -493,11 +493,10 @@ function App() {
 
   if (
     !showProfileLogin &&
-    !hasAuthData &&
+    (!hasAuthData || isDemoMode) &&
     !user &&
     !userLoading &&
-    !hasLiveTelegramAccount &&
-    !isDemoMode
+    !hasLiveTelegramAccount
   ) {
     return (
       <PinLoginScreen
