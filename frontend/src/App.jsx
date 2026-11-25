@@ -591,7 +591,7 @@ function App() {
           <button
             type="button"
             onClick={logout}
-            className="rounded-full border border-rose-300 bg-rose-50 px-4 py-2 text-sm font-extrabold text-rose-800 shadow-lg backdrop-blur transition hover:bg-rose-100"
+            className="rounded-full border border-rose-400/60 bg-slate-950/85 px-3 py-1.5 text-xs font-extrabold text-rose-200 shadow-lg backdrop-blur transition hover:bg-slate-900"
           >
             Odhlasit
           </button>

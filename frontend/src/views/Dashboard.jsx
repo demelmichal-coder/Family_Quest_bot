@@ -758,7 +758,7 @@ function Dashboard({
               <p className="mt-1 text-sm text-cyan-900/70">
                 Souhrn clenu, ukolu a odmen v aktualni rodine.
               </p>
-              <div className="mt-5 grid gap-3">
+              <div className="mt-5 grid grid-cols-2 gap-3">
                 <StatCard label="Clenove" value={familyStats?.members || 0} tone="cyan" />
                 <StatCard label="Deti" value={familyStats?.children || 0} tone="cyan" />
                 <StatCard label="Celkem XP" value={familyStats?.total_xp || 0} tone="cyan" />
