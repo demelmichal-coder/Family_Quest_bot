@@ -109,7 +109,7 @@ function LoginScreen({
         <div className="text-sm font-bold uppercase tracking-[0.35em] text-cyan-700">Family Quest</div>
         <h1 className="mt-3 text-4xl font-black text-slate-950">Prihlaseni</h1>
         <p className="mt-3 text-sm text-slate-700">
-          Vyber profil, do ktereho se chces vratit. Rodina zustava ulozena u profilu, takze se po navratu muzes prihlasit znovu.
+          Vyber profil, do kterého se chceš vrátit. Rodina zůstává uložena u profilu, takže se po návratu můžeš přihlásit znovu.
         </p>
 
         {detail ? (
@@ -587,7 +587,7 @@ function App() {
       ) : null}
 
       {user.role !== ROLE_PARENT ? (
-        <div className="fixed left-4 top-4 z-40">
+        <div className="sticky top-0 z-40 bg-slate-950/90 px-4 py-2 backdrop-blur">
           <button
             type="button"
             onClick={logout}
@@ -600,7 +600,7 @@ function App() {
 
       {user.role === ROLE_PARENT ? (
         <>
-          <div className="fixed left-3 right-3 top-4 z-40 flex flex-wrap justify-end gap-2">
+          <div className="sticky top-0 z-40 grid grid-cols-3 items-center gap-2 border-b border-slate-800 bg-slate-950/95 px-3 py-2 backdrop-blur md:flex md:flex-wrap md:justify-end md:px-4">
             <button
               type="button"
               onClick={() =>

@@ -76,7 +76,7 @@ function Onboarding({ user, api, onJoined, onSwitchAccount }) {
 
         <div className="mt-5 grid gap-3 sm:grid-cols-2">
           <div className="rounded-2xl border border-cyan-300/50 bg-cyan-50/80 p-4">
-            <div className="text-xs font-bold uppercase tracking-[0.2em] text-cyan-700">Rodic</div>
+            <div className="text-xs font-bold uppercase tracking-[0.2em] text-cyan-700">Rodič</div>
             <div className="mt-2 text-sm font-semibold text-cyan-950">
               Správa dětí, úkolů, odměn a rodinného žebříčku.
             </div>
@@ -84,7 +84,7 @@ function Onboarding({ user, api, onJoined, onSwitchAccount }) {
           <div className="rounded-2xl border border-amber-300/50 bg-amber-50/80 p-4">
             <div className="text-xs font-bold uppercase tracking-[0.2em] text-amber-700">Dítě</div>
             <div className="mt-2 text-sm font-semibold text-amber-950">
-              Plneni misi, sbirani XP a nakup odmen za gold.
+              Plnění misí, sbírání XP a nákup odměn za zlato.
             </div>
           </div>
         </div>
@@ -133,7 +133,7 @@ function Onboarding({ user, api, onJoined, onSwitchAccount }) {
               />
             </label>
             <label className="block">
-              <span className="mb-2 block text-sm font-semibold text-slate-700">Nazev rodiny</span>
+              <span className="mb-2 block text-sm font-semibold text-slate-700">Název rodiny</span>
               <input
                 required
                 value={familyName}
@@ -173,7 +173,7 @@ function Onboarding({ user, api, onJoined, onSwitchAccount }) {
               />
             </label>
             <p className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
-              Pripojis se jako dite. Druheho rodice povysi stavajici rodic v administraci
+              Připojíš se jako dítě. Druhého rodiče povýší stávající rodič v administraci
               (Členové rodiny).
             </p>
             <button

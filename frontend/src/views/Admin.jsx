@@ -822,7 +822,7 @@ function Admin({
   async function handleDeleteTask(taskId) {
     const task = tasks.find((item) => item.id === taskId);
     const taskName = task?.title || "tento úkol";
-    if (!window.confirm(`Opravdu smazat ukol "${taskName}"?`)) {
+    if (!window.confirm(`Opravdu smazat úkol "${taskName}"?`)) {
       return;
     }
     setBusyTaskId(taskId);
@@ -942,7 +942,7 @@ function Admin({
   async function handleSetMemberPin(memberId) {
     const member = users.find((item) => item.id === memberId);
     const memberName = member?.username || "tohoto člena";
-    const pin = window.prompt(`Zadej novy PIN (4-6 cislic) pro "${memberName}". Pouzije se pro prihlaseni v prohlizeci/PWA bez Telegramu.`);
+    const pin = window.prompt(`Zadej nový PIN (4–6 číslic) pro "${memberName}". Použije se pro přihlášení v prohlížeči/PWA bez Telegramu.`);
     if (pin === null) {
       return;
     }
@@ -1018,7 +1018,7 @@ function Admin({
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 px-4 pb-28 pt-20 text-slate-100">
+    <div className="min-h-screen bg-slate-950 px-4 pb-28 pt-4 text-slate-100">
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-6">
         <section className="rounded-3xl border border-cyan-500/30 bg-gradient-to-br from-slate-900 via-slate-900 to-cyan-950 p-6 shadow-2xl">
           <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
@@ -1026,13 +1026,13 @@ function Admin({
               <div className="text-sm uppercase tracking-[0.35em] text-cyan-300">
                 Administrace rodiny
               </div>
-              <h1 className="mt-2 text-3xl font-black text-white">Sprava ukolu a odmen</h1>
+              <h1 className="mt-2 text-3xl font-black text-white">Správa úkolů a odměn</h1>
               <p className="mt-2 max-w-2xl text-sm text-slate-300">
                 Vytvářej mise pro děti, spravuj odměny a schvaluj mimořádné úkoly.
               </p>
               {family ? (
                 <div className="mt-4 inline-flex rounded-2xl border border-cyan-400/30 bg-cyan-400/10 px-4 py-2 text-sm font-semibold text-cyan-100">
-                  Rodina {family.name} | kod {family.invite_code}
+                  Rodina {family.name} | kód {family.invite_code}
                 </div>
               ) : null}
             </div>
@@ -1054,13 +1054,13 @@ function Admin({
               <div className="mt-2 text-3xl font-bold text-white">{tasks.length}</div>
             </div>
             <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-              <div className="text-xs uppercase tracking-[0.2em] text-slate-400">Ke schvaleni</div>
+              <div className="text-xs uppercase tracking-[0.2em] text-slate-400">Ke schválení</div>
               <div className="mt-2 text-3xl font-bold text-white">
                 {tasks.filter((task) => !task.is_daily && !task.approved).length}
               </div>
             </div>
             <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-              <div className="text-xs uppercase tracking-[0.2em] text-slate-400">Odmeny</div>
+              <div className="text-xs uppercase tracking-[0.2em] text-slate-400">Odměny</div>
               <div className="mt-2 text-3xl font-bold text-white">{rewards.length}</div>
             </div>
           </div>
@@ -1072,7 +1072,7 @@ function Admin({
           </div>
           <div className="flex flex-wrap gap-2">
             <a href="#family-planner" className="rounded-full border border-fuchsia-400/30 bg-fuchsia-400/10 px-4 py-2 text-sm font-semibold text-fuchsia-100 transition hover:bg-fuchsia-400/20">
-              AI denni plan
+              AI denní plán
             </a>
             <a href="#task-create" className="rounded-full border border-cyan-400/30 bg-cyan-400/10 px-4 py-2 text-sm font-semibold text-cyan-100 transition hover:bg-cyan-400/20">
               Formulář úkolu
@@ -1117,7 +1117,7 @@ function Admin({
 
             <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
               <div className="rounded-2xl border border-white/10 bg-white/5 p-3">
-                <div className="text-xs uppercase tracking-[0.2em] text-slate-400">Deti aktivni</div>
+                <div className="text-xs uppercase tracking-[0.2em] text-slate-400">Děti aktivní</div>
                 <div className="mt-1 text-2xl font-bold text-white">
                   {engagementSummary.active_children_7d}/{engagementSummary.children_total}
                 </div>
@@ -1176,7 +1176,7 @@ function Admin({
             {adminTab === "family" && (
             <section id="family-planner" className="scroll-mt-6 rounded-3xl border border-fuchsia-500/30 bg-slate-900 p-5 shadow-xl">
               <div className="mb-4">
-                <h2 className="text-xl font-bold text-white">AI denni plan pro celou rodinu</h2>
+                <h2 className="text-xl font-bold text-white">AI denní plán pro celou rodinu</h2>
                 <p className="mt-1 text-sm text-slate-400">
                   Vygeneruje úkoly napříč dětmi podle historie plnění a dovolí je naplánovat na konkrétní den, nebo stejně rozložit na celý týden.
                 </p>
@@ -1253,7 +1253,7 @@ function Admin({
 
                 {players.length === 0 ? (
                   <div className="rounded-2xl border border-amber-400/40 bg-amber-400/10 px-4 py-3 text-sm text-amber-100">
-                    Nejdriv je potreba mit v rodine alespon jedno dite. Potom lze AI rodinny plan vygenerovat.
+                    Nejdřív je potřeba mít v rodině alespoň jedno dítě. Potom lze AI rodinný plán vygenerovat.
                   </div>
                 ) : null}
 
@@ -1343,7 +1343,7 @@ function Admin({
             <section id="task-create" className="scroll-mt-6 rounded-3xl border border-slate-800 bg-slate-900 p-5 shadow-xl">
               <div className="mb-4 flex items-start justify-between gap-3">
                 <div>
-                  <h2 className="text-xl font-bold text-white">{editingTaskId ? "Upravit ukol" : "Novy ukol"}</h2>
+                  <h2 className="text-xl font-bold text-white">{editingTaskId ? "Upravit úkol" : "Nový úkol"}</h2>
                   <p className="mt-1 text-sm text-slate-400">
                     {editingTaskId
                       ? "Kliknutý úkol můžeš upravit a znovu uložit."
@@ -1364,7 +1364,7 @@ function Admin({
               {taskFormOpen || editingTaskId ? (
               <form className="space-y-4 max-md:fixed max-md:inset-x-0 max-md:bottom-0 max-md:z-50 max-md:max-h-[85vh] max-md:overflow-y-auto max-md:rounded-t-3xl max-md:border-t max-md:border-cyan-400/40 max-md:bg-slate-900 max-md:p-5 max-md:shadow-2xl" onSubmit={handleCreateTask}>
                 <label className="block">
-                  <span className="mb-2 block text-sm font-medium text-slate-200">Nazev</span>
+                  <span className="mb-2 block text-sm font-medium text-slate-200">Název</span>
                   <input
                     required
                     name="title"
@@ -1416,7 +1416,7 @@ function Admin({
                     </div>
                     <div className="mt-3 space-y-2 text-sm text-violet-50">
                       <div>
-                        <span className="font-semibold text-violet-200">Nazev:</span>{" "}
+                        <span className="font-semibold text-violet-200">Název:</span>{" "}
                         {taskSuggestion.title || "Bez návrhu"}
                       </div>
                       <div>
@@ -1441,7 +1441,7 @@ function Admin({
                         onClick={() => applyTaskSuggestion("xp")}
                         className="rounded-2xl border border-violet-300/40 bg-slate-950/40 px-3 py-2 text-sm font-semibold text-violet-100 transition hover:bg-slate-950/60"
                       >
-                        Prevzit XP
+                        Převzít XP
                       </button>
                       <button
                         type="button"
@@ -1585,12 +1585,12 @@ function Admin({
             {adminTab === "rewards" && (
             <section id="reward-create" className="scroll-mt-6 rounded-3xl border border-slate-800 bg-slate-900 p-5 shadow-xl">
               <div className="mb-4">
-                <h2 className="text-xl font-bold text-white">Nova odmena</h2>
+                <h2 className="text-xl font-bold text-white">Nová odměna</h2>
                 <p className="mt-1 text-sm text-slate-400">Pridej novou polozku do rodinneho obchodu.</p>
               </div>
               <form className="space-y-4" onSubmit={handleCreateReward}>
                 <label className="block">
-                  <span className="mb-2 block text-sm font-medium text-slate-200">Nazev</span>
+                  <span className="mb-2 block text-sm font-medium text-slate-200">Název</span>
                   <input
                     required
                     name="name"
@@ -1626,7 +1626,7 @@ function Admin({
                     </div>
                     <div className="mt-3 space-y-2 text-sm text-emerald-50">
                       <div>
-                        <span className="font-semibold text-emerald-200">Nazev:</span>{" "}
+                        <span className="font-semibold text-emerald-200">Název:</span>{" "}
                         {rewardSuggestion.name || "Bez návrhu"}
                       </div>
                       <div>
@@ -2024,7 +2024,7 @@ function Admin({
               <div className="mb-4">
                 <h2 className="text-xl font-bold text-white">Členové rodiny</h2>
                 <p className="mt-1 text-sm text-slate-400">
-                  Spravuj clenstvi v rodine. Odebrani clena smaze vsechna jeho data.
+                  Spravuj členství v rodině. Odebrání člena smaže všechna jeho data.
                 </p>
               </div>
               {users.length === 0 ? (
@@ -2036,7 +2036,7 @@ function Admin({
                   {users.map((member) => (
                     <article
                       key={member.id}
-                      className="flex items-center justify-between gap-4 rounded-3xl border border-slate-800 bg-slate-950 px-4 py-3"
+                      className="flex flex-col gap-3 rounded-3xl border border-slate-800 bg-slate-950 px-4 py-3 md:flex-row md:items-center md:justify-between md:gap-4"
                     >
                       <div className="flex min-w-0 flex-1 items-center gap-3">
                         <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-2xl bg-slate-800 text-xl">
@@ -2057,7 +2057,7 @@ function Admin({
                           </div>
                         </div>
                       </div>
-                      <div className="flex flex-shrink-0 flex-wrap items-center justify-end gap-2">
+                      <div className="flex flex-wrap items-center gap-2 md:flex-shrink-0 md:justify-end">
                         <button
                           type="button"
                           onClick={() => handleSetMemberPin(member.id)}
@@ -2119,7 +2119,9 @@ function Admin({
                   placeholder="Popis"
                   className="rounded-2xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white"
                 />
-                <input
+                <label className="grid gap-1 text-xs font-semibold text-slate-400">
+                  <span>Cíl (počet)</span>
+                  <input
                   name="target"
                   type="number"
                   min="1"
@@ -2128,7 +2130,10 @@ function Admin({
                   placeholder="Cil"
                   className="rounded-2xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white"
                 />
-                <input
+                </label>
+                <label className="grid gap-1 text-xs font-semibold text-slate-400">
+                  <span>Počet dní</span>
+                  <input
                   name="days"
                   type="number"
                   min="1"
@@ -2137,7 +2142,10 @@ function Admin({
                   placeholder="Dni"
                   className="rounded-2xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white"
                 />
-                <input
+                </label>
+                <label className="grid gap-1 text-xs font-semibold text-slate-400">
+                  <span>Bonus XP</span>
+                  <input
                   name="bonus_xp"
                   type="number"
                   min="0"
@@ -2146,7 +2154,10 @@ function Admin({
                   placeholder="Bonus XP"
                   className="rounded-2xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white"
                 />
-                <input
+                </label>
+                <label className="grid gap-1 text-xs font-semibold text-slate-400">
+                  <span>Bonus zlato</span>
+                  <input
                   name="bonus_gold"
                   type="number"
                   min="0"
@@ -2155,6 +2166,7 @@ function Admin({
                   placeholder="Bonus gold"
                   className="rounded-2xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white"
                 />
+                </label>
                 <button
                   type="submit"
                   disabled={creatingChallenge}
@@ -2185,7 +2197,7 @@ function Admin({
 
               <div className="space-y-3">
                 {challenges.length === 0 ? (
-                  <p className="text-sm text-slate-400">Zatim nejsou zadne aktivni ani nedavne vyzvy.</p>
+                  <p className="text-sm text-slate-400">Zatím nejsou žádné aktivní ani nedávné výzvy.</p>
                 ) : (
                   challenges.map((challenge) => (
                     <article key={challenge.id} className="rounded-2xl border border-amber-400/20 bg-slate-950/50 p-3">

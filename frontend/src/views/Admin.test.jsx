@@ -110,10 +110,10 @@ test("klik na ukol otevre upravu a ulozi zmeny", async () => {
   await screen.findByText("Extra cteni");
   await user.click(screen.getByRole("button", { name: /extra cteni/i }));
 
-  expect(await screen.findByText("Upravit ukol")).toBeInTheDocument();
-  const taskSection = screen.getByText("Upravit ukol").closest("section");
+  expect(await screen.findByText("Upravit úkol")).toBeInTheDocument();
+  const taskSection = screen.getByText("Upravit úkol").closest("section");
   const taskQueries = within(taskSection);
-  const titleInput = taskQueries.getByRole("textbox", { name: "Nazev" });
+  const titleInput = taskQueries.getByRole("textbox", { name: "Název" });
   await user.clear(titleInput);
   await user.type(titleInput, "Extra cteni deluxe");
   await user.click(taskQueries.getByRole("button", { name: "Uložit změny" }));
@@ -157,10 +157,10 @@ test("vytvori novou odmenu", async () => {
   );
   await user.click(screen.getByRole("button", { name: "Záložka Odměny" }));
 
-  await screen.findByText("Nova odmena");
-  const rewardSection = screen.getByText("Nova odmena").closest("section");
+  await screen.findByText("Nová odměna");
+  const rewardSection = screen.getByText("Nová odměna").closest("section");
   const rewardQueries = within(rewardSection);
-  await user.type(rewardQueries.getByRole("textbox", { name: "Nazev" }), "Zoo");
+  await user.type(rewardQueries.getByRole("textbox", { name: "Název" }), "Zoo");
   await user.type(rewardQueries.getByRole("textbox", { name: "Popis" }), "Vylet");
   await user.clear(rewardQueries.getByRole("spinbutton", { name: /cena ve zlate/i }));
   await user.type(rewardQueries.getByRole("spinbutton", { name: /cena ve zlate/i }), "12");
@@ -197,7 +197,7 @@ test("vygeneruje navrh ukolu pomoci AI", async () => {
   await user.click(screen.getByRole("button", { name: "Záložka Úkoly" }));
   await user.click(screen.getByRole("button", { name: "+ Přidat úkol" }));
 
-  await screen.findByText("Novy ukol");
+  await screen.findByText("Nový úkol");
   const descriptionFields = screen.getAllByRole("textbox", { name: /popis/i });
   await user.type(descriptionFields[0], "Uklidit pokoj a stul");
   await user.click(screen.getByRole("button", { name: "Navrhnout herní úkol pomocí AI" }));
@@ -207,7 +207,7 @@ test("vygeneruje navrh ukolu pomoci AI", async () => {
   expect(
     screen.getByText((_, node) => {
       const text = (node?.textContent || "").replace(/\s+/g, " ").trim();
-      return text === "Nazev: Vyprava za cistym pokojem";
+      return text === "Název: Vyprava za cistym pokojem";
     })
   ).toBeInTheDocument();
   expect(
@@ -238,7 +238,7 @@ test("umi prevzit jen nazev nebo cele AI doporuceni", async () => {
   await user.click(screen.getByRole("button", { name: "Záložka Úkoly" }));
   await user.click(screen.getByRole("button", { name: "+ Přidat úkol" }));
 
-  await screen.findByText("Novy ukol");
+  await screen.findByText("Nový úkol");
   const descriptionFields = screen.getAllByRole("textbox", { name: /popis/i });
   await user.type(descriptionFields[0], "Uklidit pokoj a stul");
   await user.click(screen.getByRole("button", { name: "Navrhnout herní úkol pomocí AI" }));
@@ -271,7 +271,7 @@ test("posila zvoleny styl a umi zkusit navrh znovu", async () => {
   await user.click(screen.getByRole("button", { name: "Záložka Úkoly" }));
   await user.click(screen.getByRole("button", { name: "+ Přidat úkol" }));
 
-  await screen.findByText("Novy ukol");
+  await screen.findByText("Nový úkol");
   const descriptionFields = screen.getAllByRole("textbox", { name: /popis/i });
   await user.type(descriptionFields[0], "Nakrm kocku");
   await user.selectOptions(screen.getByRole("combobox", { name: /styl ai návrhu/i }), "vtipne");
@@ -302,7 +302,7 @@ test("ukaze chybu kdyz chybi popis pro AI navrh", async () => {
   await user.click(screen.getByRole("button", { name: "Záložka Úkoly" }));
   await user.click(screen.getByRole("button", { name: "+ Přidat úkol" }));
 
-  await screen.findByText("Novy ukol");
+  await screen.findByText("Nový úkol");
   await user.click(screen.getByRole("button", { name: "Navrhnout herní úkol pomocí AI" }));
 
   expect(rewriteMock).not.toHaveBeenCalled();
@@ -324,7 +324,7 @@ test("pamatuje si posledni zvoleny AI styl", async () => {
 
   await user.click(screen.getByRole("button", { name: "Záložka Úkoly" }));
   await user.click(screen.getByRole("button", { name: "+ Přidat úkol" }));
-  await screen.findByText("Novy ukol");
+  await screen.findByText("Nový úkol");
   const styleSelect = screen.getByRole("combobox", { name: /styl ai návrhu/i });
   await user.selectOptions(styleSelect, "vtipne");
   expect(styleSelect).toHaveValue("vtipne");
@@ -367,8 +367,8 @@ test("vygeneruje navrh odmeny pomoci AI a umi ho prevzit", async () => {
   );
   await user.click(screen.getByRole("button", { name: "Záložka Odměny" }));
 
-  await screen.findByText("Nova odmena");
-  const rewardSection = screen.getByText("Nova odmena").closest("section");
+  await screen.findByText("Nová odměna");
+  const rewardSection = screen.getByText("Nová odměna").closest("section");
   await user.type(within(rewardSection).getByRole("textbox", { name: /popis/i }), "Vecer s filmem a popcornem");
   await user.click(screen.getByRole("button", { name: "Navrhnout odměnu pomocí AI" }));
 
@@ -423,8 +423,8 @@ test("rodinny AI plan umi naplanovat den a rozkopirovat stejne ukoly na cely tyd
   );
   await user.click(screen.getByRole("button", { name: "Záložka Rodina" }));
 
-  await screen.findByText("AI denni plan pro celou rodinu");
-  const plannerSection = screen.getByText("AI denni plan pro celou rodinu").closest("section");
+  await screen.findByText("AI denní plán pro celou rodinu");
+  const plannerSection = screen.getByText("AI denní plán pro celou rodinu").closest("section");
   const plannerQueries = within(plannerSection);
   await user.clear(plannerQueries.getByRole("spinbutton", { name: /ukolu na dite/i }));
   await user.type(plannerQueries.getByRole("spinbutton", { name: /ukolu na dite/i }), "1");

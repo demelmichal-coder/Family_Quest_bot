@@ -1,6 +1,6 @@
 import React from "react";
 
-function Avatar({ name, image = "🙂" }) {
+function Avatar({ name, image = "🙂", showName = true }) {
   const isImageData = typeof image === "string" && image.startsWith("data:image");
 
   return (
@@ -12,7 +12,7 @@ function Avatar({ name, image = "🙂" }) {
           image
         )}
       </div>
-      <div className="text-xs font-semibold text-slate-200">{name}</div>
+      {showName ? <div className="text-xs font-semibold text-slate-200">{name}</div> : null}
     </div>
   );
 }

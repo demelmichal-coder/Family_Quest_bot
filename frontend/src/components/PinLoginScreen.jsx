@@ -195,7 +195,7 @@ export default function PinLoginScreen({ onShowSavedProfiles, hasSavedProfiles }
         <div className="text-sm font-bold uppercase tracking-[0.35em] text-cyan-700">Family Quest</div>
         <h1 className="mt-3 text-3xl font-black text-slate-950">Prihlaseni</h1>
         <p className="mt-3 text-sm text-slate-700">
-          Zadej kod rodiny a prihlas se jmenem a PINem. Jeste rodinu nemas? Zaloz novou.
+          Zadej kód rodiny a přihlas se jménem a PINem. Ještě rodinu nemáš? Založ novou.
         </p>
 
         {error ? (
@@ -263,7 +263,7 @@ export default function PinLoginScreen({ onShowSavedProfiles, hasSavedProfiles }
               }}
               className="w-full rounded-2xl border border-cyan-300 bg-cyan-50 px-4 py-3 font-bold text-cyan-950 transition hover:bg-cyan-100"
             >
-              Jsem tu novy - zalozit profil ditete
+              Jsem tu nový – založit profil dítěte
             </button>
 
             <button
@@ -322,10 +322,10 @@ export default function PinLoginScreen({ onShowSavedProfiles, hasSavedProfiles }
               />
             </label>
             <p className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
-              Novy profil je vzdy dite. Druheho rodice povysi stavajici rodic v administraci.
+              Nový profil je vždy dítě. Druhého rodiče povýší stávající rodič v administraci.
             </p>
             <label className="block">
-              <span className="mb-2 block text-sm font-semibold text-slate-700">Novy PIN</span>
+              <span className="mb-2 block text-sm font-semibold text-slate-700">Nový PIN</span>
               <input
                 value={registerPin}
                 onChange={(event) => setRegisterPin(normalizePin(event.target.value))}
@@ -366,11 +366,11 @@ export default function PinLoginScreen({ onShowSavedProfiles, hasSavedProfiles }
         {step === STEP_CREATE_FAMILY ? (
           <form className="mt-6 space-y-4" onSubmit={handleCreateFamilySubmit}>
             <p className="rounded-2xl border border-cyan-200 bg-cyan-50 px-4 py-3 text-sm text-cyan-950">
-              Zalozis rodinu a stanes se jejim rodicem. Kod rodiny pro deti najdes potom v
+              Založíš rodinu a staneš se jejím rodičem. Kód rodiny pro děti najdeš potom v
               administraci.
             </p>
             <label className="block">
-              <span className="mb-2 block text-sm font-semibold text-slate-700">Nazev rodiny</span>
+              <span className="mb-2 block text-sm font-semibold text-slate-700">Název rodiny</span>
               <input
                 value={newFamilyName}
                 onChange={(event) => setNewFamilyName(event.target.value)}
@@ -388,7 +388,7 @@ export default function PinLoginScreen({ onShowSavedProfiles, hasSavedProfiles }
               />
             </label>
             <label className="block">
-              <span className="mb-2 block text-sm font-semibold text-slate-700">Novy PIN</span>
+              <span className="mb-2 block text-sm font-semibold text-slate-700">Nový PIN</span>
               <input
                 value={registerPin}
                 onChange={(event) => setRegisterPin(normalizePin(event.target.value))}

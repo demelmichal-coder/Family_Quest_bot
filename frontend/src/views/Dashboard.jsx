@@ -413,7 +413,7 @@ function Dashboard({
   }
 
   return (
-    <div className="brawl-shell relative min-h-screen overflow-hidden px-4 pb-28 pt-20">
+    <div className="brawl-shell relative min-h-screen overflow-hidden px-4 pb-28 pt-4">
       <ConfettiReward show={showConfetti} />
       <div className="relative z-10 mx-auto flex max-w-6xl flex-col gap-6">
         <div className="flex flex-wrap items-start justify-end gap-2">
@@ -499,7 +499,7 @@ function Dashboard({
               aria-label="Změnit avatar"
               className="shrink-0 rounded-full transition hover:scale-105"
             >
-              <Avatar name={avatar.name} image={avatar.image} />
+              <Avatar name={avatar.name} image={avatar.image} showName={false} />
             </button>
             <div className="min-w-0 flex-1">
               <div className="truncate text-lg font-black text-white">{avatar.name}</div>
@@ -648,7 +648,7 @@ function Dashboard({
                   ))
                 ) : (
                   <div className="rounded-[28px] border border-dashed border-yellow-400 bg-yellow-50/70 p-8 text-center text-yellow-900/70">
-                    Zadny mimoradny ukol. Rodic ti asi pripravi dalsi.
+                    Žádný mimořádný úkol. Rodič ti asi připraví další.
                   </div>
                 )}
               </section>
@@ -664,7 +664,7 @@ function Dashboard({
                       >
                         <div className="font-bold text-amber-950">{task.title}</div>
                         <div className="mt-1 text-sm text-amber-900/75">
-                          Rodic ted potvrzuje odmenu {task.xp} XP a {task.gold} zlata.
+                          Rodič teď potvrzuje odměnu {task.xp} XP a {task.gold} zlata.
                         </div>
                       </div>
                     ))}
@@ -692,14 +692,14 @@ function Dashboard({
                     </div>
                   </div>
                 ) : (
-                  <div className="mt-2 text-sm text-cyan-200/85">Boss mise se objevi, jakmile bude aktivni ukol.</div>
+                  <div className="mt-2 text-sm text-cyan-200/85">Boss mise se objeví, jakmile bude aktivní úkol.</div>
                 )}
               </div>
 
               {challenges && challenges.length > 0 && (
                 <div className="brawl-accent-card mt-4 rounded-2xl border-fuchsia-300/60 bg-fuchsia-900/70 px-4 py-3">
                   <h3 className="brawl-subtitle text-lg font-black text-fuchsia-100">🏆 Weekly Challenge</h3>
-                  <p className="mt-1 text-xs font-semibold text-fuchsia-200/90">Spolecna rodinne vyzva - ziskejte skupinovy bonus!</p>
+                  <p className="mt-1 text-xs font-semibold text-fuchsia-200/90">Společná rodinná výzva – získejte skupinový bonus!</p>
                   {challenges[0] ? (
                     <div className="mt-3 rounded-xl border-2 border-slate-900 bg-fuchsia-950/80 px-3 py-3">
                       <div className="text-sm font-black text-fuchsia-100">{challenges[0].title}</div>
