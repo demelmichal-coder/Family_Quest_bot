@@ -85,6 +85,38 @@ function getLeagueByXp(xp = 0) {
   return "bronze";
 }
 
+// Zmensi fotku v prohlizeci (max strana maxSide, JPEG), aby se do DB a seznamu uloha jen male data.
+// Kdyz se zmenseni nepovede, vrati puvodni data URL.
+async function compressImageFile(file, maxSide, quality) {
+  const dataUrl = await new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result || ""));
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  }).catch(() => "");
+
+  if (!dataUrl || typeof document === "undefined" || typeof Image === "undefined") {
+    return dataUrl;
+  }
+
+  try {
+    const img = await new Promise((resolve, reject) => {
+      const image = new Image();
+      image.onload = () => resolve(image);
+      image.onerror = reject;
+      image.src = dataUrl;
+    });
+    const scale = Math.min(1, maxSide / Math.max(img.width, img.height));
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.max(1, Math.round(img.width * scale));
+    canvas.height = Math.max(1, Math.round(img.height * scale));
+    canvas.getContext("2d").drawImage(img, 0, 0, canvas.width, canvas.height);
+    return canvas.toDataURL("image/jpeg", quality);
+  } catch (error) {
+    return dataUrl;
+  }
+}
+
 function getAvatarRarity(avatarValue) {
   if (!avatarValue) return "common";
   if (typeof avatarValue === "string" && avatarValue.startsWith("data:image")) {
@@ -239,20 +271,18 @@ function Dashboard({
       return;
     }
 
-    const reader = new FileReader();
-    reader.onload = (loadEvent) => {
-      const nextImage = loadEvent.target?.result;
+    const fileName = file.name || "dukaz.jpg";
+    event.target.value = "";
+    compressImageFile(file, 1280, 0.75).then((nextImage) => {
       if (!nextImage) {
         return;
       }
       setProofDraft((current) => ({
         ...current,
-        mediaDataUrl: String(nextImage),
-        fileName: file.name || "dukaz.jpg",
+        mediaDataUrl: nextImage,
+        fileName,
       }));
-    };
-    reader.readAsDataURL(file);
-    event.target.value = "";
+    });
   }
 
   async function executeTaskCompletion(taskId) {
@@ -366,17 +396,14 @@ function Dashboard({
       return;
     }
 
-    const reader = new FileReader();
-    reader.onload = (loadEvent) => {
-      const nextImage = loadEvent.target?.result;
+    compressImageFile(file, 256, 0.8).then((nextImage) => {
       if (!nextImage) {
         return;
       }
       setAvatar((prev) => ({ ...prev, image: nextImage }));
       updateAvatarOnBackend(nextImage);
       setShowAvatarPicker(false);
-    };
-    reader.readAsDataURL(file);
+    });
   }
 
   function handleEmojiPick(emoji) {
