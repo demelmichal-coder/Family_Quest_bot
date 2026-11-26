@@ -335,7 +335,7 @@ export function UserProvider({ children }) {
 
       if (!hasValidSession) {
         // Po vyslovnem odhlaseni se ucet automaticky neobnovuje - jinak by tlacitko
-        // Odhlasit nemelo zadny efekt. Ulozeny ucet si uzivatel muze vybrat rucne.
+        // Odhlásit nemelo zadny efekt. Ulozeny ucet si uzivatel muze vybrat rucne.
         const forcedLogout = window.localStorage.getItem(FORCE_LOGIN_KEY) === "1";
         const rememberedAccount = forcedLogout
           ? null

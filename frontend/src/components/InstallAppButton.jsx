@@ -94,8 +94,8 @@ export default function InstallAppButton({ variant = "light", className = "" }) 
       </button>
       {showIosHint ? (
         <div className={styles.hint}>
-          V Safari klepni dole na tlacitko <strong>Sdilet</strong> (ctverecek se sipkou nahoru) a
-          vyber <strong>Pridat na plochu</strong>. Aplikace se pak otevira z ikony jako bezna
+          V Safari klepni dole na tlačítko <strong>Sdílet</strong> (čtvereček se šipkou nahoru) a
+          vyber <strong>Přidat na plochu</strong>. Aplikace se pak otevírá z ikony jako běžná
           appka.
         </div>
       ) : null}

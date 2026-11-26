@@ -23,3 +23,4 @@ createRoot(document.getElementById("root")).render(
     </UserProvider>
   </React.StrictMode>
 );
+document.getElementById("splash")?.remove();

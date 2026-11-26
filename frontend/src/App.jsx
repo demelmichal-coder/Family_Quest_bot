@@ -59,7 +59,7 @@ function LoginScreen({
   function handleSubmit(event) {
     event.preventDefault();
     if (!loginId.trim()) {
-      setError("Zadej Telegram nebo demo ID profilu, pod kterym se chces prihlasit.");
+      setError("Zadej Telegram nebo demo ID profilu, pod kterým se chceš přihlásit.");
       return;
     }
     setError("");
@@ -68,12 +68,12 @@ function LoginScreen({
 
   function formatLastUsed(timestamp) {
     if (!timestamp) {
-      return "Naposledy pouzity: zatim ne";
+      return "Naposledy použito: zatím ne";
     }
 
     const date = new Date(timestamp);
     if (Number.isNaN(date.getTime())) {
-      return "Naposledy pouzity: neznamy cas";
+      return "Naposledy použito: neznámý čas";
     }
 
     return `Naposledy pouzity: ${date.toLocaleString("cs-CZ")}`;
@@ -89,7 +89,7 @@ function LoginScreen({
 
   function handleRenameProfile(profile) {
     const profileName = profile.label || profile.username || profile.id;
-    const nextLabel = window.prompt("Zadej novy nazev profilu", profileName);
+    const nextLabel = window.prompt("Zadej nový název profilu", profileName);
     if (nextLabel === null) {
       return;
     }
@@ -100,7 +100,7 @@ function LoginScreen({
     onClearProfiles();
     setLoginId("");
     setError("");
-    setNotice("Ulozene profily byly vycisteny. Prihlas se znovu a zaloz rodinu.");
+    setNotice("Uložené profily byly vyčištěny. Přihlas se znovu a založ rodinu.");
   }
 
   return (
@@ -135,24 +135,24 @@ function LoginScreen({
               value={loginId}
               onChange={(event) => setLoginId(event.target.value)}
               className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-slate-950 shadow-sm outline-none transition focus:border-cyan-400"
-              placeholder="Napriklad player-1 nebo 123456789"
+              placeholder="Například player-1 nebo 123456789"
             />
           </label>
           <button
             type="submit"
             className="w-full rounded-2xl bg-slate-950 px-4 py-3 font-bold text-white transition hover:bg-slate-800"
           >
-            Prihlasit profil
+            Přihlásit profil
           </button>
         </form>
 
         {savedProfiles.length ? (
           <div className="mt-6 rounded-3xl border border-slate-200 bg-slate-50 p-4">
             <div className="text-xs font-bold uppercase tracking-[0.25em] text-slate-500">
-              Ulozene profily
+              Uložené profily
             </div>
             <div className="mt-1 text-[11px] text-slate-500">
-              Ucty, ktere lze obnovit jednim klikem.
+              Účty, které lze obnovit jedním kliknutím.
             </div>
             <div className="mt-3 space-y-2">
               {savedProfiles.map((profile) => (
@@ -170,8 +170,8 @@ function LoginScreen({
                       {profile.label || profile.username || profile.id}
                     </span>
                     <span className="text-xs text-slate-500">
-                      {profile.familyName || (profile.familyId ? `Rodina #${profile.familyId}` : "Zalozena identita")}
-                      {profile.role ? ` · ${profile.role === "parent" ? "rodic" : "dite"}` : ""}
+                      {profile.familyName || (profile.familyId ? `Rodina #${profile.familyId}` : "Založená identita")}
+                      {profile.role ? ` · ${profile.role === "parent" ? "rodič" : "dítě"}` : ""}
                     </span>
                     <span className="mt-1 text-[11px] text-slate-400">
                       {formatLastUsed(profile.lastUsedAt)}{profile.token ? " · pripraveno k obnove" : ""}
@@ -181,17 +181,17 @@ function LoginScreen({
                     type="button"
                     onClick={() => onTogglePinnedProfile(profile.id)}
                     className="shrink-0 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-bold text-amber-800 transition hover:bg-amber-100"
-                    aria-label={`${profile.pinned ? "Odepnout" : "Pripnout"} profil ${profile.label || profile.username || profile.id}`}
+                    aria-label={`${profile.pinned ? "Odepnout" : "Připnout"} profil ${profile.label || profile.username || profile.id}`}
                   >
-                    {profile.pinned ? "Odepnout" : "Pripnout"}
+                    {profile.pinned ? "Odepnout" : "Připnout"}
                   </button>
                   <button
                     type="button"
                     onClick={() => handleRenameProfile(profile)}
                     className="shrink-0 rounded-xl border border-cyan-200 bg-cyan-50 px-3 py-2 text-xs font-bold text-cyan-800 transition hover:bg-cyan-100"
-                    aria-label={`Prejmenovat profil ${profile.label || profile.username || profile.id}`}
+                    aria-label={`Přejmenovat profil ${profile.label || profile.username || profile.id}`}
                   >
-                    Prejmenovat
+                    Přejmenovat
                   </button>
                   <button
                     type="button"
@@ -209,7 +209,7 @@ function LoginScreen({
               onClick={handleClearProfiles}
               className="mt-3 w-full rounded-2xl border border-rose-300 bg-rose-50 px-4 py-3 text-sm font-bold text-rose-800 transition hover:bg-rose-100"
             >
-              Vycistit vsechny ulozene profily
+              Vyčistit všechny uložené profily
             </button>
           </div>
         ) : null}
@@ -220,7 +220,7 @@ function LoginScreen({
             onClick={onUseTelegram}
             className="mt-4 w-full rounded-2xl border border-cyan-300 bg-cyan-50 px-4 py-3 font-bold text-cyan-950 transition hover:bg-cyan-100"
           >
-            Pokracovat jako aktualni Telegram ucet
+            Pokračovat jako aktualni Telegram ucet
           </button>
         ) : null}
 
@@ -240,7 +240,7 @@ function LoginScreen({
             onClick={onCancel}
             className="mt-3 w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 font-bold text-slate-800 transition hover:bg-slate-50"
           >
-            Zpet na uvodni obrazovku
+            Zpět na úvodní obrazovku
           </button>
         ) : null}
       </div>
@@ -524,7 +524,7 @@ function App() {
       <LoginScreen
         detail={
           showProfileLogin
-            ? "Vyber ucet, ktery se ma obnovit z ulozeneho prihlaseni."
+            ? "Vyber účet, který se má obnovit z uloženého přihlášení."
             : userError || telegramError || APP_MESSAGES.authDetail
         }
         onLogin={handleLoginProfile}
@@ -593,7 +593,7 @@ function App() {
             onClick={logout}
             className="rounded-full border border-rose-400/60 bg-slate-950/85 px-3 py-1.5 text-xs font-extrabold text-rose-200 shadow-lg backdrop-blur transition hover:bg-slate-900"
           >
-            Odhlasit
+            Odhlásit
           </button>
         </div>
       ) : null}
@@ -610,14 +610,14 @@ function App() {
               }
               className="max-w-full rounded-full border border-slate-900/10 bg-white/85 px-3 py-2 text-xs font-bold text-slate-900 shadow-lg backdrop-blur transition hover:bg-white sm:px-4 sm:text-sm"
             >
-              {view === APP_VIEW_ADMIN ? "Prepnout na dashboard" : "Prepnout na administraci"}
+              {view === APP_VIEW_ADMIN ? "Přepnout na dashboard" : "Přepnout na administraci"}
             </button>
             <button
               type="button"
               onClick={handleSwitchProfileMode}
               className="rounded-full border border-slate-900/10 bg-white/90 px-3 py-2 text-xs font-bold text-slate-800 shadow-lg backdrop-blur transition hover:bg-slate-50 sm:px-4 sm:text-sm"
             >
-              Ulozene ucty
+              Uložené účty
             </button>
             {!tg?.initData ? (
               <button
@@ -625,7 +625,7 @@ function App() {
                 onClick={logout}
                 className="rounded-full border border-rose-300 bg-rose-50 px-3 py-2 text-xs font-bold text-rose-800 shadow-lg backdrop-blur transition hover:bg-rose-100 sm:px-4 sm:text-sm"
               >
-                Odhlasit
+                Odhlásit
               </button>
             ) : null}
           </div>

@@ -94,9 +94,9 @@ function getPlanningWeek(dateKey) {
 
 
 const ADMIN_TABS = [
-  { id: "overview", label: "Prehled", icon: "📊" },
-  { id: "tasks", label: "Ukoly", icon: "🎯" },
-  { id: "rewards", label: "Odmeny", icon: "🎁" },
+  { id: "overview", label: "Přehled", icon: "📊" },
+  { id: "tasks", label: "Úkoly", icon: "🎯" },
+  { id: "rewards", label: "Odměny", icon: "🎁" },
   { id: "family", label: "Rodina", icon: "🛡️" },
 ];
 
@@ -299,7 +299,7 @@ function Admin({
 
   function handleCancelTaskEdit() {
     resetTaskEditor(taskForm.user_id);
-    setMessage("Rezim upravy ukolu byl zrusen.");
+    setMessage("Režim úpravy úkolu byl zrušen.");
     setError("");
   }
 
@@ -390,7 +390,7 @@ function Admin({
 
   async function handleGeneratePlanner() {
     if (!plannerForm.user_id) {
-      setError("Nejdriv vyber dite pro AI plan.");
+      setError("Nejdřív vyber dítě pro AI plán.");
       return;
     }
 
@@ -410,9 +410,9 @@ function Admin({
         },
       });
       setPlannerTasks(response.tasks || []);
-      setMessage("AI plan je pripraven. Zkontroluj ho a klikni na aplikovat plan.");
+      setMessage("AI plán je připraven. Zkontroluj ho a klikni na použít plán.");
     } catch (plannerError) {
-      setError(getErrorMessage(plannerError, "AI plan se nepodarilo vygenerovat."));
+      setError(getErrorMessage(plannerError, "AI plán se nepodařilo vygenerovat."));
     } finally {
       setGeneratingPlanner(false);
     }
@@ -420,12 +420,12 @@ function Admin({
 
   async function handleApplyPlanner() {
     if (!plannerForm.user_id || plannerTasks.length === 0) {
-      setError("Nejdriv vygeneruj AI plan.");
+      setError("Nejdřív vygeneruj AI plán.");
       return;
     }
 
     if (selectedPlannerTasks.size === 0) {
-      setError("Vyber alespon jednu misi z AI planu.");
+      setError("Vyber alespoň jednu misi z AI plánu.");
       return;
     }
 
@@ -459,7 +459,7 @@ function Admin({
       await onDataChanged();
       await loadChallenges();
     } catch (applyError) {
-      setError(getErrorMessage(applyError, "AI plan se nepodarilo aplikovat."));
+      setError(getErrorMessage(applyError, "AI plán se nepodařilo použít."));
     } finally {
       setApplyingPlanner(false);
     }
@@ -492,9 +492,9 @@ function Admin({
       });
       setFamilyPlannerSchedule(nextSchedule);
       setSelectedFamilyPlannerTasks(new Set(preselect));
-      setMessage("AI denni plan pro celou rodinu je pripraven.");
+      setMessage("AI denní plán pro celou rodinu je připraven.");
     } catch (plannerError) {
-      setError(getErrorMessage(plannerError, "AI denni plan se nepodarilo vygenerovat."));
+      setError(getErrorMessage(plannerError, "AI denní plán se nepodařilo vygenerovat."));
     } finally {
       setGeneratingFamilyPlanner(false);
     }
@@ -502,11 +502,11 @@ function Admin({
 
   async function handleApplyFamilyPlanner() {
     if (familyPlannerChildren.length === 0) {
-      setError("Nejdriv vygeneruj rodinny AI plan.");
+      setError("Nejdřív vygeneruj rodinný AI plán.");
       return;
     }
     if (selectedFamilyPlannerTasks.size === 0) {
-      setError("Vyber alespon jeden ukol z rodinneho planu.");
+      setError("Vyber alespoň jeden úkol z rodinného plánu.");
       return;
     }
 
@@ -554,7 +554,7 @@ function Admin({
       await onDataChanged();
       await loadChallenges();
     } catch (applyError) {
-      setError(getErrorMessage(applyError, "Rodinny AI plan se nepodarilo aplikovat."));
+      setError(getErrorMessage(applyError, "Rodinný AI plán se nepodařilo použít."));
     } finally {
       setApplyingFamilyPlanner(false);
     }
@@ -580,9 +580,9 @@ function Admin({
       });
       setChallengeForm(initialChallengeForm);
       await loadChallenges();
-      setMessage("Rodinna vyzva byla vytvorena.");
+      setMessage("Rodinná výzva byla vytvořena.");
     } catch (challengeError) {
-      setError(getErrorMessage(challengeError, "Rodinnou vyzvu se nepodarilo vytvorit."));
+      setError(getErrorMessage(challengeError, "Rodinnou výzvu se nepodařilo vytvořit."));
     } finally {
       setCreatingChallenge(false);
     }
@@ -605,9 +605,9 @@ function Admin({
         },
       });
       await loadChallenges();
-      setMessage("Sezonni event byl vytvoren.");
+      setMessage("Sezónní event byl vytvořen.");
     } catch (seasonError) {
-      setError(getErrorMessage(seasonError, "Sezonni event se nepodarilo vytvorit."));
+      setError(getErrorMessage(seasonError, "Sezónní event se nepodařilo vytvořit."));
     } finally {
       setCreatingSeasonalChallenge(false);
     }
@@ -615,7 +615,7 @@ function Admin({
 
   async function handleDeleteChallenge(challengeId) {
     const challenge = challenges.find((item) => item.id === challengeId);
-    const challengeName = challenge?.title || "tuto vyzvu";
+    const challengeName = challenge?.title || "tuto výzvu";
     if (!window.confirm(`Opravdu smazat vyzvu "${challengeName}"?`)) {
       return;
     }
@@ -626,9 +626,9 @@ function Admin({
     try {
       await api(`/challenges/${challengeId}`, { method: "DELETE" });
       await loadChallenges();
-      setMessage("Vyzva byla smazana.");
+      setMessage("Výzva byla smazána.");
     } catch (deleteError) {
-      setError(getErrorMessage(deleteError, "Vyzvu se nepodarilo smazat."));
+      setError(getErrorMessage(deleteError, "Výzvu se nepodařilo smazat."));
     } finally {
       setDeletingChallengeId(null);
     }
@@ -821,7 +821,7 @@ function Admin({
 
   async function handleDeleteTask(taskId) {
     const task = tasks.find((item) => item.id === taskId);
-    const taskName = task?.title || "tento ukol";
+    const taskName = task?.title || "tento úkol";
     if (!window.confirm(`Opravdu smazat ukol "${taskName}"?`)) {
       return;
     }
@@ -843,7 +843,7 @@ function Admin({
 
   async function handleDeleteReward(rewardId) {
     const reward = rewards.find((item) => item.id === rewardId);
-    const rewardName = reward?.name || "tuto odmenu";
+    const rewardName = reward?.name || "tuto odměnu";
     if (!window.confirm(`Opravdu smazat odmenu "${rewardName}"?`)) {
       return;
     }
@@ -862,6 +862,27 @@ function Admin({
     }
   }
 
+  const pendingApprovalTasks = tasks.filter((task) => task.is_completed && !task.approved);
+
+  async function handleApproveAll(list) {
+    setError("");
+    setMessage("");
+    let approvedCount = 0;
+    for (const task of list) {
+      setBusyTaskId(task.id);
+      try {
+        await onApproveTask(task.id);
+        approvedCount += 1;
+      } catch (approveError) {
+        setError(getErrorMessage(approveError, ADMIN_MESSAGES.approveTaskError));
+        break;
+      }
+    }
+    setBusyTaskId(null);
+    if (approvedCount > 0) {
+      setMessage(`Schváleno úkolů: ${approvedCount}.`);
+    }
+  }
   async function handleApprove(taskId) {
     setBusyTaskId(taskId);
     setError("");
@@ -887,18 +908,18 @@ function Admin({
         method: "POST",
         body: {
           approved,
-          note: approved ? "Rodic schvalil dukaz." : "Rodic pozaduje presvedcivejsi dukaz.",
+          note: approved ? "Rodič schválil důkaz." : "Rodič požaduje přesvědčivější důkaz.",
         },
       });
       setMessage(
         approved
-          ? "Dukaz byl rodicem schvalen."
-          : "Dukaz byl vratcen k doplneni."
+          ? "Důkaz byl rodičem schválen."
+          : "Důkaz byl vrácen k doplnění."
       );
       await onDataChanged();
       return response;
     } catch (reviewError) {
-      setError(getErrorMessage(reviewError, "Hodnoceni dukazu se nepodarilo ulozit."));
+      setError(getErrorMessage(reviewError, "Hodnocení důkazu se nepodařilo uložit."));
       return null;
     } finally {
       setBusyTaskId(null);
@@ -920,13 +941,13 @@ function Admin({
 
   async function handleSetMemberPin(memberId) {
     const member = users.find((item) => item.id === memberId);
-    const memberName = member?.username || "tohoto clena";
+    const memberName = member?.username || "tohoto člena";
     const pin = window.prompt(`Zadej novy PIN (4-6 cislic) pro "${memberName}". Pouzije se pro prihlaseni v prohlizeci/PWA bez Telegramu.`);
     if (pin === null) {
       return;
     }
     if (!/^\d{4,6}$/.test(pin.trim())) {
-      setError("PIN musi mit 4 az 6 cislic.");
+      setError("PIN musí mít 4 až 6 číslic.");
       return;
     }
     setBusyMemberId(memberId);
@@ -939,7 +960,7 @@ function Admin({
       });
       setMessage(`PIN pro "${memberName}" byl nastaven.`);
     } catch (pinError) {
-      setError(getErrorMessage(pinError, "PIN se nepodarilo nastavit."));
+      setError(getErrorMessage(pinError, "PIN se nepodařilo nastavit."));
     } finally {
       setBusyMemberId(null);
     }
@@ -950,7 +971,7 @@ function Admin({
     if (!member) {
       return;
     }
-    const memberName = member.username || "tohoto clena";
+    const memberName = member.username || "tohoto člena";
     const nextRole = member.role === "parent" ? "child" : "parent";
     const question =
       nextRole === "parent"
@@ -968,7 +989,7 @@ function Admin({
       await loadUsers();
       await onDataChanged();
     } catch (roleError) {
-      setError(getErrorMessage(roleError, "Roli se nepodarilo zmenit."));
+      setError(getErrorMessage(roleError, "Roli se nepodařilo změnit."));
     } finally {
       setBusyMemberId(null);
     }
@@ -976,7 +997,7 @@ function Admin({
 
   async function handleDeleteMember(memberId) {
     const member = users.find((item) => item.id === memberId);
-    const memberName = member?.username || "tohoto clena";
+    const memberName = member?.username || "tohoto člena";
     if (!window.confirm(`Opravdu odebrat "${memberName}" z rodiny? Smazou se tim vsechna jeho data (XP, zlato, historie ukolu) a jde to vratit jen znovupripojenim.`)) {
       return;
     }
@@ -1007,7 +1028,7 @@ function Admin({
               </div>
               <h1 className="mt-2 text-3xl font-black text-white">Sprava ukolu a odmen</h1>
               <p className="mt-2 max-w-2xl text-sm text-slate-300">
-                Vytvarej mise pro deti, spravuj odmeny a schvaluj mimoradne ukoly.
+                Vytvářej mise pro děti, spravuj odměny a schvaluj mimořádné úkoly.
               </p>
               {family ? (
                 <div className="mt-4 inline-flex rounded-2xl border border-cyan-400/30 bg-cyan-400/10 px-4 py-2 text-sm font-semibold text-cyan-100">
@@ -1020,16 +1041,16 @@ function Admin({
               onClick={handleResetDaily}
               className="rounded-2xl border border-cyan-400/50 bg-cyan-400/10 px-4 py-3 text-sm font-semibold text-cyan-100 transition hover:bg-cyan-400/20"
             >
-              Reset denni ukoly
+              Reset denních úkolů
             </button>
           </div>
           <div className="mt-6 grid grid-cols-2 gap-3 md:grid-cols-4">
             <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-              <div className="text-xs uppercase tracking-[0.2em] text-slate-400">Deti</div>
+              <div className="text-xs uppercase tracking-[0.2em] text-slate-400">Děti</div>
               <div className="mt-2 text-3xl font-bold text-white">{players.length}</div>
             </div>
             <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-              <div className="text-xs uppercase tracking-[0.2em] text-slate-400">Aktivni ukoly</div>
+              <div className="text-xs uppercase tracking-[0.2em] text-slate-400">Aktivní úkoly</div>
               <div className="mt-2 text-3xl font-bold text-white">{tasks.length}</div>
             </div>
             <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
@@ -1047,23 +1068,23 @@ function Admin({
 
         <nav className="rounded-3xl border border-slate-800 bg-slate-900/80 p-4 shadow-lg backdrop-blur">
           <div className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
-            Rychly presun v menu
+            Rychlý přesun v menu
           </div>
           <div className="flex flex-wrap gap-2">
             <a href="#family-planner" className="rounded-full border border-fuchsia-400/30 bg-fuchsia-400/10 px-4 py-2 text-sm font-semibold text-fuchsia-100 transition hover:bg-fuchsia-400/20">
               AI denni plan
             </a>
             <a href="#task-create" className="rounded-full border border-cyan-400/30 bg-cyan-400/10 px-4 py-2 text-sm font-semibold text-cyan-100 transition hover:bg-cyan-400/20">
-              Formular ukolu
+              Formulář úkolu
             </a>
             <a href="#task-list" className="rounded-full border border-slate-700 bg-slate-950 px-4 py-2 text-sm font-semibold text-slate-200 transition hover:border-cyan-400 hover:text-white">
-              Aktivni ukoly
+              Aktivní úkoly
             </a>
             <a href="#reward-create" className="rounded-full border border-emerald-400/30 bg-emerald-400/10 px-4 py-2 text-sm font-semibold text-emerald-100 transition hover:bg-emerald-400/20">
-              Formular odmen
+              Formulář odměn
             </a>
             <a href="#reward-list" className="rounded-full border border-yellow-400/30 bg-yellow-400/10 px-4 py-2 text-sm font-semibold text-yellow-100 transition hover:bg-yellow-400/20">
-              Odmeny v obchodu
+              Odměny v obchodě
             </a>
           </div>
         </nav>
@@ -1106,7 +1127,7 @@ function Admin({
                 <div className="mt-1 text-2xl font-bold text-white">{engagementSummary.assigned_tasks_7d}</div>
               </div>
               <div className="rounded-2xl border border-white/10 bg-white/5 p-3">
-                <div className="text-xs uppercase tracking-[0.2em] text-slate-400">Dokoncene ukoly</div>
+                <div className="text-xs uppercase tracking-[0.2em] text-slate-400">Dokončené úkoly</div>
                 <div className="mt-1 text-2xl font-bold text-cyan-300">{engagementSummary.completed_tasks_7d}</div>
               </div>
               <div className="rounded-2xl border border-white/10 bg-white/5 p-3">
@@ -1124,9 +1145,9 @@ function Admin({
                 <table className="min-w-full text-left text-sm">
                   <thead>
                     <tr className="border-b border-white/10 text-xs uppercase tracking-[0.2em] text-slate-400">
-                      <th className="py-2 pr-3">Dite</th>
+                      <th className="py-2 pr-3">Dítě</th>
                       <th className="py-2 pr-3">Pridelene</th>
-                      <th className="py-2 pr-3">Dokoncene</th>
+                      <th className="py-2 pr-3">Dokončené</th>
                       <th className="py-2 pr-3">Dokonceni</th>
                       <th className="py-2 pr-3">Ceka schvaleni</th>
                       <th className="py-2 pr-0">Streak</th>
@@ -1157,7 +1178,7 @@ function Admin({
               <div className="mb-4">
                 <h2 className="text-xl font-bold text-white">AI denni plan pro celou rodinu</h2>
                 <p className="mt-1 text-sm text-slate-400">
-                  Vygeneruje ukoly napric detmi podle historie plneni a dovoli je naplanovat na konkretni den, nebo stejne rozlozit na cely tyden.
+                  Vygeneruje úkoly napříč dětmi podle historie plnění a dovolí je naplánovat na konkrétní den, nebo stejně rozložit na celý týden.
                 </p>
               </div>
 
@@ -1170,7 +1191,7 @@ function Admin({
                       value={familyPlannerForm.goal}
                       onChange={handleFamilyPlannerChange}
                       className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none transition focus:border-fuchsia-400"
-                      placeholder="Treba samostatnost"
+                      placeholder="Třeba samostatnost"
                     />
                   </label>
                   <label className="block">
@@ -1204,7 +1225,7 @@ function Admin({
                       className="h-4 w-4"
                     />
                     <span className="text-sm font-medium text-fuchsia-100">
-                      Stejne ukoly kazdy den cely tyden
+                      Stejné úkoly každý den celý týden
                     </span>
                   </label>
                 </div>
@@ -1216,7 +1237,7 @@ function Admin({
                     disabled={generatingFamilyPlanner || players.length === 0}
                     className="rounded-2xl border border-fuchsia-400/40 bg-fuchsia-400/10 px-4 py-3 text-sm font-bold text-fuchsia-100 transition hover:bg-fuchsia-400/20 disabled:cursor-not-allowed disabled:opacity-60"
                   >
-                    {generatingFamilyPlanner ? "Generuji rodinny plan..." : "Vygenerovat rodinny plan"}
+                    {generatingFamilyPlanner ? "Generuji rodinný plán..." : "Vygenerovat rodinný plán"}
                   </button>
                   <button
                     type="button"
@@ -1225,7 +1246,7 @@ function Admin({
                     className="rounded-2xl border border-emerald-400/40 bg-emerald-400/10 px-4 py-3 text-sm font-bold text-emerald-100 transition hover:bg-emerald-400/20 disabled:cursor-not-allowed disabled:opacity-60"
                   >
                     {applyingFamilyPlanner
-                      ? "Aplikuji plan..."
+                      ? "Používám plán..."
                       : `Aplikovat plan (${selectedFamilyPlannerTasks.size})`}
                   </button>
                 </div>
@@ -1254,7 +1275,7 @@ function Admin({
                         className="h-4 w-4 cursor-pointer"
                       />
                       <label htmlFor="selectAllFamilyPlanner" className="text-xs font-bold uppercase tracking-[0.2em] text-fuchsia-200 cursor-pointer">
-                        Vybrat vsechny navrzene ukoly
+                        Vybrat všechny navržené úkoly
                       </label>
                     </div>
 
@@ -1279,13 +1300,13 @@ function Admin({
                                     <span className="text-sm text-fuchsia-50">
                                       <span className="font-semibold">{taskItem.title}</span>
                                       <span className="ml-2 text-xs text-fuchsia-200/80">
-                                        {taskItem.xp} XP • {taskItem.gold} gold • {taskItem.requires_proof ? "dukaz" : "bez dukazu"}
+                                        {taskItem.xp} XP • {taskItem.gold} gold • {taskItem.requires_proof ? "důkaz" : "bez důkazu"}
                                       </span>
                                     </span>
                                   </label>
                                   <div className="mt-3 flex items-center justify-between gap-3 pl-7">
                                     <span className="text-xs font-semibold uppercase tracking-[0.2em] text-fuchsia-200/70">
-                                      Den ukolu
+                                      Den úkolu
                                     </span>
                                     <select
                                       value={familyPlannerSchedule[key] || familyPlannerForm.start_date}
@@ -1325,8 +1346,8 @@ function Admin({
                   <h2 className="text-xl font-bold text-white">{editingTaskId ? "Upravit ukol" : "Novy ukol"}</h2>
                   <p className="mt-1 text-sm text-slate-400">
                     {editingTaskId
-                      ? "Kliknuty ukol muzes upravit a znovu ulozit."
-                      : "Prirad konkretni ukol vybranemu diteti."}
+                      ? "Kliknutý úkol můžeš upravit a znovu uložit."
+                      : "Přiřaď konkrétní úkol vybranému dítěti."}
                   </p>
                 </div>
                 {!editingTaskId ? (
@@ -1336,12 +1357,12 @@ function Admin({
                     aria-expanded={taskFormOpen}
                     className="shrink-0 rounded-2xl border border-cyan-500/40 bg-cyan-500/10 px-4 py-2 text-sm font-bold text-cyan-100 transition hover:bg-cyan-500/20"
                   >
-                    {taskFormOpen ? "Zavrit" : "+ Pridat ukol"}
+                    {taskFormOpen ? "Zavřít" : "+ Přidat úkol"}
                   </button>
                 ) : null}
               </div>
               {taskFormOpen || editingTaskId ? (
-              <form className="space-y-4" onSubmit={handleCreateTask}>
+              <form className="space-y-4 max-md:fixed max-md:inset-x-0 max-md:bottom-0 max-md:z-50 max-md:max-h-[85vh] max-md:overflow-y-auto max-md:rounded-t-3xl max-md:border-t max-md:border-cyan-400/40 max-md:bg-slate-900 max-md:p-5 max-md:shadow-2xl" onSubmit={handleCreateTask}>
                 <label className="block">
                   <span className="mb-2 block text-sm font-medium text-slate-200">Nazev</span>
                   <input
@@ -1350,7 +1371,7 @@ function Admin({
                     value={taskForm.title}
                     onChange={handleTaskChange}
                     className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none transition focus:border-cyan-400"
-                    placeholder="Treba Uklid pokoj"
+                    placeholder="Třeba Úklid pokoje"
                   />
                 </label>
                 <label className="block">
@@ -1361,7 +1382,7 @@ function Admin({
                     onChange={handleTaskChange}
                     rows="4"
                     className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none transition focus:border-cyan-400"
-                    placeholder="Co presne je potreba splnit"
+                    placeholder="Co přesně je potřeba splnit"
                   />
                 </label>
                 <button
@@ -1370,7 +1391,7 @@ function Admin({
                   disabled={rewritingTask}
                   className="w-full rounded-2xl border border-violet-400/40 bg-violet-400/10 px-4 py-3 text-sm font-bold text-violet-100 transition hover:bg-violet-400/20 disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  {rewritingTask ? "Generuji navrh..." : "Navrhnout herni ukol pomoci AI"}
+                  {rewritingTask ? "Generuji návrh..." : "Navrhnout herní úkol pomocí AI"}
                 </button>
                 <label className="block">
                   <span className="mb-2 block text-sm font-medium text-slate-200">
@@ -1396,11 +1417,11 @@ function Admin({
                     <div className="mt-3 space-y-2 text-sm text-violet-50">
                       <div>
                         <span className="font-semibold text-violet-200">Nazev:</span>{" "}
-                        {taskSuggestion.title || "Bez navrhu"}
+                        {taskSuggestion.title || "Bez návrhu"}
                       </div>
                       <div>
                         <span className="font-semibold text-violet-200">XP:</span>{" "}
-                        {taskSuggestion.xp ?? "Bez navrhu"}
+                        {taskSuggestion.xp ?? "Bez návrhu"}
                       </div>
                       <div>
                         <span className="font-semibold text-violet-200">Styl:</span>{" "}
@@ -1413,7 +1434,7 @@ function Admin({
                         onClick={() => applyTaskSuggestion("title")}
                         className="rounded-2xl border border-violet-300/40 bg-slate-950/40 px-3 py-2 text-sm font-semibold text-violet-100 transition hover:bg-slate-950/60"
                       >
-                        Prevzit nazev
+                        Převzít název
                       </button>
                       <button
                         type="button"
@@ -1427,7 +1448,7 @@ function Admin({
                         onClick={() => applyTaskSuggestion("all")}
                         className="rounded-2xl bg-violet-300 px-3 py-2 text-sm font-bold text-violet-950 transition hover:bg-violet-200"
                       >
-                        Prevzit vse
+                        Převzít vše
                       </button>
                     </div>
                     <button
@@ -1436,7 +1457,7 @@ function Admin({
                       disabled={rewritingTask}
                       className="mt-3 w-full rounded-2xl border border-violet-300/40 bg-slate-950/40 px-3 py-2 text-sm font-semibold text-violet-100 transition hover:bg-slate-950/60 disabled:cursor-not-allowed disabled:opacity-60"
                     >
-                      {rewritingTask ? "Generuji navrh..." : ADMIN_MESSAGES.aiRetry}
+                      {rewritingTask ? "Generuji návrh..." : ADMIN_MESSAGES.aiRetry}
                     </button>
                   </div>
                 ) : null}
@@ -1449,7 +1470,7 @@ function Admin({
                     onChange={handleTaskChange}
                     className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none transition focus:border-cyan-400"
                   >
-                    {players.length === 0 ? <option value="">Nejsou dostupne zadne deti</option> : null}
+                    {players.length === 0 ? <option value="">Nejsou dostupné žádné děti</option> : null}
                     {players.map((member) => (
                       <option key={member.id} value={member.id}>
                         {member.username || member.telegram_id}
@@ -1501,7 +1522,7 @@ function Admin({
                     className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none transition focus:border-cyan-400"
                   />
                   <span className="mt-2 block text-xs text-slate-400">
-                    Vyber den, kdy se ma jednorazovy ukol zobrazit diteti.
+                    Vyber den, kdy se má jednorázový úkol zobrazit dítěti.
                   </span>
                 </label>
                 <label className="block">
@@ -1514,7 +1535,7 @@ function Admin({
                     className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none transition focus:border-cyan-400"
                   />
                   <span className="mt-2 block text-xs text-slate-400">
-                    Pokud je vyplneny, dite dostane pripominku v nastaveny cas.
+                    Pokud je vyplněný, dítě dostane připomínku v nastavený čas.
                   </span>
                 </label>
                 <label className="flex items-center gap-3 rounded-2xl border border-slate-800 bg-slate-950 px-4 py-3">
@@ -1544,7 +1565,7 @@ function Admin({
                     disabled={submittingTask || players.length === 0}
                     className="w-full rounded-2xl bg-cyan-400 px-4 py-3 font-bold text-slate-950 transition hover:bg-cyan-300 disabled:cursor-not-allowed disabled:bg-slate-700 disabled:text-slate-400"
                   >
-                    {submittingTask ? "Ukladam..." : editingTaskId ? "Ulozit zmeny" : "Vytvorit ukol"}
+                    {submittingTask ? "Ukládám..." : editingTaskId ? "Uložit změny" : "Vytvořit úkol"}
                   </button>
                   {editingTaskId ? (
                     <button
@@ -1552,7 +1573,7 @@ function Admin({
                       onClick={handleCancelTaskEdit}
                       className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 font-semibold text-slate-200 transition hover:border-cyan-400 hover:text-white"
                     >
-                      Zrusit upravu
+                      Zrušit úpravu
                     </button>
                   ) : null}
                 </div>
@@ -1576,7 +1597,7 @@ function Admin({
                     value={rewardForm.name}
                     onChange={handleRewardChange}
                     className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none transition focus:border-cyan-400"
-                    placeholder="Treba Filmovy vecer"
+                    placeholder="Třeba filmový večer"
                   />
                 </label>
                 <label className="block">
@@ -1587,7 +1608,7 @@ function Admin({
                     onChange={handleRewardChange}
                     rows="3"
                     className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none transition focus:border-cyan-400"
-                    placeholder="Co presne dite dostane"
+                    placeholder="Co přesně dítě dostane"
                   />
                 </label>
                 <button
@@ -1596,7 +1617,7 @@ function Admin({
                   disabled={rewritingReward}
                   className="w-full rounded-2xl border border-emerald-400/40 bg-emerald-400/10 px-4 py-3 text-sm font-bold text-emerald-100 transition hover:bg-emerald-400/20 disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  {rewritingReward ? "Generuji navrh..." : "Navrhnout odmenu pomoci AI"}
+                  {rewritingReward ? "Generuji návrh..." : "Navrhnout odměnu pomocí AI"}
                 </button>
                 {rewardSuggestion ? (
                   <div className="rounded-2xl border border-emerald-400/30 bg-emerald-400/10 p-4">
@@ -1606,11 +1627,11 @@ function Admin({
                     <div className="mt-3 space-y-2 text-sm text-emerald-50">
                       <div>
                         <span className="font-semibold text-emerald-200">Nazev:</span>{" "}
-                        {rewardSuggestion.name || "Bez navrhu"}
+                        {rewardSuggestion.name || "Bez návrhu"}
                       </div>
                       <div>
                         <span className="font-semibold text-emerald-200">Cena:</span>{" "}
-                        {rewardSuggestion.cost ?? "Bez navrhu"}
+                        {rewardSuggestion.cost ?? "Bez návrhu"}
                       </div>
                       <div>
                         <span className="font-semibold text-emerald-200">Styl:</span>{" "}
@@ -1623,21 +1644,21 @@ function Admin({
                         onClick={() => applyRewardSuggestion("name")}
                         className="rounded-2xl border border-emerald-300/40 bg-slate-950/40 px-3 py-2 text-sm font-semibold text-emerald-100 transition hover:bg-slate-950/60"
                       >
-                        Prevzit nazev
+                        Převzít název
                       </button>
                       <button
                         type="button"
                         onClick={() => applyRewardSuggestion("cost")}
                         className="rounded-2xl border border-emerald-300/40 bg-slate-950/40 px-3 py-2 text-sm font-semibold text-emerald-100 transition hover:bg-slate-950/60"
                       >
-                        Prevzit cenu
+                        Převzít cenu
                       </button>
                       <button
                         type="button"
                         onClick={() => applyRewardSuggestion("all")}
                         className="rounded-2xl bg-emerald-300 px-3 py-2 text-sm font-bold text-emerald-950 transition hover:bg-emerald-200"
                       >
-                        Prevzit vse
+                        Převzít vše
                       </button>
                     </div>
                     <button
@@ -1646,7 +1667,7 @@ function Admin({
                       disabled={rewritingReward}
                       className="mt-3 w-full rounded-2xl border border-emerald-300/40 bg-slate-950/40 px-3 py-2 text-sm font-semibold text-emerald-100 transition hover:bg-slate-950/60 disabled:cursor-not-allowed disabled:opacity-60"
                     >
-                      {rewritingReward ? "Generuji navrh..." : ADMIN_MESSAGES.aiRetry}
+                      {rewritingReward ? "Generuji návrh..." : ADMIN_MESSAGES.aiRetry}
                     </button>
                   </div>
                 ) : null}
@@ -1666,7 +1687,7 @@ function Admin({
                   disabled={submittingReward}
                   className="w-full rounded-2xl bg-emerald-400 px-4 py-3 font-bold text-emerald-950 transition hover:bg-emerald-300 disabled:cursor-not-allowed disabled:bg-slate-700 disabled:text-slate-400"
                 >
-                  {submittingReward ? "Ukladam..." : "Vytvorit odmenu"}
+                  {submittingReward ? "Ukládám..." : "Vytvořit odměnu"}
                 </button>
               </form>
             </section>
@@ -1678,7 +1699,7 @@ function Admin({
             <section id="task-list" className="scroll-mt-6 rounded-3xl border border-slate-800 bg-slate-900 p-5 shadow-xl">
               <div className="mb-4 flex items-center justify-between gap-4">
                 <div>
-                  <h2 className="text-xl font-bold text-white">Aktivni ukoly</h2>
+                  <h2 className="text-xl font-bold text-white">Aktivní úkoly</h2>
                   <p className="mt-1 text-sm text-slate-400">Prehled vsech ukolu v rodine.</p>
                 </div>
                 <button
@@ -1692,17 +1713,17 @@ function Admin({
               <div className="mb-4 grid gap-3 sm:grid-cols-2">
                 <label className="block">
                   <span className="mb-2 block text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
-                    Stav ukolu
+                    Stav úkolu
                   </span>
                   <select
                     value={taskStatusFilter}
                     onChange={(event) => setTaskStatusFilter(event.target.value)}
                     className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-2 text-sm text-white outline-none transition focus:border-cyan-400"
                   >
-                    <option value="all">Vsechny</option>
-                    <option value="pending">Aktivni</option>
-                    <option value="completed">Dokoncene</option>
-                    <option value="approval">Cekajici na schvaleni</option>
+                    <option value="all">Všechny</option>
+                    <option value="pending">Aktivní</option>
+                    <option value="completed">Dokončené</option>
+                    <option value="approval">Čekající na schválení</option>
                   </select>
                 </label>
                 <label className="block">
@@ -1714,7 +1735,7 @@ function Admin({
                     onChange={(event) => setTaskChildFilter(event.target.value)}
                     className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-2 text-sm text-white outline-none transition focus:border-cyan-400"
                   >
-                    <option value="all">Vsechny deti</option>
+                    <option value="all">Všechny děti</option>
                     {players.map((member) => (
                       <option key={member.id} value={member.id}>
                         {member.username || member.telegram_id}
@@ -1723,9 +1744,18 @@ function Admin({
                   </select>
                 </label>
               </div>
+              {pendingApprovalTasks.length > 1 ? (
+                <button
+                  type="button"
+                  onClick={() => handleApproveAll(pendingApprovalTasks)}
+                  className="mb-3 w-full rounded-2xl bg-emerald-400 px-4 py-2.5 text-sm font-black text-slate-950 transition hover:bg-emerald-300"
+                >
+                  Schválit vše čekající ({pendingApprovalTasks.length})
+                </button>
+              ) : null}
               <div className="mb-4 rounded-2xl border border-slate-800 bg-slate-950/70 p-3">
                 <div className="mb-2 text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
-                  Tydenni kalendar ukolu
+                  Týdenní kalendář úkolů
                 </div>
                 <div className="grid grid-cols-4 gap-2 sm:grid-cols-8">
                   <button
@@ -1737,7 +1767,7 @@ function Admin({
                         : "border border-slate-700 bg-slate-900 text-slate-200 hover:border-cyan-400"
                     }`}
                   >
-                    Vse
+                    Vše
                   </button>
                   {weekCalendar.map((entry) => (
                     <button
@@ -1758,11 +1788,11 @@ function Admin({
               </div>
               {loading ? (
                 <div className="rounded-2xl border border-slate-800 bg-slate-950 px-4 py-8 text-center text-slate-400">
-                  Nacitam administraci...
+                  Načítám administraci...
                 </div>
               ) : filteredTasks.length === 0 ? (
                 <div className="rounded-2xl border border-dashed border-slate-700 bg-slate-950 px-4 py-8 text-center text-slate-400">
-                  Zadny ukol neodpovida zvolenemu filtru.
+                  Žádný úkol neodpovídá zvolenému filtru.
                 </div>
               ) : (
                 <div className="grid gap-4">
@@ -1785,32 +1815,32 @@ function Admin({
                               <h3 className="text-lg font-bold text-white">{task.title}</h3>
                               {task.is_daily ? (
                                 <span className="rounded-full border border-amber-400/30 bg-amber-400/10 px-2 py-1 text-xs font-semibold text-amber-200">
-                                  Denne
+                                  Denně
                                 </span>
                               ) : null}
                               {task.is_completed ? (
                                 <span className="rounded-full border border-emerald-400/30 bg-emerald-400/10 px-2 py-1 text-xs font-semibold text-emerald-200">
-                                  Ditetem splneno
+                                  Dítětem splněno
                                 </span>
                               ) : null}
                               {task.approved ? (
                                 <span className="rounded-full border border-cyan-400/30 bg-cyan-400/10 px-2 py-1 text-xs font-semibold text-cyan-200">
-                                  Rodicem schvaleno
+                                  Rodičem schváleno
                                 </span>
                               ) : null}
                               {needsApproval ? (
                                 <span className="rounded-full border border-rose-400/30 bg-rose-400/10 px-2 py-1 text-xs font-semibold text-rose-200">
-                                  Ceka na schvaleni
+                                  Čeká na schválení
                                 </span>
                               ) : null}
                               {task.requires_proof ? (
                                 <span className="rounded-full border border-fuchsia-400/30 bg-fuchsia-400/10 px-2 py-1 text-xs font-semibold text-fuchsia-200">
-                                  Dukaz povinny
+                                  Důkaz povinný
                                 </span>
                               ) : null}
                               {task.proof_submitted_at ? (
                                 <span className="rounded-full border border-cyan-400/30 bg-cyan-400/10 px-2 py-1 text-xs font-semibold text-cyan-200">
-                                  Dukaz odeslan
+                                  Důkaz odeslán
                                 </span>
                               ) : null}
                               {needsProofReview ? (
@@ -1820,7 +1850,7 @@ function Admin({
                               ) : null}
                             </div>
                             <p className="mt-2 text-sm text-slate-400">
-                              {task.description || "Bez doplneneho popisu."}
+                              {task.description || "Bez doplněného popisu."}
                             </p>
                             <div className="mt-4 flex flex-wrap gap-2 text-xs font-semibold">
                               <span className="rounded-full bg-cyan-400/10 px-3 py-1 text-cyan-200">
@@ -1830,7 +1860,7 @@ function Admin({
                                 {task.gold} zlata
                               </span>
                               <span className="rounded-full bg-white/5 px-3 py-1 text-slate-300">
-                                {assignee?.username || assignee?.telegram_id || "Bez prirazeni"}
+                                {assignee?.username || assignee?.telegram_id || "Bez přiřazení"}
                               </span>
                               {task.due_time ? (
                                 <span className="rounded-full bg-sky-400/10 px-3 py-1 text-sky-200">
@@ -1874,13 +1904,13 @@ function Admin({
                                     className="mt-2 inline-block text-xs font-semibold text-cyan-200 underline"
                                     onClick={(event) => event.stopPropagation()}
                                   >
-                                    Otevrit prilozeny dukaz
+                                    Otevřít přiložený důkaz
                                   </a>
                                 )}
                               </div>
                             ) : null}
                             <div className="mt-3 text-xs font-semibold uppercase tracking-[0.2em] text-cyan-300">
-                              Klikni pro upravu ukolu
+                              Klikni pro úpravu úkolu
                             </div>
                           </button>
                           <div className="flex flex-wrap gap-2">
@@ -1894,7 +1924,7 @@ function Admin({
                                 disabled={busyTaskId === task.id}
                                 className="rounded-2xl border border-emerald-500/40 bg-emerald-500/10 px-4 py-2 text-sm font-semibold text-emerald-100 transition hover:bg-emerald-500/20 disabled:cursor-not-allowed disabled:opacity-60"
                               >
-                                {busyTaskId === task.id ? "Schvaluji..." : "Schvalit"}
+                                {busyTaskId === task.id ? "Schvaluji..." : "Schválit"}
                               </button>
                             ) : null}
                             {needsProofReview ? (
@@ -1908,7 +1938,7 @@ function Admin({
                                   disabled={busyTaskId === task.id}
                                   className="rounded-2xl border border-cyan-500/40 bg-cyan-500/10 px-4 py-2 text-sm font-semibold text-cyan-100 transition hover:bg-cyan-500/20 disabled:cursor-not-allowed disabled:opacity-60"
                                 >
-                                  {busyTaskId === task.id ? "Ukladam..." : "Schvalit dukaz"}
+                                  {busyTaskId === task.id ? "Ukládám..." : "Schválit důkaz"}
                                 </button>
                                 <button
                                   type="button"
@@ -1919,7 +1949,7 @@ function Admin({
                                   disabled={busyTaskId === task.id}
                                   className="rounded-2xl border border-orange-500/40 bg-orange-500/10 px-4 py-2 text-sm font-semibold text-orange-100 transition hover:bg-orange-500/20 disabled:cursor-not-allowed disabled:opacity-60"
                                 >
-                                  {busyTaskId === task.id ? "Ukladam..." : "Vratit dukaz"}
+                                  {busyTaskId === task.id ? "Ukládám..." : "Vrátit důkaz"}
                                 </button>
                               </>
                             ) : null}
@@ -1947,14 +1977,14 @@ function Admin({
             {adminTab === "rewards" && (
             <section id="reward-list" className="scroll-mt-6 rounded-3xl border border-slate-800 bg-slate-900 p-5 shadow-xl">
               <div className="mb-4">
-                <h2 className="text-xl font-bold text-white">Odmeny v obchodu</h2>
+                <h2 className="text-xl font-bold text-white">Odměny v obchodě</h2>
                 <p className="mt-1 text-sm text-slate-400">
-                  Polozky, ktere si deti mohou koupit za zlato.
+                  Položky, které si děti mohou koupit za zlato.
                 </p>
               </div>
               {rewards.length === 0 ? (
                 <div className="rounded-2xl border border-dashed border-slate-700 bg-slate-950 px-4 py-8 text-center text-slate-400">
-                  Zatim tu nejsou zadne odmeny.
+                  Zatím tu nejsou žádné odměny.
                 </div>
               ) : (
                 <div className="grid gap-4">
@@ -1967,7 +1997,7 @@ function Admin({
                         <div>
                           <h3 className="text-lg font-bold text-white">{reward.name}</h3>
                           <p className="mt-2 text-sm text-slate-400">
-                            {reward.description || "Bez doplneneho popisu."}
+                            {reward.description || "Bez doplněného popisu."}
                           </p>
                           <div className="mt-3 inline-flex rounded-full bg-emerald-400/10 px-3 py-1 text-xs font-semibold text-emerald-200">
                             {reward.cost} zlata
@@ -1992,14 +2022,14 @@ function Admin({
             {adminTab === "family" && (
             <section className="rounded-3xl border border-slate-800 bg-slate-900 p-5 shadow-xl">
               <div className="mb-4">
-                <h2 className="text-xl font-bold text-white">Clenove rodiny</h2>
+                <h2 className="text-xl font-bold text-white">Členové rodiny</h2>
                 <p className="mt-1 text-sm text-slate-400">
                   Spravuj clenstvi v rodine. Odebrani clena smaze vsechna jeho data.
                 </p>
               </div>
               {users.length === 0 ? (
                 <div className="rounded-2xl border border-dashed border-slate-700 bg-slate-950 px-4 py-8 text-center text-slate-400">
-                  Zatim tu nejsou zadni clenove.
+                  Zatím tu nejsou žádní členové.
                 </div>
               ) : (
                 <div className="grid gap-3">
@@ -2043,7 +2073,7 @@ function Admin({
                             disabled={busyMemberId === member.id}
                             className="rounded-2xl border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-sm font-semibold text-amber-100 transition hover:bg-amber-500/20 disabled:cursor-not-allowed disabled:opacity-60"
                           >
-                            {member.role === "parent" ? "Zmenit na dite" : "Udelat rodicem"}
+                            {member.role === "parent" ? "Změnit na dítě" : "Udělat rodičem"}
                           </button>
                         ) : null}
                         {member.id !== user?.id ? (
@@ -2079,7 +2109,7 @@ function Admin({
                   required
                   value={challengeForm.title}
                   onChange={handleChallengeChange}
-                  placeholder="Nazev vyzvy"
+                  placeholder="Název výzvy"
                   className="rounded-2xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white"
                 />
                 <input
@@ -2130,16 +2160,16 @@ function Admin({
                   disabled={creatingChallenge}
                   className="rounded-2xl border border-amber-400/40 bg-amber-400/10 px-3 py-2 text-sm font-bold text-amber-100 transition hover:bg-amber-400/20 disabled:opacity-60 sm:col-span-2"
                 >
-                  {creatingChallenge ? "Vytvarim vyzvu..." : "Vytvorit tymovou vyzvu"}
+                  {creatingChallenge ? "Vytvářím výzvu..." : "Vytvořit týmovou výzvu"}
                 </button>
               </form>
 
               <div className="mb-4 grid gap-2 sm:grid-cols-4">
                 {[
-                  { id: "jaro", label: "Jarni event" },
-                  { id: "leto", label: "Letni event" },
-                  { id: "podzim", label: "Podzimni event" },
-                  { id: "zima", label: "Zimni event" },
+                  { id: "jaro", label: "Jarní event" },
+                  { id: "leto", label: "Letní event" },
+                  { id: "podzim", label: "Podzimní event" },
+                  { id: "zima", label: "Zimní event" },
                 ].map((season) => (
                   <button
                     key={season.id}
@@ -2178,7 +2208,7 @@ function Admin({
                           disabled={deletingChallengeId === challenge.id}
                           className="rounded-2xl border border-rose-500/40 bg-rose-500/10 px-3 py-2 text-xs font-semibold text-rose-100 transition hover:bg-rose-500/20 disabled:opacity-60"
                         >
-                          {deletingChallengeId === challenge.id ? "Mazani..." : "Smazat"}
+                          {deletingChallengeId === challenge.id ? "Mazání..." : "Smazat"}
                         </button>
                       </div>
                     </article>
@@ -2197,7 +2227,7 @@ function Admin({
               key={item.id}
               type="button"
               onClick={() => setAdminTab(item.id)}
-              aria-label={`Zalozka ${item.label}`}
+              aria-label={`Záložka ${item.label}`}
               aria-current={adminTab === item.id ? "page" : undefined}
               className={`flex min-h-[56px] flex-col items-center justify-center rounded-2xl text-xs font-bold transition ${
                 adminTab === item.id ? "bg-cyan-500/20 text-cyan-100" : "text-slate-400 hover:bg-slate-900"

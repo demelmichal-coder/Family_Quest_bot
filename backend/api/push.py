@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 from api import get_current_user, get_db
 from config import settings
 from models import PushSubscription, User
+from push_notify import send_push_to_user_by_id
 
 router = APIRouter(prefix="/push", tags=["push"])
 
@@ -70,3 +71,15 @@ def unsubscribe(
     db.delete(sub)
     db.commit()
     return {"detail": "Odber notifikaci vypnut."}
+
+
+@router.post("/test", summary="Poslat testovaci Web Push notifikaci na tento ucet")
+def send_test_push(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    count = db.query(PushSubscription).filter(PushSubscription.user_id == current_user.id).count()
+    if count == 0:
+        raise HTTPException(status_code=404, detail="Nejdříve zapni upozornění na tomto zařízení.")
+    send_push_to_user_by_id(current_user.id, "Family Quest", "Upozornění funguje!", "/")
+    return {"detail": "Testovací upozornění odesláno."}

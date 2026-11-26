@@ -7,8 +7,8 @@ const stateStyles = {
 };
 
 const stateLabels = {
-  ready: "K plneni",
-  waiting: "Ceka na schvaleni",
+  ready: "K plnění",
+  waiting: "Čeká na schválení",
   done: "Hotovo",
 };
 
@@ -39,7 +39,7 @@ function TaskCard({
             <h3 className="brawl-subtitle text-xl font-black text-yellow-100">{title}</h3>
             {isDaily ? (
               <span className="rounded-full border-2 border-slate-950 bg-yellow-300 px-3 py-1 text-xs font-bold uppercase tracking-[0.2em] text-yellow-950">
-                Denne
+                Denně
               </span>
             ) : null}
           </div>
@@ -53,7 +53,7 @@ function TaskCard({
           {requiresProof ? (
             <div className="mt-3 flex flex-wrap gap-2 text-xs font-semibold">
               <span className="rounded-full border-2 border-slate-950 bg-fuchsia-300 px-2 py-1 text-fuchsia-950">
-                Dukaz povinny
+                Důkaz povinný
               </span>
               {dueTime ? (
                 <span className="rounded-full border-2 border-slate-950 bg-sky-300 px-2 py-1 text-sky-950">
@@ -62,12 +62,12 @@ function TaskCard({
               ) : null}
               {proofSubmittedAt ? (
                 <span className="rounded-full border-2 border-slate-950 bg-cyan-300 px-2 py-1 text-cyan-950">
-                  Dukaz odeslan
+                  Důkaz odeslán
                 </span>
               ) : null}
               {aiFlagged ? (
                 <span className="rounded-full border-2 border-slate-950 bg-orange-300 px-2 py-1 text-orange-950">
-                  Ceka na rodice
+                  Čeká na rodiče
                 </span>
               ) : null}
             </div>
@@ -103,14 +103,14 @@ function TaskCard({
           className="w-full rounded-2xl border-2 border-slate-950 bg-gradient-to-b from-yellow-300 to-yellow-500 px-4 py-2.5 text-sm font-black text-yellow-950 shadow-[0_4px_0_#020617] transition hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-60"
         >
           {approved
-            ? "Uz splneno"
+            ? "Už splněno"
             : isCompleted
-            ? "Odeslano ke schvaleni"
+            ? "Odesláno ke schválení"
             : busy
-            ? "Dokoncuji..."
+            ? "Dokončuji..."
             : requiresProof && !proofSubmittedAt
-            ? "Odeslat dukaz a splnit"
-            : "Oznacit jako splnene"}
+            ? "Odeslat důkaz a splnit"
+            : "Označit jako splněné"}
         </button>
       </div>
     </article>

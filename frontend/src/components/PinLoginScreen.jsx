@@ -48,7 +48,7 @@ export default function PinLoginScreen({ onShowSavedProfiles, hasSavedProfiles }
     event.preventDefault();
     const code = familyCode.trim().toUpperCase();
     if (!code) {
-      setError("Zadej kod rodiny.");
+      setError("Zadej kód rodiny.");
       return;
     }
     setLoading(true);
@@ -62,7 +62,7 @@ export default function PinLoginScreen({ onShowSavedProfiles, hasSavedProfiles }
       setMembers(Array.isArray(list) ? list : []);
       setStep(STEP_MEMBER_PICKER);
     } catch (submitError) {
-      setError(getErrorMessage(submitError, "Rodinu se nepodarilo najit."));
+      setError(getErrorMessage(submitError, "Rodinu se nepodařilo najít."));
     } finally {
       setLoading(false);
     }
@@ -78,7 +78,7 @@ export default function PinLoginScreen({ onShowSavedProfiles, hasSavedProfiles }
   async function handlePinSubmit(event) {
     event.preventDefault();
     if (pin.length < 4) {
-      setError("PIN musi mit alespon 4 cislice.");
+      setError("PIN musí mít alespoň 4 číslice.");
       return;
     }
     setLoading(true);
@@ -91,7 +91,7 @@ export default function PinLoginScreen({ onShowSavedProfiles, hasSavedProfiles }
       });
       await loginWithPinToken(authResponse);
     } catch (submitError) {
-      setError(getErrorMessage(submitError, "Prihlaseni se nezdarilo."));
+      setError(getErrorMessage(submitError, "Přihlášení se nezdařilo."));
       setPin("");
     } finally {
       setLoading(false);
@@ -101,15 +101,15 @@ export default function PinLoginScreen({ onShowSavedProfiles, hasSavedProfiles }
   async function handleRegisterSubmit(event) {
     event.preventDefault();
     if (!registerName.trim()) {
-      setError("Zadej jmeno.");
+      setError("Zadej jméno.");
       return;
     }
     if (registerPin.length < 4) {
-      setError("PIN musi mit alespon 4 cislice.");
+      setError("PIN musí mít alespoň 4 číslice.");
       return;
     }
     if (registerPin !== registerPinConfirm) {
-      setError("PINy se neshoduji.");
+      setError("PINy se neshodují.");
       return;
     }
     setLoading(true);
@@ -126,7 +126,7 @@ export default function PinLoginScreen({ onShowSavedProfiles, hasSavedProfiles }
       });
       await loginWithPinToken(authResponse);
     } catch (submitError) {
-      setError(getErrorMessage(submitError, "Zalozeni profilu se nezdarilo."));
+      setError(getErrorMessage(submitError, "Založení profilu se nezdařilo."));
     } finally {
       setLoading(false);
     }
@@ -135,19 +135,19 @@ export default function PinLoginScreen({ onShowSavedProfiles, hasSavedProfiles }
   async function handleCreateFamilySubmit(event) {
     event.preventDefault();
     if (newFamilyName.trim().length < 2) {
-      setError("Zadej nazev rodiny.");
+      setError("Zadej název rodiny.");
       return;
     }
     if (!registerName.trim()) {
-      setError("Zadej sve jmeno.");
+      setError("Zadej své jméno.");
       return;
     }
     if (registerPin.length < 4) {
-      setError("PIN musi mit alespon 4 cislice.");
+      setError("PIN musí mít alespoň 4 číslice.");
       return;
     }
     if (registerPin !== registerPinConfirm) {
-      setError("PINy se neshoduji.");
+      setError("PINy se neshodují.");
       return;
     }
     setLoading(true);
@@ -167,7 +167,7 @@ export default function PinLoginScreen({ onShowSavedProfiles, hasSavedProfiles }
       }
       await loginWithPinToken(authResponse);
     } catch (submitError) {
-      setError(getErrorMessage(submitError, "Rodinu se nepodarilo zalozit."));
+      setError(getErrorMessage(submitError, "Rodinu se nepodařilo založit."));
     } finally {
       setLoading(false);
     }
@@ -212,7 +212,7 @@ export default function PinLoginScreen({ onShowSavedProfiles, hasSavedProfiles }
                 value={familyCode}
                 onChange={(event) => setFamilyCode(event.target.value.toUpperCase())}
                 className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-slate-950 shadow-sm outline-none transition focus:border-cyan-400"
-                placeholder="Napr. AB12CD34"
+                placeholder="Např. AB12CD34"
                 autoCapitalize="characters"
               />
             </label>
@@ -221,7 +221,7 @@ export default function PinLoginScreen({ onShowSavedProfiles, hasSavedProfiles }
               disabled={loading}
               className="w-full rounded-2xl bg-slate-950 px-4 py-3 font-bold text-white transition hover:bg-slate-800 disabled:opacity-60"
             >
-              {loading ? "Hledam rodinu..." : "Pokracovat"}
+              {loading ? "Hledám rodinu..." : "Pokračovat"}
             </button>
             <button
               type="button"
@@ -231,7 +231,7 @@ export default function PinLoginScreen({ onShowSavedProfiles, hasSavedProfiles }
               }}
               className="w-full rounded-2xl border border-cyan-300 bg-cyan-50 px-4 py-3 font-bold text-cyan-950 transition hover:bg-cyan-100"
             >
-              Zalozit novou rodinu
+              Založit novou rodinu
             </button>
           </form>
         ) : null}
@@ -298,7 +298,7 @@ export default function PinLoginScreen({ onShowSavedProfiles, hasSavedProfiles }
               disabled={loading}
               className="w-full rounded-2xl bg-slate-950 px-4 py-3 font-bold text-white transition hover:bg-slate-800 disabled:opacity-60"
             >
-              {loading ? "Prihlasuji..." : "Prihlasit se"}
+              {loading ? "Přihlašuji..." : "Přihlásit se"}
             </button>
             <button
               type="button"
@@ -318,7 +318,7 @@ export default function PinLoginScreen({ onShowSavedProfiles, hasSavedProfiles }
                 value={registerName}
                 onChange={(event) => setRegisterName(event.target.value)}
                 className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-slate-950 shadow-sm outline-none transition focus:border-cyan-400"
-                placeholder="Napr. Anicka"
+                placeholder="Např. Anička"
               />
             </label>
             <p className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
@@ -351,7 +351,7 @@ export default function PinLoginScreen({ onShowSavedProfiles, hasSavedProfiles }
               disabled={loading}
               className="w-full rounded-2xl bg-slate-950 px-4 py-3 font-bold text-white transition hover:bg-slate-800 disabled:opacity-60"
             >
-              {loading ? "Zakladam profil..." : "Zalozit profil a prihlasit se"}
+              {loading ? "Zakládám profil..." : "Založit profil a přihlásit se"}
             </button>
             <button
               type="button"
@@ -375,7 +375,7 @@ export default function PinLoginScreen({ onShowSavedProfiles, hasSavedProfiles }
                 value={newFamilyName}
                 onChange={(event) => setNewFamilyName(event.target.value)}
                 className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-slate-950 shadow-sm outline-none transition focus:border-cyan-400"
-                placeholder="Napr. Demelovi"
+                placeholder="Např. Demelovi"
               />
             </label>
             <label className="block">
@@ -384,7 +384,7 @@ export default function PinLoginScreen({ onShowSavedProfiles, hasSavedProfiles }
                 value={registerName}
                 onChange={(event) => setRegisterName(event.target.value)}
                 className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-slate-950 shadow-sm outline-none transition focus:border-cyan-400"
-                placeholder="Napr. Mamka"
+                placeholder="Např. Mamka"
               />
             </label>
             <label className="block">
@@ -414,7 +414,7 @@ export default function PinLoginScreen({ onShowSavedProfiles, hasSavedProfiles }
               disabled={loading}
               className="w-full rounded-2xl bg-slate-950 px-4 py-3 font-bold text-white transition hover:bg-slate-800 disabled:opacity-60"
             >
-              {loading ? "Zakladam rodinu..." : "Zalozit rodinu"}
+              {loading ? "Zakládám rodinu..." : "Založit rodinu"}
             </button>
             <button
               type="button"
@@ -434,7 +434,7 @@ export default function PinLoginScreen({ onShowSavedProfiles, hasSavedProfiles }
             onClick={onShowSavedProfiles}
             className="mt-4 w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm font-bold text-slate-700 transition hover:bg-slate-50"
           >
-            Mam ulozeny profil
+            Mám uložený profil
           </button>
         ) : null}
       </div>

@@ -20,8 +20,8 @@ test("zobrazi nazev, odmeny a stav k plneni u mimoradneho ukolu", () => {
   expect(screen.getByText("Uklidit pokoj")).toBeInTheDocument();
   expect(screen.getByText("30 XP")).toBeInTheDocument();
   expect(screen.getByText("4 zlata")).toBeInTheDocument();
-  expect(screen.getByText("K plneni")).toBeInTheDocument();
-  expect(screen.getByRole("button", { name: "Oznacit jako splnene" })).toBeEnabled();
+  expect(screen.getByText("K plnění")).toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "Označit jako splněné" })).toBeEnabled();
 });
 
 test("spusti dokonceni ukolu, kdyz je pripraveny", async () => {
@@ -41,7 +41,7 @@ test("spusti dokonceni ukolu, kdyz je pripraveny", async () => {
     />
   );
 
-  await user.click(screen.getByRole("button", { name: "Oznacit jako splnene" }));
+  await user.click(screen.getByRole("button", { name: "Označit jako splněné" }));
 
   expect(onComplete).toHaveBeenCalledTimes(1);
 });

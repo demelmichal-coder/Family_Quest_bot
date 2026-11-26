@@ -33,7 +33,7 @@ function Shop({ user, rewards, purchases, onBuyReward }) {
     <div className="space-y-6">
       <div className="shop-container brawl-shop-surface p-5">
         <div className="header">
-          <h1>Obchod s odmenami</h1>
+          <h1>Obchod s odměnami</h1>
           <div className="coin-badge">{user?.gold || 0} zlata</div>
         </div>
 
@@ -83,7 +83,7 @@ function Shop({ user, rewards, purchases, onBuyReward }) {
         <aside className="brawl-accent-card rounded-[32px] border-emerald-300/70 bg-emerald-900/75 p-5 shadow-xl">
           <h3 className="brawl-subtitle text-xl font-black text-emerald-100">Historie nakupu</h3>
           <p className="mt-1 text-sm text-emerald-200/90">
-            Posledni odmeny, ktere sis uz poridil.
+            Poslední odměny, které sis už pořídil.
           </p>
           <div className="mt-4 space-y-3">
             {purchases.length > 0 ? (
@@ -98,7 +98,7 @@ function Shop({ user, rewards, purchases, onBuyReward }) {
               ))
             ) : (
               <div className="rounded-2xl border border-dashed border-emerald-300 px-4 py-6 text-sm text-emerald-200/90">
-                Zatim bez nakupu.
+                🛒 Zatím bez nákupů. Až něco koupíš za zlato, uvidíš to tady.
               </div>
             )}
           </div>

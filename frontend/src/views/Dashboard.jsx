@@ -18,35 +18,35 @@ import { getErrorMessage } from "../utils/errors";
 
 const LEAGUE_STYLES = {
   bronze: {
-    name: "Bronze liga",
+    name: "Bronzová liga",
     heroBadge: "border-yellow-300/90 bg-yellow-700/75 text-yellow-50 shadow-lg shadow-yellow-500/50",
     rankBadge: "border-yellow-400/60 bg-yellow-400 text-slate-950",
     rankCard: "border-yellow-400/60 bg-slate-800/80",
     heroGlow: "from-yellow-500/40 via-orange-500/20 to-slate-950/90",
   },
   silver: {
-    name: "Silver liga",
+    name: "Stříbrná liga",
     heroBadge: "border-slate-200/90 bg-slate-700/75 text-slate-50 shadow-lg shadow-slate-400/40",
     rankBadge: "border-slate-300/60 bg-slate-300 text-slate-950",
     rankCard: "border-slate-400/60 bg-slate-800/80",
     heroGlow: "from-slate-400/40 via-cyan-500/20 to-slate-950/90",
   },
   gold: {
-    name: "Gold liga",
+    name: "Zlatá liga",
     heroBadge: "border-yellow-300/90 bg-amber-700/75 text-yellow-50 shadow-lg shadow-yellow-500/60",
     rankBadge: "border-yellow-300/70 bg-yellow-300 text-slate-950 font-black",
     rankCard: "border-yellow-400/60 bg-slate-800/80",
     heroGlow: "from-yellow-400/45 via-amber-500/25 to-slate-950/90",
   },
   diamond: {
-    name: "Diamond liga",
+    name: "Diamantová liga",
     heroBadge: "border-cyan-300/90 bg-cyan-800/75 text-cyan-50 shadow-lg shadow-cyan-500/50",
     rankBadge: "border-cyan-300/70 bg-cyan-300 text-slate-950 font-black",
     rankCard: "border-cyan-400/60 bg-slate-800/80",
     heroGlow: "from-cyan-400/45 via-blue-500/25 to-slate-950/90",
   },
   mythic: {
-    name: "Mythic liga",
+    name: "Mytická liga",
     heroBadge: "border-fuchsia-300/90 bg-fuchsia-800/75 text-fuchsia-50 shadow-lg shadow-fuchsia-500/60",
     rankBadge: "border-fuchsia-300/70 bg-fuchsia-300 text-slate-950 font-black",
     rankCard: "border-fuchsia-400/60 bg-slate-800/80",
@@ -155,7 +155,7 @@ function Dashboard({
   const proofFileInputRef = useRef(null);
   const [avatar, setAvatar] = useState({
     image: user?.avatar || ":)",
-    name: user?.username || "Hrac",
+    name: user?.username || "Hráč",
   });
 
   const level = Math.floor((user?.xp || 0) / 100) + 1;
@@ -211,7 +211,7 @@ function Dashboard({
   function openProofComposer(task) {
     setProofDraft({
       taskId: task.id,
-      title: task.title || "Ukol",
+      title: task.title || "Úkol",
       text: "",
       mediaDataUrl: "",
       fileName: "",
@@ -292,13 +292,13 @@ function Dashboard({
   async function submitProofAndComplete(taskId) {
     const task = tasks.find((item) => item.id === taskId);
     if (!task) {
-      setError("Ukol se nepodarilo najit.");
+      setError("Úkol se nepodařilo najít.");
       return;
     }
 
     const normalizedProofText = proofDraft.text.trim() || (proofDraft.mediaDataUrl ? `Fotodukaz k ukolu: ${task.title}` : "");
     if (!normalizedProofText) {
-      setError("U tohoto ukolu vypln aspon kratky popis nebo pridej fotku dukazu.");
+      setError("U tohoto úkolu vyplň alespoň krátký popis nebo přidej fotku důkazu.");
       return;
     }
 
@@ -396,7 +396,7 @@ function Dashboard({
         {proofDraft.taskId ? (
           <div className="fixed inset-0 z-30 flex items-center justify-center bg-slate-950/80 px-4 py-6 backdrop-blur-sm">
             <div className="w-full max-w-xl rounded-3xl border border-cyan-300/60 bg-slate-900 p-5 shadow-2xl">
-              <h2 className="text-xl font-black text-cyan-100">Dukaz splneni ukolu</h2>
+              <h2 className="text-xl font-black text-cyan-100">Důkaz splnění ukolu</h2>
               <p className="mt-1 text-sm text-slate-300">Mise: {proofDraft.title}</p>
 
               <label className="mt-4 block text-xs font-semibold uppercase tracking-[0.2em] text-cyan-200">
@@ -406,7 +406,7 @@ function Dashboard({
                   onChange={(event) =>
                     setProofDraft((current) => ({ ...current, text: event.target.value }))
                   }
-                  placeholder="Napis kratce, co jsi dnes udelal/a..."
+                  placeholder="Napiš krátce, co jsi dnes udělal/a..."
                   className="mt-2 min-h-24 w-full rounded-2xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none transition focus:border-cyan-400"
                 />
               </label>
@@ -426,18 +426,18 @@ function Dashboard({
                   onClick={handlePickProofPhoto}
                   className="rounded-2xl border border-emerald-400/50 bg-emerald-500/20 px-4 py-2 text-sm font-semibold text-emerald-100 transition hover:bg-emerald-500/30"
                 >
-                  Otevrit fotak a vyfotit dukaz
+                  Otevřít fotoaparát a vyfotit důkaz
                 </button>
               </div>
 
               {proofDraft.mediaDataUrl ? (
                 <div className="mt-4 rounded-2xl border border-slate-700 bg-slate-950/70 p-3">
                   <div className="text-xs font-semibold text-slate-300">
-                    Prilozena fotka: {proofDraft.fileName || "dukaz.jpg"}
+                    Přiložená fotka: {proofDraft.fileName || "dukaz.jpg"}
                   </div>
                   <img
                     src={proofDraft.mediaDataUrl}
-                    alt="Dukaz splneni"
+                    alt="Důkaz splnění"
                     className="mt-2 max-h-64 w-full rounded-xl object-contain"
                   />
                 </div>
@@ -450,7 +450,7 @@ function Dashboard({
                   disabled={proofSubmitting}
                   className="rounded-2xl border border-cyan-400/50 bg-cyan-500/20 px-4 py-2 text-sm font-semibold text-cyan-100 transition hover:bg-cyan-500/30 disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  {proofSubmitting ? "Odesilam dukaz..." : "Odeslat dukaz a dokoncit ukol"}
+                  {proofSubmitting ? "Odesílám důkaz..." : "Odeslat důkaz a dokončit úkol"}
                 </button>
                 <button
                   type="button"
@@ -458,7 +458,7 @@ function Dashboard({
                   disabled={proofSubmitting}
                   className="rounded-2xl border border-slate-600 bg-slate-800 px-4 py-2 text-sm font-semibold text-slate-200 transition hover:border-slate-400 disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  Zrusit
+                  Zrušit
                 </button>
               </div>
             </div>
@@ -469,7 +469,7 @@ function Dashboard({
             <button
               type="button"
               onClick={() => setShowAvatarPicker((value) => !value)}
-              aria-label="Zmenit avatar"
+              aria-label="Změnit avatar"
               className="shrink-0 rounded-full transition hover:scale-105"
             >
               <Avatar name={avatar.name} image={avatar.image} />
@@ -487,16 +487,16 @@ function Dashboard({
           <div className="mt-3">
             <div className="mb-1 flex items-center justify-between text-xs font-semibold text-slate-200">
               <span>{currentLevelXp}/100 XP</span>
-              <span><strong className="text-white">{user?.current_streak || 0}</strong> dni v rade</span>
+              <span><strong className="text-white">{user?.current_streak || 0}</strong> dní v řadě</span>
             </div>
             <ProgressBar value={currentLevelXp} max={100} />
             <div className="mt-2 flex items-center gap-4 text-xs font-semibold text-slate-200">
-              <span>Hotove mise <strong className="text-white">{completedTasks.length}</strong></span>
+              <span>Hotové mise <strong className="text-white">{completedTasks.length}</strong></span>
               <span>Celkem XP <strong className="text-white">{user?.xp || 0}</strong></span>
             </div>
             {daysToGoal > 0 ? (
               <div className="mt-2 text-[11px] font-semibold text-orange-200/80">
-                Do dalsiho bonusu chybi {daysToGoal} d
+                Do dalšího bonusu chybí {daysToGoal} d
               </div>
             ) : null}
           </div>
@@ -515,7 +515,7 @@ function Dashboard({
                 ))}
               </div>
               <label className="mt-2 block text-xs font-semibold text-cyan-100">
-                Nebo vlastni obrazek
+                Nebo vlastní obrázek
                 <input type="file" accept="image/*" className="mt-1 block" onChange={handleAvatarChange} />
               </label>
               <button
@@ -523,7 +523,7 @@ function Dashboard({
                 className="mt-2 text-xs text-cyan-300 underline"
                 onClick={() => setShowAvatarPicker(false)}
               >
-                Zavrit
+                Zavřít
               </button>
             </div>
           ) : null}
@@ -549,14 +549,14 @@ function Dashboard({
           <section className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
             <div className="space-y-4">
               <div className="grid grid-cols-3 gap-2 md:gap-4">
-                <StatCard label="Ceka na schvaleni" value={waitingApprovalTasks.length} tone="amber" />
-                <StatCard label="Dnesni ukoly" value={todayDailyTasks.length} tone="emerald" />
-                <StatCard label="Mimoradne ukoly" value={extraTasks.length} tone="cyan" />
+                <StatCard label="Čeká na schválení" value={waitingApprovalTasks.length} tone="amber" />
+                <StatCard label="Dnešní úkoly" value={todayDailyTasks.length} tone="emerald" />
+                <StatCard label="Mimořádné úkoly" value={extraTasks.length} tone="cyan" />
               </div>
 
               <section className="space-y-4">
                 <div className="mt-6 flex items-center justify-between">
-                  <h2 className="text-2xl font-black text-yellow-100">Dnesni ukoly</h2>
+                  <h2 className="text-2xl font-black text-yellow-100">Dnešní úkoly</h2>
                   <div className="rounded-full bg-yellow-950 px-3 py-1 text-sm font-bold text-yellow-100">
                     {todayDailyTasks.length}
                   </div>
@@ -585,14 +585,14 @@ function Dashboard({
                   ))
                 ) : (
                   <div className="rounded-[28px] border border-dashed border-emerald-300 bg-emerald-50/80 p-8 text-center text-emerald-950/70">
-                    Na dnesek nemas zadny denni ukol.
+                    🌤️ Na dnešek nemáš žádný denní úkol. Užij si volno!
                   </div>
                 )}
               </section>
 
               <section className="space-y-4">
                 <div className="mt-6 flex items-center justify-between">
-                  <h2 className="text-2xl font-black text-yellow-100">Mimoradne ukoly</h2>
+                  <h2 className="text-2xl font-black text-yellow-100">Mimořádné úkoly</h2>
                   <div className="rounded-full bg-yellow-950 px-3 py-1 text-sm font-bold text-yellow-100">
                     {extraTasks.length}
                   </div>
@@ -698,7 +698,7 @@ function Dashboard({
 
               <h2 className="brawl-subtitle text-xl font-black text-yellow-100">Hotovo dnes</h2>
               <p className="mt-1 text-sm text-yellow-200/85">
-                Prehled misi, ktere uz byly rodicem potvrzene.
+                Přehled misí, které už byly rodičem potvrzené.
               </p>
               <div className="mt-4 space-y-3">
                 {completedTasks.length > 0 ? (
@@ -712,7 +712,7 @@ function Dashboard({
                   ))
                 ) : (
                   <div className="rounded-2xl border border-dashed border-yellow-300/80 px-4 py-6 text-sm text-yellow-200/85">
-                    Zatim nic dokonceneho.
+                    🏁 Zatím nic dokončeného. Splň první misi a objeví se tady!
                   </div>
                 )}
               </div>
@@ -756,23 +756,23 @@ function Dashboard({
             <aside className="rounded-[32px] border border-cyan-300 bg-cyan-50/85 p-5 shadow-xl">
               <h2 className="text-xl font-black text-cyan-950">Rodinne statistiky</h2>
               <p className="mt-1 text-sm text-cyan-900/70">
-                Souhrn clenu, ukolu a odmen v aktualni rodine.
+                Souhrn členů, úkolů a odměn v aktuální rodině.
               </p>
               <div className="mt-5 grid grid-cols-2 gap-3">
-                <StatCard label="Clenove" value={familyStats?.members || 0} tone="cyan" />
-                <StatCard label="Deti" value={familyStats?.children || 0} tone="cyan" />
+                <StatCard label="Členové" value={familyStats?.members || 0} tone="cyan" />
+                <StatCard label="Děti" value={familyStats?.children || 0} tone="cyan" />
                 <StatCard label="Celkem XP" value={familyStats?.total_xp || 0} tone="cyan" />
                 <StatCard
-                  label="Dokoncene ukoly"
+                  label="Dokončené úkoly"
                   value={familyStats?.completed_tasks || 0}
                   tone="cyan"
                 />
                 <StatCard
-                  label="Ceka na schvaleni"
+                  label="Čeká na schválení"
                   value={familyStats?.pending_approval || 0}
                   tone="cyan"
                 />
-                <StatCard label="Odmeny v obchode" value={familyStats?.rewards || 0} tone="cyan" />
+                <StatCard label="Odměny v obchodě" value={familyStats?.rewards || 0} tone="cyan" />
               </div>
             </aside>
 
@@ -780,7 +780,7 @@ function Dashboard({
               <div className="rounded-3xl border border-fuchsia-300 bg-fuchsia-50/70 p-4">
                 <h3 className="text-xl font-black text-fuchsia-950">Achievementy</h3>
                 <p className="mt-1 text-sm text-fuchsia-900/70">
-                  Dlouhodobe cile, ktere odemykas plnenim misi.
+                  Dlouhodobé cíle, které odemykáš plněním misí.
                 </p>
                 <div className="mt-4 grid gap-3 md:grid-cols-2">
                   {achievements.length > 0 ? (
@@ -805,7 +805,7 @@ function Dashboard({
                               item.unlocked ? "bg-emerald-200 text-emerald-900" : "bg-slate-200 text-slate-700"
                             }`}
                           >
-                            {item.unlocked ? "odemceno" : "v procesu"}
+                            {item.unlocked ? "odemčeno" : "v procesu"}
                           </div>
                         </div>
                         <div className="mt-1 text-sm text-slate-700">{item.description}</div>
@@ -826,7 +826,7 @@ function Dashboard({
                     ))
                   ) : (
                     <div className="rounded-2xl border border-dashed border-fuchsia-300 px-4 py-6 text-sm text-fuchsia-900/70 md:col-span-2">
-                      Achievementy zatim nejsou dostupne.
+                      Achievementy zatím nejsou dostupné.
                     </div>
                   )}
                 </div>
@@ -842,7 +842,7 @@ function Dashboard({
             key={item.id}
             type="button"
             onClick={() => setTab(item.id)}
-            aria-label={`Zalozka ${item.label}`}
+            aria-label={`Záložka ${item.label}`}
             aria-current={tab === item.id ? "page" : undefined}
             className={`flex min-h-[56px] flex-col items-center justify-center rounded-2xl text-xs font-bold transition ${
               tab === item.id ? "bg-cyan-500/20 text-cyan-100" : "text-slate-400 hover:bg-slate-900"

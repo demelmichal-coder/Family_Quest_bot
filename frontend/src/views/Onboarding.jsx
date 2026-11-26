@@ -64,25 +64,25 @@ function Onboarding({ user, api, onJoined, onSwitchAccount }) {
         </div>
         <h1 className="mt-3 text-4xl font-black text-slate-950">Nastaveni rodiny</h1>
         <p className="mt-3 text-sm text-slate-700">
-          Nejdriv je potreba zalozit rodinu nebo se pripojit pomoci kodu od rodice.
+          Nejdřív je potřeba založit rodinu nebo se připojit pomocí kódu od rodiče.
         </p>
         <button
           type="button"
           onClick={onSwitchAccount}
           className="mt-4 w-full rounded-2xl border border-slate-300 bg-slate-100 px-4 py-3 text-sm font-bold text-slate-900 transition hover:bg-slate-200"
         >
-          Mam uz ucet a rodinu, chci se prihlasit jinym profilem
+          Mám už účet a rodinu, chci se přihlásit jiným profilem
         </button>
 
         <div className="mt-5 grid gap-3 sm:grid-cols-2">
           <div className="rounded-2xl border border-cyan-300/50 bg-cyan-50/80 p-4">
             <div className="text-xs font-bold uppercase tracking-[0.2em] text-cyan-700">Rodic</div>
             <div className="mt-2 text-sm font-semibold text-cyan-950">
-              Sprava deti, ukolu, odmen a rodinneho zebricku.
+              Správa dětí, úkolů, odměn a rodinného žebříčku.
             </div>
           </div>
           <div className="rounded-2xl border border-amber-300/50 bg-amber-50/80 p-4">
-            <div className="text-xs font-bold uppercase tracking-[0.2em] text-amber-700">Dite</div>
+            <div className="text-xs font-bold uppercase tracking-[0.2em] text-amber-700">Dítě</div>
             <div className="mt-2 text-sm font-semibold text-amber-950">
               Plneni misi, sbirani XP a nakup odmen za gold.
             </div>
@@ -99,7 +99,7 @@ function Onboarding({ user, api, onJoined, onSwitchAccount }) {
                 : "bg-cyan-100 text-cyan-950 hover:bg-cyan-200"
             }`}
           >
-            Vytvorit rodinu
+            Vytvořit rodinu
           </button>
           <button
             type="button"
@@ -110,7 +110,7 @@ function Onboarding({ user, api, onJoined, onSwitchAccount }) {
                 : "bg-yellow-100 text-yellow-950 hover:bg-yellow-200"
             }`}
           >
-            Pripojit se kodem
+            Připojit se kódem
           </button>
         </div>
 
@@ -129,7 +129,7 @@ function Onboarding({ user, api, onJoined, onSwitchAccount }) {
                 value={username}
                 onChange={(event) => setUsername(event.target.value)}
                 className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-slate-950"
-                placeholder="Treba Mamka"
+                placeholder="Třeba Mamka"
               />
             </label>
             <label className="block">
@@ -139,7 +139,7 @@ function Onboarding({ user, api, onJoined, onSwitchAccount }) {
                 value={familyName}
                 onChange={(event) => setFamilyName(event.target.value)}
                 className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-slate-950"
-                placeholder="Treba Demelovi"
+                placeholder="Třeba Demelovi"
               />
             </label>
             <button
@@ -147,7 +147,7 @@ function Onboarding({ user, api, onJoined, onSwitchAccount }) {
               disabled={busy}
               className="w-full rounded-2xl bg-cyan-400 px-4 py-3 font-bold text-slate-950 transition hover:bg-cyan-300 disabled:opacity-60"
             >
-              {busy ? "Zakladam..." : "Zalozit rodinu jako rodic"}
+              {busy ? "Zakládám..." : "Založit rodinu jako rodič"}
             </button>
           </form>
         ) : (
@@ -159,7 +159,7 @@ function Onboarding({ user, api, onJoined, onSwitchAccount }) {
                 value={username}
                 onChange={(event) => setUsername(event.target.value)}
                 className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-slate-950"
-                placeholder="Treba Kuba"
+                placeholder="Třeba Kuba"
               />
             </label>
             <label className="block">
@@ -174,14 +174,14 @@ function Onboarding({ user, api, onJoined, onSwitchAccount }) {
             </label>
             <p className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
               Pripojis se jako dite. Druheho rodice povysi stavajici rodic v administraci
-              (Clenove rodiny).
+              (Členové rodiny).
             </p>
             <button
               type="submit"
               disabled={busy}
               className="w-full rounded-2xl bg-yellow-400 px-4 py-3 font-bold text-yellow-950 transition hover:bg-yellow-300 disabled:opacity-60"
             >
-              {busy ? "Pripojuju..." : "Pripojit se do rodiny"}
+              {busy ? "Připojuji..." : "Připojit se do rodiny"}
             </button>
           </form>
         )}

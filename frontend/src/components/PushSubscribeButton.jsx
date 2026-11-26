@@ -17,11 +17,25 @@ function isPushSupported() {
   );
 }
 
+function isIosDevice() {
+  return typeof navigator !== "undefined" && /iphone|ipad|ipod/i.test(navigator.userAgent);
+}
+
+function isStandaloneApp() {
+  if (typeof window === "undefined") {
+    return false;
+  }
+  const standaloneQuery = window.matchMedia ? window.matchMedia("(display-mode: standalone)").matches : false;
+  return standaloneQuery || window.navigator.standalone === true;
+}
+
 export default function PushSubscribeButton({ className = "" }) {
   const { api } = useUser();
   const [supported, setSupported] = useState(false);
   const [subscribed, setSubscribed] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [testing, setTesting] = useState(false);
+  const [testMessage, setTestMessage] = useState("");
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -48,7 +62,7 @@ export default function PushSubscribeButton({ className = "" }) {
 
       const { publicKey } = await api("/push/vapid-public-key", { includeTelegramHeaders: false });
       if (!publicKey) {
-        setError("Push notifikace nejsou na serveru nastavene.");
+        setError("Push notifikace nejsou na serveru nastavené.");
         setLoading(false);
         return;
       }
@@ -69,14 +83,54 @@ export default function PushSubscribeButton({ className = "" }) {
       });
       setSubscribed(true);
     } catch (subscribeError) {
-      setError("Zapnuti notifikaci se nepodarilo.");
+      setError("Zapnutí notifikací se nepodařilo.");
     } finally {
       setLoading(false);
     }
   }
 
-  if (!supported || subscribed) {
+  async function handleTest() {
+    setError("");
+    setTestMessage("");
+    setTesting(true);
+    try {
+      const response = await api("/push/test", { method: "POST" });
+      setTestMessage(response.detail || "Testovací upozornění odesláno.");
+    } catch (testError) {
+      setError("Testovací upozornění se nepodařilo odeslat.");
+    } finally {
+      setTesting(false);
+    }
+  }
+
+  if (isIosDevice() && !isStandaloneApp()) {
+    return (
+      <p className={`rounded-2xl border border-cyan-300/40 bg-cyan-500/10 px-3 py-2 text-xs text-cyan-100 ${className}`}>
+        Na iPhonu fungují upozornění jen z ikony na ploše. Nejdřív aplikaci přidej na plochu
+        (Sdílet → Přidat na plochu), pak ji otevři z ikony a zapni upozornění.
+      </p>
+    );
+  }
+
+  if (!supported) {
     return null;
+  }
+
+  if (subscribed) {
+    return (
+      <div className={className}>
+        <button
+          type="button"
+          onClick={handleTest}
+          disabled={testing}
+          className="rounded-full border border-emerald-300/60 bg-emerald-500/20 px-4 py-2 text-xs font-bold text-emerald-100 shadow-lg backdrop-blur transition hover:bg-emerald-500/30 disabled:opacity-60"
+        >
+          {testing ? "Odesílám..." : "🔔 Poslat testovací upozornění"}
+        </button>
+        {testMessage ? <p className="mt-1 text-xs text-emerald-200">{testMessage}</p> : null}
+        {error ? <p className="mt-1 text-xs text-rose-300">{error}</p> : null}
+      </div>
+    );
   }
 
   return (
@@ -87,7 +141,7 @@ export default function PushSubscribeButton({ className = "" }) {
         disabled={loading}
         className="rounded-full border border-cyan-300/60 bg-cyan-500/20 px-4 py-2 text-xs font-bold text-cyan-100 shadow-lg backdrop-blur transition hover:bg-cyan-500/30 disabled:opacity-60"
       >
-        {loading ? "Zapinam..." : "🔔 Zapnout upozorneni"}
+        {loading ? "Zapínám..." : "🔔 Zapnout upozornění"}
       </button>
       {error ? <p className="mt-1 text-xs text-rose-300">{error}</p> : null}
     </div>

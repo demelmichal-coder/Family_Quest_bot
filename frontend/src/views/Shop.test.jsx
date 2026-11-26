@@ -12,7 +12,7 @@ const baseProps = {
 test("zobrazi nabidku i historii nakupu", () => {
   render(<Shop {...baseProps} onBuyReward={vi.fn()} />);
 
-  expect(screen.getByText("Obchod s odmenami")).toBeInTheDocument();
+  expect(screen.getByText("Obchod s odměnami")).toBeInTheDocument();
   expect(screen.getByText("Zmrzlina")).toBeInTheDocument();
   expect(screen.getByText("Vanilkova")).toBeInTheDocument();
   expect(screen.getByText("Film")).toBeInTheDocument();
@@ -24,7 +24,7 @@ test("nakoupi odmenu a zobrazi potvrzeni", async () => {
 
   render(<Shop {...baseProps} onBuyReward={onBuyReward} />);
 
-  await user.click(screen.getByRole("button", { name: "Koupit odmenu" }));
+  await user.click(screen.getByRole("button", { name: "Koupit odměnu" }));
 
   expect(onBuyReward).toHaveBeenCalledWith(1);
   expect(await screen.findByText("Koupeno: Zmrzlina.")).toBeInTheDocument();

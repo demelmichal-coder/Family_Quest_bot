@@ -81,8 +81,8 @@ test("zobrazi denni a mimoradne ukoly oddelene", () => {
     />
   );
 
-  expect(screen.getByRole("heading", { name: "Dnesni ukoly" })).toBeInTheDocument();
-  expect(screen.getByRole("heading", { name: "Mimoradne ukoly" })).toBeInTheDocument();
+  expect(screen.getByRole("heading", { name: "Dnešní úkoly" })).toBeInTheDocument();
+  expect(screen.getByRole("heading", { name: "Mimořádné úkoly" })).toBeInTheDocument();
   expect(screen.getByText(/Level 2/)).toBeInTheDocument();
   expect(screen.getByText("35/100 XP")).toBeInTheDocument();
   expect(screen.getByText("12")).toBeInTheDocument();
@@ -110,7 +110,7 @@ test("dokonci ukol a ukaze potvrzeni", async () => {
     />
   );
 
-  await appUser.click(screen.getByRole("button", { name: "Oznacit jako splnene" }));
+  await appUser.click(screen.getByRole("button", { name: "Označit jako splněné" }));
 
   expect(onCompleteTask).toHaveBeenCalledWith(3);
   expect(await screen.findByText("Ukol byl odeslan rodici ke schvaleni.")).toBeInTheDocument();
@@ -131,10 +131,10 @@ test("prepne se do shopu", async () => {
     />
   );
 
-  await appUser.click(screen.getByRole("button", { name: "Zalozka Obchod" }));
+  await appUser.click(screen.getByRole("button", { name: "Záložka Obchod" }));
 
   await waitFor(() => {
-    expect(screen.getByText("Obchod s odmenami")).toBeInTheDocument();
+    expect(screen.getByText("Obchod s odměnami")).toBeInTheDocument();
   });
   expect(screen.getByText("Filmovy vecer")).toBeInTheDocument();
 });
@@ -176,11 +176,11 @@ test("u ukolu s dukazem umozni odeslat text dukazu a dokoncit ukol", async () =>
     />
   );
 
-  await appUser.click(screen.getByRole("button", { name: "Odeslat dukaz a splnit" }));
+  await appUser.click(screen.getByRole("button", { name: "Odeslat důkaz a splnit" }));
 
-  expect(await screen.findByText("Dukaz splneni ukolu")).toBeInTheDocument();
+  expect(await screen.findByText("Důkaz splnění ukolu")).toBeInTheDocument();
   await appUser.type(screen.getByRole("textbox", { name: "Co jsi splnil/a" }), "Pokoj je uklizeny a stul je cisty.");
-  await appUser.click(screen.getByRole("button", { name: "Odeslat dukaz a dokoncit ukol" }));
+  await appUser.click(screen.getByRole("button", { name: "Odeslat důkaz a dokončit úkol" }));
 
   await waitFor(() => {
     expect(apiMock).toHaveBeenCalledWith("/game/submit-proof/4", {

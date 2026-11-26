@@ -110,7 +110,7 @@ test("zobrazi loading stav pri cekani na telegram nebo uzivatele", () => {
 
   render(<App />);
 
-  expect(screen.getByText("Nacitam Family Quest")).toBeInTheDocument();
+  expect(screen.getByText("Načítám Family Quest")).toBeInTheDocument();
 });
 
 test("zobrazi prihlasovaci stranku kdyz chybi overeni", () => {
@@ -122,7 +122,7 @@ test("zobrazi prihlasovaci stranku kdyz chybi overeni", () => {
   render(<App />);
 
   expect(screen.getByText("Prihlaseni")).toBeInTheDocument();
-  expect(screen.getByRole("button", { name: "Zalozit novou rodinu" })).toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "Založit novou rodinu" })).toBeInTheDocument();
 });
 
 test("zobrazi prihlasovaci stranku misto slepe cesty kdyz Telegram posle jen id bez podepsaneho initData", () => {
@@ -137,7 +137,7 @@ test("zobrazi prihlasovaci stranku misto slepe cesty kdyz Telegram posle jen id 
   render(<App />);
 
   expect(screen.getByText("Prihlaseni")).toBeInTheDocument();
-  expect(screen.getByRole("button", { name: "Prihlasit profil" })).toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "Přihlásit profil" })).toBeInTheDocument();
 });
 
 test("tlacitko pokracovat jako telegram ucet zavola prepnuti", async () => {
@@ -162,7 +162,7 @@ test("tlacitko pokracovat jako telegram ucet zavola prepnuti", async () => {
 
   render(<App />);
 
-  await user.click(screen.getByRole("button", { name: "Pokracovat jako aktualni Telegram ucet" }));
+  await user.click(screen.getByRole("button", { name: "Pokračovat jako aktualni Telegram ucet" }));
 
   expect(useTelegramAccountMock).toHaveBeenCalled();
 });
@@ -185,7 +185,7 @@ test("tlacitko pokracovat jako telegram ucet se neskryte nezobrazi v demo modu",
   render(<App />);
 
   expect(
-    screen.queryByRole("button", { name: "Pokracovat jako aktualni Telegram ucet" })
+    screen.queryByRole("button", { name: "Pokračovat jako aktualni Telegram ucet" })
   ).not.toBeInTheDocument();
 });
 
@@ -206,9 +206,9 @@ test("nabidne ulozene profily pro rychly navrat do rodiny", () => {
   };
 
   render(<App />);
-  fireEvent.click(screen.getByRole("button", { name: "Mam ulozeny profil" }));
+  fireEvent.click(screen.getByRole("button", { name: "Mám uložený profil" }));
 
-  expect(screen.getByText("Ulozene profily")).toBeInTheDocument();
+  expect(screen.getByText("Uložené profily")).toBeInTheDocument();
   expect(screen.getByRole("button", { name: /Mamka.*Demelovi/i })).toBeInTheDocument();
 });
 
@@ -230,7 +230,7 @@ test("obnovi ulozeny ucet jednim klikem", async () => {
   };
 
   render(<App />);
-  fireEvent.click(screen.getByRole("button", { name: "Mam ulozeny profil" }));
+  fireEvent.click(screen.getByRole("button", { name: "Mám uložený profil" }));
 
   await user.click(screen.getByRole("button", { name: /Mamka.*Demelovi/i }));
 
@@ -255,7 +255,7 @@ test("klik na ulozeny profil bez tokenu take funguje", async () => {
   };
 
   render(<App />);
-  fireEvent.click(screen.getByRole("button", { name: "Mam ulozeny profil" }));
+  fireEvent.click(screen.getByRole("button", { name: "Mám uložený profil" }));
 
   await user.click(screen.getByRole("button", { name: /Tata.*Demelovi/i }));
 
@@ -279,7 +279,7 @@ test("umozni smazat ulozeny profil z prihlaseni", async () => {
   };
 
   render(<App />);
-  fireEvent.click(screen.getByRole("button", { name: "Mam ulozeny profil" }));
+  fireEvent.click(screen.getByRole("button", { name: "Mám uložený profil" }));
 
   await user.click(screen.getByRole("button", { name: /Smazat profil Mamka/i }));
 
@@ -304,13 +304,13 @@ test("umozni vycistit vsechny ulozene profily", async () => {
   };
 
   render(<App />);
-  fireEvent.click(screen.getByRole("button", { name: "Mam ulozeny profil" }));
+  fireEvent.click(screen.getByRole("button", { name: "Mám uložený profil" }));
 
-  await user.click(screen.getByRole("button", { name: "Vycistit vsechny ulozene profily" }));
+  await user.click(screen.getByRole("button", { name: "Vyčistit všechny uložené profily" }));
 
   expect(clearSavedProfilesMock).toHaveBeenCalled();
   expect(
-    screen.getByText("Ulozene profily byly vycisteny. Prihlas se znovu a zaloz rodinu.")
+    screen.getByText("Uložené profily byly vyčištěny. Přihlas se znovu a založ rodinu.")
   ).toBeInTheDocument();
 });
 
@@ -331,9 +331,9 @@ test("umozni prejmenovat ulozeny profil", async () => {
   };
 
   render(<App />);
-  fireEvent.click(screen.getByRole("button", { name: "Mam ulozeny profil" }));
+  fireEvent.click(screen.getByRole("button", { name: "Mám uložený profil" }));
 
-  await user.click(screen.getByRole("button", { name: /Prejmenovat profil Mamka/i }));
+  await user.click(screen.getByRole("button", { name: /Přejmenovat profil Mamka/i }));
 
   expect(window.prompt).toHaveBeenCalled();
   expect(renameSavedProfileMock).toHaveBeenCalledWith("player-1", "Mamka 2");
@@ -356,9 +356,9 @@ test("umozni pripnout ulozeny profil", async () => {
   };
 
   render(<App />);
-  fireEvent.click(screen.getByRole("button", { name: "Mam ulozeny profil" }));
+  fireEvent.click(screen.getByRole("button", { name: "Mám uložený profil" }));
 
-  await user.click(screen.getByRole("button", { name: /Pripnout profil Mamka/i }));
+  await user.click(screen.getByRole("button", { name: /Připnout profil Mamka/i }));
 
   expect(togglePinnedProfileMock).toHaveBeenCalledWith("player-1");
 });
@@ -384,7 +384,7 @@ test("odhlasi profil z aplikace", async () => {
   render(<App />);
   await screen.findByText("Dashboard for Kid (1/1)");
 
-  await user.click(screen.getByRole("button", { name: "Odhlasit" }));
+  await user.click(screen.getByRole("button", { name: "Odhlásit" }));
 
   expect(logoutMock).toHaveBeenCalled();
 });
@@ -466,13 +466,13 @@ test("rodic se muze prepinat mezi admin a dashboard pohledem", async () => {
 
   expect(await screen.findByText("Admin for Parent (1/1)")).toBeInTheDocument();
 
-  await user.click(screen.getByRole("button", { name: "Prepnout na dashboard" }));
+  await user.click(screen.getByRole("button", { name: "Přepnout na dashboard" }));
 
   await waitFor(() => {
     expect(screen.getByText("Dashboard for Parent (1/1)")).toBeInTheDocument();
   });
 
-  await user.click(screen.getByRole("button", { name: "Prepnout na administraci" }));
+  await user.click(screen.getByRole("button", { name: "Přepnout na administraci" }));
 
   await waitFor(() => {
     expect(screen.getByText("Admin for Parent (1/1)")).toBeInTheDocument();
