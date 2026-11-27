@@ -549,3 +549,34 @@ test("úprava odměny jde zrušit bez uložení", async () => {
   expect(apiMock).not.toHaveBeenCalledWith("/rewards/1", expect.anything());
 });
 
+test("nový úkol jde zadat najednou pro všechny děti", async () => {
+  const twoKids = [...users, { id: 3, role: "child", username: "Anička", telegram_id: "player-2" }];
+  apiMock.mockReset();
+  apiMock
+    .mockResolvedValueOnce(twoKids)
+    .mockResolvedValueOnce({ ...family, members: twoKids })
+    .mockResolvedValueOnce([])
+    .mockResolvedValue([]);
+  const user = userEvent.setup();
+  render(
+    <Admin
+      user={users[0]}
+      tasks={[]}
+      rewards={rewards}
+      onApproveTask={vi.fn()}
+      onDataChanged={vi.fn()}
+    />
+  );
+  await user.click(screen.getByRole("button", { name: "Záložka Úkoly" }));
+  await user.click(screen.getByRole("button", { name: "+ Přidat úkol" }));
+  await user.type(screen.getByRole("textbox", { name: /Název/ }), "Vynést koš");
+  await user.click(screen.getByRole("button", { name: "Všem dětem" }));
+  await user.click(screen.getByRole("button", { name: "Vytvořit úkol pro 2 dětí" }));
+
+  await waitFor(() => expect(apiMock).toHaveBeenCalledWith("/tasks/bulk/create", expect.anything()));
+  const call = apiMock.mock.calls.find(([url]) => url === "/tasks/bulk/create");
+  expect(call[1].body.tasks.map((task) => task.user_id)).toEqual([2, 3]);
+  expect(call[1].body.tasks[0].title).toBe("Vynést koš");
+  expect(apiMock).not.toHaveBeenCalledWith("/tasks/", expect.anything());
+});
+

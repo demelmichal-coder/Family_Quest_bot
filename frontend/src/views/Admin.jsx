@@ -123,6 +123,7 @@ function Admin({
   const [taskForm, setTaskForm] = useState(initialTaskForm);
   const [editingTaskId, setEditingTaskId] = useState(null);
   const [taskFormOpen, setTaskFormOpen] = useState(false);
+  const [taskAssigneeIds, setTaskAssigneeIds] = useState([]);
   const [taskSuggestion, setTaskSuggestion] = useState(null);
   const [rewriteStyle, setRewriteStyle] = useState(getInitialRewriteStyle);
   const [rewardForm, setRewardForm] = useState(initialRewardForm);
@@ -238,6 +239,13 @@ function Admin({
         const firstPlayer = userList.find((member) => member.role === ROLE_CHILD);
         return firstPlayer ? { ...current, user_id: String(firstPlayer.id) } : current;
       });
+      setTaskAssigneeIds((current) => {
+        if (current.length > 0) {
+          return current;
+        }
+        const firstPlayer = userList.find((member) => member.role === ROLE_CHILD);
+        return firstPlayer ? [String(firstPlayer.id)] : current;
+      });
       setPlannerForm((current) => {
         if (current.user_id) {
           return current;
@@ -283,6 +291,18 @@ function Admin({
       ...initialTaskForm,
       user_id: fallbackUserId,
     });
+    setTaskAssigneeIds(fallbackUserId ? [fallbackUserId] : []);
+  }
+
+  function toggleTaskAssignee(memberId) {
+    setTaskAssigneeIds((current) =>
+      current.includes(memberId) ? current.filter((id) => id !== memberId) : [...current, memberId]
+    );
+  }
+
+  function toggleAllTaskAssignees() {
+    const allIds = players.map((member) => String(member.id));
+    setTaskAssigneeIds((current) => (allIds.length > 0 && allIds.every((id) => current.includes(id)) ? [] : allIds));
   }
 
   function handleStartTaskEdit(task) {
@@ -651,6 +671,10 @@ function Admin({
 
   async function handleCreateTask(event) {
     event.preventDefault();
+    if (!editingTaskId && taskAssigneeIds.length === 0) {
+      setError("Vyber alespoň jedno dítě.");
+      return;
+    }
     setSubmittingTask(true);
     setError("");
     setMessage("");
@@ -677,11 +701,17 @@ function Admin({
         });
         setMessage(ADMIN_MESSAGES.updateTaskSuccess);
       } else {
-        await api("/tasks/", {
+        const { user_id: unusedUserId, ...sharedFields } = body;
+        const tasksForChildren = taskAssigneeIds.map((id) => ({ ...sharedFields, user_id: Number(id) }));
+        await api("/tasks/bulk/create", {
           method: "POST",
-          body,
+          body: { tasks: tasksForChildren },
         });
-        setMessage(ADMIN_MESSAGES.createTaskSuccess);
+        setMessage(
+          tasksForChildren.length > 1
+            ? `Úkol byl vytvořen pro ${tasksForChildren.length} dětí.`
+            : ADMIN_MESSAGES.createTaskSuccess
+        );
       }
 
       resetTaskEditor(taskForm.user_id);
@@ -1492,23 +1522,70 @@ function Admin({
                     </button>
                   </div>
                 ) : null}
-                <label className="block">
-                  <span className="mb-2 block text-sm font-medium text-slate-200">Komu přiřadit</span>
-                  <select
-                    required
-                    name="user_id"
-                    value={taskForm.user_id}
-                    onChange={handleTaskChange}
-                    className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none transition focus:border-cyan-400"
-                  >
-                    {players.length === 0 ? <option value="">Nejsou dostupné žádné děti</option> : null}
-                    {players.map((member) => (
-                      <option key={member.id} value={member.id}>
-                        {member.username || member.telegram_id}
-                      </option>
-                    ))}
-                  </select>
-                </label>
+                {editingTaskId ? (
+                  <label className="block">
+                    <span className="mb-2 block text-sm font-medium text-slate-200">Komu přiřadit</span>
+                    <select
+                      required
+                      name="user_id"
+                      value={taskForm.user_id}
+                      onChange={handleTaskChange}
+                      className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none transition focus:border-cyan-400"
+                    >
+                      {players.length === 0 ? <option value="">Nejsou dostupné žádné děti</option> : null}
+                      {players.map((member) => (
+                        <option key={member.id} value={member.id}>
+                          {member.username || member.telegram_id}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                ) : (
+                <fieldset className="block">
+                  <div className="mb-2 flex items-center justify-between gap-2">
+                    <legend className="text-sm font-medium text-slate-200">Komu přiřadit</legend>
+                    {players.length > 1 ? (
+                      <button
+                        type="button"
+                        onClick={toggleAllTaskAssignees}
+                        className="text-xs font-semibold text-cyan-300 underline-offset-2 hover:underline"
+                      >
+                        {players.every((member) => taskAssigneeIds.includes(String(member.id)))
+                          ? "Odznačit všechny"
+                          : "Všem dětem"}
+                      </button>
+                    ) : null}
+                  </div>
+                  {players.length === 0 ? (
+                    <p className="text-sm text-slate-400">Nejsou dostupné žádné děti</p>
+                  ) : (
+                    <div className="grid gap-2 sm:grid-cols-2">
+                      {players.map((member) => {
+                        const memberId = String(member.id);
+                        const checked = taskAssigneeIds.includes(memberId);
+                        return (
+                          <label
+                            key={member.id}
+                            className={`flex cursor-pointer items-center gap-3 rounded-2xl border px-4 py-3 transition ${
+                              checked
+                                ? "border-cyan-400 bg-cyan-500/10 text-white"
+                                : "border-slate-700 bg-slate-950 text-slate-300"
+                            }`}
+                          >
+                            <input
+                              type="checkbox"
+                              checked={checked}
+                              onChange={() => toggleTaskAssignee(memberId)}
+                              className="h-4 w-4 accent-cyan-400"
+                            />
+                            <span className="font-semibold">{member.username || member.telegram_id}</span>
+                          </label>
+                        );
+                      })}
+                    </div>
+                  )}
+                </fieldset>
+                )}
                 <div className="grid gap-4 sm:grid-cols-2">
                   <label className="block">
                     <span className="mb-2 block text-sm font-medium text-slate-200">XP</span>
@@ -1596,7 +1673,7 @@ function Admin({
                     disabled={submittingTask || players.length === 0}
                     className="w-full rounded-2xl bg-cyan-400 px-4 py-3 font-bold text-slate-950 transition hover:bg-cyan-300 disabled:cursor-not-allowed disabled:bg-slate-700 disabled:text-slate-400"
                   >
-                    {submittingTask ? "Ukládám..." : editingTaskId ? "Uložit změny" : "Vytvořit úkol"}
+                    {submittingTask ? "Ukládám..." : editingTaskId ? "Uložit změny" : taskAssigneeIds.length > 1 ? `Vytvořit úkol pro ${taskAssigneeIds.length} dětí` : "Vytvořit úkol"}
                   </button>
                   {editingTaskId ? (
                     <button
