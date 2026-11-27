@@ -33,10 +33,15 @@ class User(Base):
     pin_locked_until = Column(DateTime(timezone=True), nullable=True)
     auth_kind = Column(String, nullable=False, default="telegram")
 
+    # Tichy rezim Web Push (HH:MM, mistni cas aplikace); obe hodnoty NULL = vypnuto.
+    quiet_start = Column(String, nullable=True)
+    quiet_end = Column(String, nullable=True)
+
     family = relationship("Family", back_populates="members")
     tasks = relationship("Task", back_populates="user", cascade="all, delete-orphan")
     purchases = relationship("RewardPurchase", back_populates="user", cascade="all, delete-orphan")
     push_subscriptions = relationship("PushSubscription", back_populates="user", cascade="all, delete-orphan")
+    wishes = relationship("RewardWish", back_populates="user", cascade="all, delete-orphan")
 
 
 class Family(Base):
@@ -75,6 +80,8 @@ class Task(Base):
     recurrence = Column(String, nullable=True)        # 'daily' | 'weekly' | 'mon,wed,fri' atd.
     recurrence_days = Column(String, nullable=True)   # CSV dnu tydne: '0,2,4' (0=Po)
     parent_task_id = Column(Integer, ForeignKey("tasks.id"), nullable=True)
+    # Volny ukol (nabidka): user_id je NULL a rodina, ve ktere si ho deti mohou vzit, je tady.
+    offer_family_id = Column(Integer, nullable=True)
     # Feedback od rodice
     feedback = Column(Text, nullable=True)
     feedback_at = Column(DateTime(timezone=True), nullable=True)
@@ -162,3 +169,37 @@ class ChallengeProgress(Base):
 
     challenge = relationship("FamilyChallenge", back_populates="progress_entries")
     user = relationship("User")
+
+
+class RewardWish(Base):
+    """Prani ditete: navrh odmeny, kterou rodic schvali (a vytvori se z ni Reward) nebo zamitne."""
+
+    __tablename__ = "reward_wishes"
+
+    id = Column(Integer, primary_key=True)
+    family_id = Column(Integer, ForeignKey("families.id"), nullable=False)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    title = Column(String, nullable=False)
+    suggested_cost = Column(Integer, default=0, nullable=False)
+    status = Column(String, default="pending", nullable=False)  # pending | approved | rejected
+    parent_note = Column(String, nullable=True)
+    reward_id = Column(Integer, ForeignKey("rewards.id"), nullable=True)
+    created_at = Column(DateTime(timezone=True), default=utc_now)
+    resolved_at = Column(DateTime(timezone=True), nullable=True)
+
+    user = relationship("User", back_populates="wishes")
+
+
+class FamilyGoal(Base):
+    """Spolecny rodinny cil: deti dohromady sbiraji XP (napr. na pizza vecer)."""
+
+    __tablename__ = "family_goals"
+
+    id = Column(Integer, primary_key=True)
+    family_id = Column(Integer, ForeignKey("families.id"), nullable=False)
+    title = Column(String, nullable=False)
+    target_xp = Column(Integer, nullable=False)
+    active = Column(Boolean, default=True, nullable=False)
+    created_at = Column(DateTime(timezone=True), default=utc_now)
+    completed_at = Column(DateTime(timezone=True), nullable=True)
+

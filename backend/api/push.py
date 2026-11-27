@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 from api import get_current_user, get_db
 from config import settings
 from models import PushSubscription, User
-from push_notify import send_push_to_user_by_id
+from push_notify import is_valid_time, send_push_to_user_by_id
 
 router = APIRouter(prefix="/push", tags=["push"])
 
@@ -81,5 +81,33 @@ def send_test_push(
     count = db.query(PushSubscription).filter(PushSubscription.user_id == current_user.id).count()
     if count == 0:
         raise HTTPException(status_code=404, detail="Nejdříve zapni upozornění na tomto zařízení.")
-    send_push_to_user_by_id(current_user.id, "Family Quest", "Upozornění funguje!", "/")
+    send_push_to_user_by_id(current_user.id, "Family Quest", "Upozornění funguje!", "/", ignore_quiet=True)
     return {"detail": "Testovací upozornění odesláno."}
+
+
+class QuietHours(BaseModel):
+    start: str | None = None
+    end: str | None = None
+
+
+@router.get("/quiet-hours", summary="Tichý režim upozornění")
+def get_quiet_hours(current_user: User = Depends(get_current_user)):
+    return {"start": current_user.quiet_start, "end": current_user.quiet_end}
+
+
+@router.put("/quiet-hours", summary="Nastavit tichý režim upozornění")
+def set_quiet_hours(
+    payload: QuietHours,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    start = (payload.start or "").strip() or None
+    end = (payload.end or "").strip() or None
+    if (start is None) != (end is None):
+        raise HTTPException(status_code=400, detail="Vyplň začátek i konec tichého režimu, nebo obojí nech prázdné.")
+    if start and (not is_valid_time(start) or not is_valid_time(end)):
+        raise HTTPException(status_code=400, detail="Čas zadej ve formátu HH:MM.")
+    current_user.quiet_start = start
+    current_user.quiet_end = end
+    db.commit()
+    return {"start": start, "end": end}

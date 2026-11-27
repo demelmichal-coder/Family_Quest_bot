@@ -12,6 +12,14 @@ vi.mock("../context/UserContext", () => ({
   }),
 }));
 
+// Panely s vlastnim nacitanim dat se testuji samostatne (src/components/*.test.jsx).
+vi.mock("../components/FamilyGoalCard", () => ({ default: () => null }));
+vi.mock("../components/WeeklyOverview", () => ({ default: () => null }));
+vi.mock("../components/OffersManager", () => ({ default: () => null }));
+vi.mock("../components/WishInbox", () => ({ default: () => null }));
+vi.mock("../components/QuietHoursSettings", () => ({ default: () => null }));
+vi.mock("../components/DataPrivacyPanel", () => ({ default: () => null }));
+
 vi.mock("../hooks/useGroqRewrite", () => ({
   useGroqRewrite: () => ({
     rewriteTask: rewriteMock,

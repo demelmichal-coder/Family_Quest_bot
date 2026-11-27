@@ -650,6 +650,7 @@ function App() {
               challenges={challenges}
               onCompleteTask={handleCompleteTask}
               onBuyReward={handleBuyReward}
+              onDataChanged={loadAppData}
             />
           )}
         </>
@@ -666,6 +667,7 @@ function App() {
             challenges={challenges}
             onCompleteTask={handleCompleteTask}
             onBuyReward={handleBuyReward}
+              onDataChanged={loadAppData}
           />
         </>
       )}

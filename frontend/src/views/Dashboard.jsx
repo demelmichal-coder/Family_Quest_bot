@@ -13,6 +13,12 @@ import ProgressBar from "../components/ProgressBar";
 import InstallAppButton from "../components/InstallAppButton";
 import PushSubscribeButton from "../components/PushSubscribeButton";
 import TaskCard from "../components/TaskCard";
+import FamilyGoalCard from "../components/FamilyGoalCard";
+import OffersBoard from "../components/OffersBoard";
+import QuietHoursSettings from "../components/QuietHoursSettings";
+import WeekCalendar from "../components/WeekCalendar";
+import WeeklyOverview from "../components/WeeklyOverview";
+import WishesPanel from "../components/WishesPanel";
 import Shop from "./Shop";
 import { getErrorMessage } from "../utils/errors";
 
@@ -167,6 +173,7 @@ function Dashboard({
   challenges = [],
   onCompleteTask,
   onBuyReward,
+  onDataChanged,
 }) {
   const { api, setUser } = useUser();
   const [activeTaskId, setActiveTaskId] = useState(null);
@@ -572,6 +579,8 @@ function Dashboard({
           </div>
         ) : null}
 
+        {tab === DASHBOARD_TAB_MISSIONS ? <OffersBoard onClaimed={onDataChanged} /> : null}
+
         {tab === DASHBOARD_TAB_MISSIONS ? (
           <section className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
             <div className="space-y-4">
@@ -769,6 +778,8 @@ function Dashboard({
           </section>
         ) : null}
 
+        {tab === DASHBOARD_TAB_MISSIONS ? <WeekCalendar tasks={tasks} /> : null}
+
         {tab === DASHBOARD_TAB_SHOP ? (
           <Shop
             user={user}
@@ -777,6 +788,8 @@ function Dashboard({
             onBuyReward={onBuyReward}
           />
         ) : null}
+
+        {tab === DASHBOARD_TAB_SHOP ? <WishesPanel onChanged={onDataChanged} /> : null}
 
         {tab === DASHBOARD_TAB_FAMILY ? (
           <section className="grid gap-6 xl:grid-cols-[360px_minmax(0,1fr)]">
@@ -860,6 +873,14 @@ function Dashboard({
               </div>
             </div>
           </section>
+        ) : null}
+
+        {tab === DASHBOARD_TAB_FAMILY ? (
+          <div className="space-y-6">
+            <FamilyGoalCard isParent={user?.role === "parent"} />
+            <WeeklyOverview />
+            <QuietHoursSettings />
+          </div>
         ) : null}
       </div>
       <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-white/10 bg-slate-950/95 px-2 pb-[env(safe-area-inset-bottom)] pt-2 backdrop-blur">

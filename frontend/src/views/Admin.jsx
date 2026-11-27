@@ -4,6 +4,14 @@ import { ROLE_CHILD } from "../constants/roles";
 import { useUser } from "../context/UserContext";
 import { useGroqRewrite } from "../hooks/useGroqRewrite";
 import { getErrorMessage } from "../utils/errors";
+import DataPrivacyPanel from "../components/DataPrivacyPanel";
+import FamilyGoalCard from "../components/FamilyGoalCard";
+import OffersManager from "../components/OffersManager";
+import QuietHoursSettings from "../components/QuietHoursSettings";
+import TaskTemplates from "../components/TaskTemplates";
+import WeekCalendar from "../components/WeekCalendar";
+import WeeklyOverview from "../components/WeeklyOverview";
+import WishInbox from "../components/WishInbox";
 
 const AI_STYLE_STORAGE_KEY = "familyquest.aiRewriteStyle";
 
@@ -1017,6 +1025,19 @@ function Admin({
     }
   }
 
+  function handleTemplatePick(template) {
+    setEditingTaskId(null);
+    setTaskForm({
+      ...initialTaskForm,
+      title: template.title,
+      description: template.description,
+      xp: template.xp,
+      gold: template.gold,
+    });
+    setTaskFormOpen(true);
+    document.getElementById("task-create")?.scrollIntoView?.({ behavior: "smooth", block: "start" });
+  }
+
   return (
     <div className="min-h-screen bg-slate-950 px-4 pb-28 pt-4 text-slate-100">
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-6">
@@ -1078,6 +1099,13 @@ function Admin({
           <div className="rounded-2xl border border-emerald-400/40 bg-emerald-400/10 px-4 py-3 text-sm text-emerald-100">
             {message}
           </div>
+        ) : null}
+
+        {adminTab === "overview" ? (
+          <>
+            <FamilyGoalCard isParent />
+            <WeeklyOverview />
+          </>
         ) : null}
 
         {adminTab === "overview" && engagementSummary ? (
@@ -1318,6 +1346,10 @@ function Admin({
               </div>
             </section>
               )}
+
+            {adminTab === "tasks" && <TaskTemplates onPick={handleTemplatePick} />}
+
+            {adminTab === "tasks" && <OffersManager />}
 
             {adminTab === "tasks" && (
             <section id="task-create" className="scroll-mt-6 rounded-3xl border border-slate-800 bg-slate-900 p-5 shadow-xl">
@@ -1561,6 +1593,8 @@ function Admin({
               ) : null}
             </section>
               )}
+
+            {adminTab === "rewards" && <WishInbox onChanged={onDataChanged} />}
 
             {adminTab === "rewards" && (
             <section id="reward-create" className="scroll-mt-6 rounded-3xl border border-slate-800 bg-slate-900 p-5 shadow-xl">
@@ -1954,6 +1988,8 @@ function Admin({
             </section>
               )}
 
+            {adminTab === "tasks" && <WeekCalendar tasks={tasks} />}
+
             {adminTab === "rewards" && (
             <section id="reward-list" className="scroll-mt-6 rounded-3xl border border-slate-800 bg-slate-900 p-5 shadow-xl">
               <div className="mb-4">
@@ -2209,6 +2245,13 @@ function Admin({
               </div>
             </section>
               )}
+
+            {adminTab === "family" && (
+              <>
+                <QuietHoursSettings />
+                <DataPrivacyPanel />
+              </>
+            )}
           </div>
         </div>
       </div>
