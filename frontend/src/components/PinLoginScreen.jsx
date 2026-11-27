@@ -207,7 +207,7 @@ export default function PinLoginScreen({ onShowSavedProfiles, hasSavedProfiles }
         {step === STEP_FAMILY_CODE ? (
           <form className="mt-6 space-y-4" onSubmit={handleFamilyCodeSubmit}>
             <label className="block">
-              <span className="mb-2 block text-sm font-semibold text-slate-700">Kod rodiny</span>
+              <span className="mb-2 block text-sm font-semibold text-slate-700">Kód rodiny</span>
               <input
                 value={familyCode}
                 onChange={(event) => setFamilyCode(event.target.value.toUpperCase())}
@@ -251,7 +251,7 @@ export default function PinLoginScreen({ onShowSavedProfiles, hasSavedProfiles }
               ))
             ) : (
               <p className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
-                V teto rodine jeste nikdo nema nastaveny PIN.
+                V této rodině ještě nikdo nemá nastavený PIN.
               </p>
             )}
 
@@ -271,7 +271,7 @@ export default function PinLoginScreen({ onShowSavedProfiles, hasSavedProfiles }
               onClick={handleBack}
               className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 font-bold text-slate-800 transition hover:bg-slate-50"
             >
-              Zpet
+              Zpět
             </button>
           </div>
         ) : null}
@@ -305,7 +305,7 @@ export default function PinLoginScreen({ onShowSavedProfiles, hasSavedProfiles }
               onClick={handleBack}
               className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 font-bold text-slate-800 transition hover:bg-slate-50"
             >
-              Zpet
+              Zpět
             </button>
           </form>
         ) : null}
@@ -313,7 +313,7 @@ export default function PinLoginScreen({ onShowSavedProfiles, hasSavedProfiles }
         {step === STEP_REGISTER ? (
           <form className="mt-6 space-y-4" onSubmit={handleRegisterSubmit}>
             <label className="block">
-              <span className="mb-2 block text-sm font-semibold text-slate-700">Jmeno</span>
+              <span className="mb-2 block text-sm font-semibold text-slate-700">Jméno</span>
               <input
                 value={registerName}
                 onChange={(event) => setRegisterName(event.target.value)}
@@ -358,7 +358,7 @@ export default function PinLoginScreen({ onShowSavedProfiles, hasSavedProfiles }
               onClick={handleBack}
               className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 font-bold text-slate-800 transition hover:bg-slate-50"
             >
-              Zpet
+              Zpět
             </button>
           </form>
         ) : null}
@@ -379,7 +379,7 @@ export default function PinLoginScreen({ onShowSavedProfiles, hasSavedProfiles }
               />
             </label>
             <label className="block">
-              <span className="mb-2 block text-sm font-semibold text-slate-700">Tvoje jmeno</span>
+              <span className="mb-2 block text-sm font-semibold text-slate-700">Tvoje jméno</span>
               <input
                 value={registerName}
                 onChange={(event) => setRegisterName(event.target.value)}
@@ -421,7 +421,7 @@ export default function PinLoginScreen({ onShowSavedProfiles, hasSavedProfiles }
               onClick={handleBack}
               className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 font-bold text-slate-800 transition hover:bg-slate-50"
             >
-              Zpet
+              Zpět
             </button>
           </form>
         ) : null}

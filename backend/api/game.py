@@ -2,6 +2,7 @@
 
 import asyncio
 import os
+import unicodedata
 from datetime import date, datetime, timedelta, timezone
 from zoneinfo import ZoneInfo
 
@@ -52,7 +53,7 @@ def _notify_family_parents(
     family_id: int | None,
     message: str,
     background_tasks: BackgroundTasks,
-    push_title: str = "Ceka na schvaleni",
+    push_title: str = "Čeká na schválení",
 ) -> None:
     if family_id:
         parents = (
@@ -119,7 +120,7 @@ def _grant_task_rewards(db: Session, user: User, task: Task) -> tuple[int, int, 
 
 def _approval_detail(task: Task) -> str:
     time_suffix = f" do {task.due_time}" if task.due_time else ""
-    return f"Ukol byl odeslan rodici ke schvaleni{time_suffix}."
+    return f"Úkol byl odeslán rodiči ke schválení{time_suffix}."
 
 
 def _update_streak(user: User) -> tuple[int, int]:
@@ -156,8 +157,14 @@ def get_db():
         db.close()
 
 
+def _fold(value: str) -> str:
+    """Malá písmena bez diakritiky, aby 'splněno' a 'splneno' byly při porovnání stejné."""
+    decomposed = unicodedata.normalize("NFKD", value or "")
+    return "".join(ch for ch in decomposed if not unicodedata.combining(ch)).lower()
+
+
 def _score_task_proof(task: Task, proof_text: str, proof_media_url: str | None) -> tuple[int, bool, str]:
-    text = (proof_text or "").strip().lower()
+    text = _fold((proof_text or "").strip())
     score = 0
 
     if len(text) >= 20:
@@ -165,7 +172,7 @@ def _score_task_proof(task: Task, proof_text: str, proof_media_url: str | None) 
     elif len(text) >= 10:
         score += 20
 
-    keywords = [w for w in f"{task.title} {task.description or ''}".lower().split() if len(w) >= 4]
+    keywords = [w for w in _fold(f"{task.title} {task.description or ''}").split() if len(w) >= 4]
     keyword_hits = sum(1 for kw in set(keywords[:10]) if kw in text)
     score += min(30, keyword_hits * 10)
 
@@ -176,9 +183,9 @@ def _score_task_proof(task: Task, proof_text: str, proof_media_url: str | None) 
 
     flagged = score < 45
     note = (
-        "AI: Duvod je dostatecny, muze pokracovat."
+        "AI: Důvod je dostatečný, může pokračovat."
         if not flagged
-        else "AI: Duvod je slaby, vyzaduje kontrolu rodicem."
+        else "AI: Důvod je slabý, vyžaduje kontrolu rodičem."
     )
     return score, flagged, note
 
@@ -211,7 +218,7 @@ def reset_daily(
         }
     )
     db.commit()
-    return {"detail": f"Resetovano {updated} dennic h ukolu."}
+    return {"detail": f"Resetováno {updated} denních úkolů."}
 
 
 @router.post("/approve-task/{task_id}", summary="Schvalit mimoradny ukol", response_model=MessageResponse)
@@ -223,21 +230,21 @@ def approve_task(
 ):
     task = db.query(Task).filter(Task.id == task_id).first()
     if not task:
-        raise HTTPException(status_code=404, detail="Ukol nenalezen.")
+        raise HTTPException(status_code=404, detail="Úkol nenalezen.")
     if task.recurrence and task.parent_task_id is None:
-        raise HTTPException(status_code=400, detail="Sablonu opakujiciho se ukolu nelze schvalit.")
+        raise HTTPException(status_code=400, detail="Šablonu opakujícího se úkolu nelze schválit.")
     if task.approved:
-        raise HTTPException(status_code=400, detail="Ukol uz je schvaleny.")
+        raise HTTPException(status_code=400, detail="Úkol už je schválený.")
     if not task.is_completed:
-        raise HTTPException(status_code=400, detail="Ukol jeste nebyl ditetem oznacen jako splneny.")
+        raise HTTPException(status_code=400, detail="Úkol ještě nebyl dítětem označen jako splněný.")
     if task.requires_proof and task.ai_flagged:
-        raise HTTPException(status_code=400, detail="Nejdriv je potreba zkontrolovat dukaz splneni.")
+        raise HTTPException(status_code=400, detail="Nejdřív je potřeba zkontrolovat důkaz splnění.")
 
     user = db.query(User).filter(User.id == task.user_id).first()
     if not user:
-        raise HTTPException(status_code=404, detail="Uzivatel ukolu nenalezen.")
+        raise HTTPException(status_code=404, detail="Uživatel úkolu nenalezen.")
     if user.family_id != current_user.family_id:
-        raise HTTPException(status_code=403, detail="Nelze schvalit ukol mimo vlastni rodinu.")
+        raise HTTPException(status_code=403, detail="Nelze schválit úkol mimo vlastní rodinu.")
 
     task.approved = True
     task.approved_at = datetime.now(timezone.utc)
@@ -246,19 +253,19 @@ def approve_task(
     db.refresh(task)
     db.refresh(user)
 
-    detail = f"Ukol schvalen. {user.username or user.telegram_id} dostava +{task.xp} XP a +{task.gold} gold."
+    detail = f"Úkol schválen. {user.username or user.telegram_id} dostává +{task.xp} XP a +{task.gold} zlata."
     if bonus_xp:
         detail += f" Bonus za streak +{bonus_xp} XP."
     if challenge_completed_titles:
-        detail += " " + " ".join(f"Rodinna vyzva splnena: {title}." for title in challenge_completed_titles)
+        detail += " " + " ".join(f"Rodinná výzva splněna: {title}." for title in challenge_completed_titles)
 
     child_message = (
-        f"🎉 Rodic schvalil ukol <b>{task.title}</b>. "
-        f"Pripsano +{task.xp} XP a +{task.gold} gold."
+        f"🎉 Rodič schválil úkol <b>{task.title}</b>. "
+        f"Připsáno +{task.xp} XP a +{task.gold} zlata."
     )
     background_tasks.add_task(asyncio.run, send_telegram_message(user.telegram_id, child_message))
     background_tasks.add_task(
-        send_push_to_user_by_id, user.id, "Ukol schvalen!", _strip_html(child_message), "/"
+        send_push_to_user_by_id, user.id, "Úkol schválen!", _strip_html(child_message), "/"
     )
     return {"detail": detail}
 
@@ -272,9 +279,9 @@ def submit_task_proof(
 ):
     task = db.query(Task).filter(Task.id == task_id).first()
     if not task:
-        raise HTTPException(status_code=404, detail="Ukol nenalezen.")
+        raise HTTPException(status_code=404, detail="Úkol nenalezen.")
     if task.user_id != current_user.id and current_user.role != ROLE_PARENT:
-        raise HTTPException(status_code=403, detail="Nelze odeslat dukaz k cizimu ukolu.")
+        raise HTTPException(status_code=403, detail="Nelze odeslat důkaz k cizímu úkolu.")
 
     score, flagged, note = _score_task_proof(task, body.proof_text, body.proof_media_url)
     try:
@@ -302,13 +309,13 @@ def review_task_proof(
 ):
     task = db.query(Task).filter(Task.id == task_id).first()
     if not task:
-        raise HTTPException(status_code=404, detail="Ukol nenalezen.")
+        raise HTTPException(status_code=404, detail="Úkol nenalezen.")
 
     if not task.user_id:
-        raise HTTPException(status_code=400, detail="Ukol nema prirazeneho uzivatele.")
+        raise HTTPException(status_code=400, detail="Úkol nemá přiřazeného uživatele.")
     task_owner = db.query(User).filter(User.id == task.user_id).first()
     if not task_owner or task_owner.family_id != current_user.family_id:
-        raise HTTPException(status_code=403, detail="Nelze hodnotit ukol mimo rodinu.")
+        raise HTTPException(status_code=403, detail="Nelze hodnotit úkol mimo rodinu.")
 
     if body.approved:
         task.ai_flagged = False
@@ -335,28 +342,28 @@ def complete_task(
 ):
     db_user = db.query(User).filter(User.id == current_user.id).first()
     if not db_user:
-        raise HTTPException(status_code=404, detail="Aktualni uzivatel nenalezen.")
+        raise HTTPException(status_code=404, detail="Aktuální uživatel nenalezen.")
 
     task = db.query(Task).filter(Task.id == task_id).first()
     if not task:
-        raise HTTPException(status_code=404, detail="Ukol nenalezen.")
+        raise HTTPException(status_code=404, detail="Úkol nenalezen.")
     if task.recurrence and task.parent_task_id is None:
-        raise HTTPException(status_code=400, detail="Sablonu opakujiciho se ukolu nelze dokoncit.")
+        raise HTTPException(status_code=400, detail="Šablonu opakujícího se úkolu nelze dokončit.")
     if db_user.role != ROLE_PARENT and task.user_id != db_user.id:
-        raise HTTPException(status_code=403, detail="Nelze splnit cizi ukol.")
+        raise HTTPException(status_code=403, detail="Nelze splnit cizí úkol.")
     if task.is_completed:
-        raise HTTPException(status_code=400, detail="Ukol uz je splneny.")
+        raise HTTPException(status_code=400, detail="Úkol už je splněný.")
     today_local = datetime.now(timezone.utc).astimezone(APP_TIMEZONE).date()
     if task.due_date and task.due_date != today_local:
         raise HTTPException(
             status_code=400,
-            detail="Ukol lze splnit jen v den, na ktery byl naplanovany.",
+            detail="Úkol lze splnit jen v den, na který byl naplánovaný.",
         )
     if task.requires_proof and db_user.role != ROLE_PARENT:
         if not task.proof_submitted_at:
-            raise HTTPException(status_code=400, detail="Ukol vyzaduje dukaz splneni.")
+            raise HTTPException(status_code=400, detail="Úkol vyžaduje důkaz splnění.")
         if task.ai_flagged:
-            raise HTTPException(status_code=403, detail="Dukaz ceka na schvaleni rodicem.")
+            raise HTTPException(status_code=403, detail="Důkaz čeká na schválení rodičem.")
 
     task.is_completed = True
     task.completed_at = datetime.now(timezone.utc)
@@ -364,13 +371,13 @@ def complete_task(
 
     user = db.query(User).filter(User.id == task.user_id).first()
     if not user:
-        raise HTTPException(status_code=404, detail="Uzivatel ukolu nenalezen.")
+        raise HTTPException(status_code=404, detail="Uživatel úkolu nenalezen.")
     if db_user.role == ROLE_PARENT and user.family_id != db_user.family_id:
-        raise HTTPException(status_code=403, detail="Nelze splnit ukol mimo vlastni rodinu.")
+        raise HTTPException(status_code=403, detail="Nelze splnit úkol mimo vlastní rodinu.")
     if db_user.role == ROLE_PARENT and task.user_id != db_user.id:
         raise HTTPException(
             status_code=400,
-            detail="Rodic nemuze ukol ditete dokoncit misto nej. Pouzij schvaleni ukolu.",
+            detail="Rodič nemůže úkol dítěte dokončit místo něj. Použij schválení úkolu.",
         )
 
     if db_user.role == ROLE_PARENT:
@@ -381,7 +388,7 @@ def complete_task(
         db.refresh(task)
         db.refresh(user)
 
-        detail = f"Ukol splnen. +{task.xp} XP, +{task.gold} gold."
+        detail = f"Úkol splněn. +{task.xp} XP, +{task.gold} zlata."
         if bonus_xp:
             detail += f" 🔥 Streak bonus +{bonus_xp} XP!"
         if streak >= 2:
@@ -404,7 +411,7 @@ def complete_task(
         db.refresh(task)
         db.refresh(user)
 
-        detail = f"Ukol splnen. +{task.xp} XP, +{task.gold} gold."
+        detail = f"Úkol splněn. +{task.xp} XP, +{task.gold} zlata."
         if bonus_xp:
             detail += f" 🔥 Streak bonus +{bonus_xp} XP!"
         if streak >= 2:
@@ -426,8 +433,8 @@ def complete_task(
 
     child_name = user.username or user.telegram_id
     parent_message = (
-        f"✅ {child_name} oznacil/a ukol <b>{task.title}</b> jako splneny. "
-        f"Ceka na tvoje schvaleni."
+        f"✅ {child_name} označil/a úkol <b>{task.title}</b> jako splněný. "
+        f"Čeká na tvé schválení."
     )
     _notify_family_parents(db, user.family_id, parent_message, background_tasks)
 
@@ -448,13 +455,13 @@ def buy_reward(
 ):
     db_user = db.query(User).filter(User.id == current_user.id).first()
     if not db_user:
-        raise HTTPException(status_code=404, detail="Aktualni uzivatel nenalezen.")
+        raise HTTPException(status_code=404, detail="Aktuální uživatel nenalezen.")
 
     reward = db.query(Reward).filter(Reward.id == reward_id).first()
     if not reward:
-        raise HTTPException(status_code=404, detail="Odmena nenalezena.")
+        raise HTTPException(status_code=404, detail="Odměna nenalezena.")
     if reward.family_id != db_user.family_id:
-        raise HTTPException(status_code=403, detail="Nelze koupit odmenu mimo vlastni rodinu.")
+        raise HTTPException(status_code=403, detail="Nelze koupit odměnu mimo vlastní rodinu.")
     if db_user.gold < reward.cost:
         raise HTTPException(status_code=400, detail="Nedostatek zlata.")
 
@@ -507,7 +514,7 @@ def leaderboard(
     current_user=Depends(get_current_user),
 ):
     if not current_user.family_id:
-        raise HTTPException(status_code=400, detail="Uzivatel neni clenem zadne rodiny.")
+        raise HTTPException(status_code=400, detail="Uživatel není členem žádné rodiny.")
     members = (
         db.query(User)
         .filter(User.family_id == current_user.family_id)
@@ -542,7 +549,7 @@ def family_stats(
     current_user=Depends(get_current_user),
 ):
     if not current_user.family_id:
-        raise HTTPException(status_code=400, detail="Uzivatel neni clenem zadne rodiny.")
+        raise HTTPException(status_code=400, detail="Uživatel není členem žádné rodiny.")
     family = db.query(Family).filter(Family.id == current_user.family_id).first()
     member_ids = [u.id for u in db.query(User.id).filter(User.family_id == current_user.family_id).all()]
     total_members = len(member_ids)
@@ -586,7 +593,7 @@ def season_progress(
 ):
     db_user = db.query(User).filter(User.id == current_user.id).first()
     if not db_user:
-        raise HTTPException(status_code=404, detail="Aktualni uzivatel nenalezen.")
+        raise HTTPException(status_code=404, detail="Aktuální uživatel nenalezen.")
 
     now = datetime.now(timezone.utc)
     elapsed_days = (now - SEASON_START).days
@@ -616,7 +623,7 @@ def achievements(
 ):
     db_user = db.query(User).filter(User.id == current_user.id).first()
     if not db_user:
-        raise HTTPException(status_code=404, detail="Aktualni uzivatel nenalezen.")
+        raise HTTPException(status_code=404, detail="Aktuální uživatel nenalezen.")
 
     completed_tasks = (
         db.query(func.count(Task.id))
@@ -647,8 +654,8 @@ def achievements(
     items = [
         AchievementRead(
             id="first_steps",
-            title="Prvni kroky",
-            description="Dokoncit 1 misi.",
+            title="První kroky",
+            description="Dokončit 1 misi.",
             unlocked=completed_tasks >= 1,
             progress=min(completed_tasks, 1),
             target=1,
@@ -657,7 +664,7 @@ def achievements(
         AchievementRead(
             id="task_runner",
             title="Task runner",
-            description="Dokoncit 10 misi.",
+            description="Dokončit 10 misí.",
             unlocked=completed_tasks >= 10,
             progress=min(completed_tasks, 10),
             target=10,
@@ -666,7 +673,7 @@ def achievements(
         AchievementRead(
             id="daily_streak",
             title="Daily master",
-            description="Dokoncit 5 dennic h misi.",
+            description="Dokončit 5 denních misí.",
             unlocked=daily_completed >= 5,
             progress=min(daily_completed, 5),
             target=5,
@@ -675,7 +682,7 @@ def achievements(
         AchievementRead(
             id="xp_hunter",
             title="XP Hunter",
-            description="Dosahnout 250 XP.",
+            description="Dosáhnout 250 XP.",
             unlocked=db_user.xp >= 250,
             progress=min(db_user.xp, 250),
             target=250,
@@ -684,7 +691,7 @@ def achievements(
         AchievementRead(
             id="gold_hoarder",
             title="Gold Hoarder",
-            description="Nasbirat 150 gold.",
+            description="Nasbírat 150 zlata.",
             unlocked=db_user.gold >= 150,
             progress=min(db_user.gold, 150),
             target=150,
@@ -692,8 +699,8 @@ def achievements(
         ),
         AchievementRead(
             id="family_top3",
-            title="Rodinna elita",
-            description="Byt v top 3 rodinneho zebricku.",
+            title="Rodinná elita",
+            description="Být v top 3 rodinného žebříčku.",
             unlocked=rank is not None and rank <= 3,
             progress=1 if rank is not None and rank <= 3 else 0,
             target=1,
@@ -702,7 +709,7 @@ def achievements(
         AchievementRead(
             id="streak_3",
             title="Na vlne",
-            description="Dosahnout 3denni serie aktivit.",
+            description="Dosáhnout 3denní série aktivit.",
             unlocked=(db_user.current_streak or 0) >= 3,
             progress=min(db_user.current_streak or 0, 3),
             target=3,
@@ -710,8 +717,8 @@ def achievements(
         ),
         AchievementRead(
             id="streak_7",
-            title="Tydenni hrdina",
-            description="Dosahnout 7denni serie aktivit.",
+            title="Týdenní hrdina",
+            description="Dosáhnout 7denní série aktivit.",
             unlocked=(db_user.current_streak or 0) >= 7,
             progress=min(db_user.current_streak or 0, 7),
             target=7,
@@ -720,7 +727,7 @@ def achievements(
         AchievementRead(
             id="task_master",
             title="Task Master",
-            description="Dokoncit 25 misi.",
+            description="Dokončit 25 misí.",
             unlocked=completed_tasks >= 25,
             progress=min(completed_tasks, 25),
             target=25,
@@ -729,7 +736,7 @@ def achievements(
         AchievementRead(
             id="xp_legend",
             title="XP Legenda",
-            description="Dosahnout 500 XP.",
+            description="Dosáhnout 500 XP.",
             unlocked=db_user.xp >= 500,
             progress=min(db_user.xp, 500),
             target=500,
@@ -746,7 +753,7 @@ def family_weekly_stats(
     current_user=Depends(get_current_user),
 ):
     if not current_user.family_id:
-        raise HTTPException(status_code=400, detail="Uzivatel neni clenem zadne rodiny.")
+        raise HTTPException(status_code=400, detail="Uživatel není členem žádné rodiny.")
 
     children = (
         db.query(User)
@@ -803,7 +810,7 @@ def daily_activity(
     current_user=Depends(require_role(ROLE_PARENT)),
 ):
     if not current_user.family_id:
-        raise HTTPException(status_code=400, detail="Uzivatel neni clenem zadne rodiny.")
+        raise HTTPException(status_code=400, detail="Uživatel není členem žádné rodiny.")
 
     children = (
         db.query(User)
@@ -878,7 +885,7 @@ def engagement_summary(
     current_user=Depends(require_role(ROLE_PARENT)),
 ):
     if not current_user.family_id:
-        raise HTTPException(status_code=400, detail="Uzivatel neni clenem zadne rodiny.")
+        raise HTTPException(status_code=400, detail="Uživatel není členem žádné rodiny.")
 
     period_days = 7
     now = datetime.now(timezone.utc)

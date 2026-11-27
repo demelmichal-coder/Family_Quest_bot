@@ -30,7 +30,7 @@ def _get_task(db: Session, task_id: int) -> Task:
 def _get_family_assignee(db: Session, user_id: int, family_id: int) -> User:
     assignee = db.query(User).filter(User.id == user_id).first()
     if not assignee or assignee.family_id != family_id:
-        raise HTTPException(status_code=403, detail="Ukol lze priradit jen clenu vlastni rodiny.")
+        raise HTTPException(status_code=403, detail="Úkol lze přiřadit jen členu vlastní rodiny.")
     return assignee
 
 
@@ -107,7 +107,7 @@ def get_task(
 ):
     task = _get_task(db, task_id)
     if current_user.role != ROLE_PARENT and task.user_id != current_user.id:
-        raise HTTPException(status_code=403, detail="Nelze zobrazit cizi ukol.")
+        raise HTTPException(status_code=403, detail="Nelze zobrazit cizí úkol.")
     if current_user.role == ROLE_PARENT:
         _ensure_task_family_access(task, current_user.family_id, "Nelze zobrazit ukol mimo rodinu.")
     return task
@@ -155,7 +155,7 @@ def create_tasks_bulk(
     current_user=Depends(get_current_user),
 ):
     if current_user.role != ROLE_PARENT:
-        raise HTTPException(status_code=403, detail="Pouze rodic muze vytvarit vice ukolu najednou.")
+        raise HTTPException(status_code=403, detail="Pouze rodič může vytvářet více úkolů najednou.")
     
     created_tasks = []
     for task_data in payload.tasks:
@@ -200,13 +200,13 @@ def update_task(
 ):
     db_task = _get_task(db, task_id)
     if current_user.role != ROLE_PARENT and db_task.user_id != current_user.id:
-        raise HTTPException(status_code=403, detail="Nelze upravit cizi ukol.")
+        raise HTTPException(status_code=403, detail="Nelze upravit cizí úkol.")
     _ensure_task_family_access(db_task, current_user.family_id, "Nelze upravit ukol mimo rodinu.")
 
     updates = task.model_dump(exclude_unset=True)
     if "user_id" in updates:
         if current_user.role != ROLE_PARENT:
-            raise HTTPException(status_code=403, detail="Nelze zmenit prirazeni ukolu.")
+            raise HTTPException(status_code=403, detail="Nelze změnit přiřazení úkolu.")
         _get_family_assignee(db, updates["user_id"], current_user.family_id)
 
     for key, value in updates.items():
@@ -239,7 +239,7 @@ def add_feedback(
     db_task = _get_task(db, task_id)
     _ensure_task_family_access(db_task, current_user.family_id, "Nelze okomentovat ukol mimo rodinu.")
     if not db_task.is_completed:
-        raise HTTPException(status_code=400, detail="Ukol jeste neni splneny.")
+        raise HTTPException(status_code=400, detail="Úkol ještě není splněný.")
     db_task.feedback = body.feedback
     db_task.feedback_at = datetime.now(timezone.utc)
     db.commit()
@@ -254,7 +254,7 @@ def create_recurring_task(
     current_user=Depends(require_role(ROLE_PARENT)),
 ):
     if not task.recurrence:
-        raise HTTPException(status_code=400, detail="Recurrence pole je povinne.")
+        raise HTTPException(status_code=400, detail="Pole opakování je povinné.")
     if task.user_id is not None:
         _get_family_assignee(db, task.user_id, current_user.family_id)
 

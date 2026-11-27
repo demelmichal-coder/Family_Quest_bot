@@ -11,6 +11,7 @@ import TaskTemplates from "./TaskTemplates";
 import WeeklyOverview, { badgesFor, buildDayLabels } from "./WeeklyOverview";
 import WeekCalendar from "./WeekCalendar";
 import DataPrivacyPanel from "./DataPrivacyPanel";
+import ChangePinPanel from "./ChangePinPanel";
 import { dateKey } from "../utils/calendar";
 
 const apiMock = vi.fn();
@@ -377,3 +378,39 @@ test("smazání rodiny vyžaduje přesné potvrzení a pak odhlásí", async () 
   );
   expect(logoutMock).toHaveBeenCalled();
 });
+
+// ---------- Změna PINu ----------
+
+test("změna PINu ověří délku i shodu a pak PIN uloží", async () => {
+  routeApi({ "POST /auth/pin/set-own": { id: 1 } });
+  const user = userEvent.setup();
+  render(<ChangePinPanel />);
+
+  await user.type(screen.getByLabelText("Nový PIN"), "12");
+  expect(screen.getByRole("button", { name: "Změnit PIN" })).toBeDisabled();
+
+  await user.clear(screen.getByLabelText("Nový PIN"));
+  await user.type(screen.getByLabelText("Nový PIN"), "4321");
+  await user.type(screen.getByLabelText("Nový PIN znovu"), "9999");
+  await user.click(screen.getByRole("button", { name: "Změnit PIN" }));
+  expect(await screen.findByText("PINy se neshodují.")).toBeInTheDocument();
+  expect(apiMock).not.toHaveBeenCalled();
+
+  await user.clear(screen.getByLabelText("Nový PIN znovu"));
+  await user.type(screen.getByLabelText("Nový PIN znovu"), "4321");
+  await user.click(screen.getByRole("button", { name: "Změnit PIN" }));
+
+  await waitFor(() =>
+    expect(apiMock).toHaveBeenCalledWith("/auth/pin/set-own", { method: "POST", body: { pin: "4321" } })
+  );
+  expect(await screen.findByText(/PIN byl změněn/)).toBeInTheDocument();
+  expect(screen.getByLabelText("Nový PIN")).toHaveValue("");
+});
+
+test("pole pro PIN přijme jen číslice", async () => {
+  const user = userEvent.setup();
+  render(<ChangePinPanel />);
+  await user.type(screen.getByLabelText("Nový PIN"), "a1b2c3");
+  expect(screen.getByLabelText("Nový PIN")).toHaveValue("123");
+});
+

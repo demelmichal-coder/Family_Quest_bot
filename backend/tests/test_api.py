@@ -176,7 +176,7 @@ def test_ai_rewrite_task_requires_text():
     response = client.post("/ai/rewrite-task", json={}, headers={"X-Telegram-Id": "admin-1"})
 
     assert response.status_code == 400
-    assert response.json()["detail"] == "Chybi text ukolu."
+    assert response.json()["detail"] == "Chybí text úkolu."
 
 
 def test_ai_rewrite_task_returns_rewritten_task(monkeypatch):
@@ -247,7 +247,7 @@ def test_ai_rewrite_reward_requires_text():
     response = client.post("/ai/rewrite-reward", json={}, headers={"X-Telegram-Id": "admin-1"})
 
     assert response.status_code == 400
-    assert response.json()["detail"] == "Chybi text odmeny."
+    assert response.json()["detail"] == "Chybí text odměny."
 
 
 def test_ai_rewrite_reward_returns_suggested_shop_item(monkeypatch):
@@ -300,7 +300,7 @@ def test_ai_rewrite_rate_limit_blocks_fast_retries(monkeypatch):
     )
 
     assert response.status_code == 429
-    assert "prilis rychle" in response.json()["detail"].lower()
+    assert "příliš rychle" in response.json()["detail"].lower()
 
 
 def test_get_current_user():
@@ -475,7 +475,7 @@ def test_parent_cannot_assign_task_to_other_family_member():
     )
 
     assert response.status_code == 403
-    assert "vlastni rodiny" in response.json()["detail"]
+    assert "vlastní rodiny" in response.json()["detail"]
 
 
 def test_parent_can_update_and_delete_task_in_family():
@@ -500,7 +500,7 @@ def test_parent_can_update_and_delete_task_in_family():
     )
 
     assert delete_response.status_code == 200
-    assert "smazan" in delete_response.json()["detail"].lower()
+    assert "smazán" in delete_response.json()["detail"].lower()
 
 
 def test_child_does_not_see_tasks_from_previous_day():
@@ -631,7 +631,7 @@ def test_child_cannot_promote_self_or_grant_rewards():
     )
 
     assert response.status_code == 403
-    assert "profilove udaje" in response.json()["detail"]
+    assert "profilové údaje" in response.json()["detail"]
 
 
 def test_parent_cannot_delete_user_from_other_family():
@@ -678,7 +678,7 @@ def test_parent_can_create_update_and_delete_reward_in_family():
     )
 
     assert delete_response.status_code == 200
-    assert "smazana" in delete_response.json()["detail"].lower()
+    assert "smazána" in delete_response.json()["detail"].lower()
 
 
 def test_child_cannot_access_reward_from_other_family():
@@ -718,7 +718,7 @@ def test_player_cannot_complete_unapproved_special_task():
     r = client.post(f"/game/complete-task/{task_id}", headers={"X-Telegram-Id": "player-1"})
 
     assert r.status_code == 200
-    assert "schvaleni" in r.json()["detail"].lower()
+    assert "schválení" in r.json()["detail"].lower()
     assert r.json()["task"]["is_completed"] is True
     assert r.json()["task"]["approved"] is False
 
@@ -735,7 +735,7 @@ def test_parent_can_approve_special_task():
     r = client.post(f"/game/approve-task/{task_id}", headers={"X-Telegram-Id": "admin-1"})
 
     assert r.status_code == 200
-    assert "schvalen" in r.json()["detail"]
+    assert "schválen" in r.json()["detail"]
 
 
 def test_parent_cannot_approve_before_child_completion():
@@ -747,7 +747,7 @@ def test_parent_cannot_approve_before_child_completion():
     r = client.post(f"/game/approve-task/{task_id}", headers={"X-Telegram-Id": "admin-1"})
 
     assert r.status_code == 400
-    assert "oznacen" in r.json()["detail"].lower() or "splneny" in r.json()["detail"].lower()
+    assert "označen" in r.json()["detail"].lower() or "splněný" in r.json()["detail"].lower()
 
 
 def test_player_can_buy_reward_and_get_purchase_history():
@@ -802,7 +802,7 @@ def test_player_cannot_buy_reward_from_other_family():
     )
 
     assert response.status_code == 403
-    assert "mimo vlastni rodinu" in response.json()["detail"].lower()
+    assert "mimo vlastní rodinu" in response.json()["detail"].lower()
 
 
 def test_reset_daily_only_resets_own_family_tasks():

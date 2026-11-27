@@ -13,6 +13,7 @@ import ProgressBar from "../components/ProgressBar";
 import InstallAppButton from "../components/InstallAppButton";
 import PushSubscribeButton from "../components/PushSubscribeButton";
 import TaskCard from "../components/TaskCard";
+import ChangePinPanel from "../components/ChangePinPanel";
 import FamilyGoalCard from "../components/FamilyGoalCard";
 import OffersBoard from "../components/OffersBoard";
 import QuietHoursSettings from "../components/QuietHoursSettings";
@@ -570,7 +571,7 @@ function Dashboard({
         ) : null}
         {showLevelUpBanner ? (
           <div className="animate-pulse rounded-2xl border border-cyan-300/70 bg-cyan-100 px-4 py-3 text-sm font-black text-cyan-950 shadow-lg">
-            LEVEL UP! Jsi na levelu {level}. Pokracuj v tempu.
+            LEVEL UP! Jsi na levelu {level}. Pokračuj v tempu.
           </div>
         ) : null}
         {error ? (
@@ -664,7 +665,7 @@ function Dashboard({
 
               {waitingApprovalTasks.length > 0 ? (
                 <div className="rounded-[28px] border border-amber-300 bg-amber-50/80 p-5 shadow-lg">
-                  <h3 className="text-lg font-black text-amber-950">Odeslano rodici ke schvaleni</h3>
+                  <h3 className="text-lg font-black text-amber-950">Odesláno rodiči ke schválení</h3>
                   <div className="mt-4 space-y-3">
                     {waitingApprovalTasks.map((task) => (
                       <div
@@ -684,8 +685,8 @@ function Dashboard({
 
             <aside className="brawl-panel rounded-[32px] border-yellow-300/60 bg-gradient-to-b from-violet-800/90 to-indigo-900/95 p-5 shadow-xl">
               <div className="brawl-accent-card rounded-2xl border-cyan-300/60 bg-cyan-900/70 px-4 py-3">
-                <h3 className="brawl-subtitle text-lg font-black text-cyan-100">Boss tydne</h3>
-                <p className="mt-1 text-xs font-semibold text-cyan-200/90">Nejtezsi mise s nejlepsim lootem.</p>
+                <h3 className="brawl-subtitle text-lg font-black text-cyan-100">Boss týdne</h3>
+                <p className="mt-1 text-xs font-semibold text-cyan-200/90">Nejtěžší mise s nejlepším lootem.</p>
                 {bossTask ? (
                   <div className="mt-3 rounded-xl border-2 border-slate-900 bg-cyan-950/80 px-3 py-3">
                     <div className="text-sm font-black text-cyan-100">{bossTask.title}</div>
@@ -771,7 +772,7 @@ function Dashboard({
                     </div>
                   </>
                 ) : (
-                  <div className="mt-2 text-sm text-cyan-200/85">Season Pass zatim neni dostupny.</div>
+                  <div className="mt-2 text-sm text-cyan-200/85">Season Pass zatím není dostupný.</div>
                 )}
               </div>
             </aside>
@@ -794,7 +795,7 @@ function Dashboard({
         {tab === DASHBOARD_TAB_FAMILY ? (
           <section className="grid gap-6 xl:grid-cols-[360px_minmax(0,1fr)]">
             <aside className="rounded-[32px] border border-cyan-300 bg-cyan-50/85 p-5 shadow-xl">
-              <h2 className="text-xl font-black text-cyan-950">Rodinne statistiky</h2>
+              <h2 className="text-xl font-black text-cyan-950">Rodinné statistiky</h2>
               <p className="mt-1 text-sm text-cyan-900/70">
                 Souhrn členů, úkolů a odměn v aktuální rodině.
               </p>
@@ -880,6 +881,7 @@ function Dashboard({
             <FamilyGoalCard isParent={user?.role === "parent"} />
             <WeeklyOverview />
             <QuietHoursSettings />
+            <ChangePinPanel />
           </div>
         ) : null}
       </div>

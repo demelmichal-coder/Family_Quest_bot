@@ -109,7 +109,7 @@ def join_family(
 
     role = payload.role.strip().lower()
     if role not in FAMILY_ROLES:
-        raise HTTPException(status_code=400, detail="Role musi byt parent nebo child.")
+        raise HTTPException(status_code=400, detail="Role musí být parent nebo child.")
 
     family = (
         db.query(Family)

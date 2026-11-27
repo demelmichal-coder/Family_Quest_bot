@@ -81,7 +81,7 @@ function LoginScreen({
 
   function handleDeleteProfile(profile) {
     const profileName = profile.label || profile.username || profile.id;
-    if (!window.confirm(`Opravdu smazat ulozeny profil ${profileName}?`)) {
+    if (!window.confirm(`Opravdu smazat uložený profil ${profileName}?`)) {
       return;
     }
     onDeleteProfile(profile.id);
@@ -174,7 +174,7 @@ function LoginScreen({
                       {profile.role ? ` · ${profile.role === "parent" ? "rodič" : "dítě"}` : ""}
                     </span>
                     <span className="mt-1 text-[11px] text-slate-400">
-                      {formatLastUsed(profile.lastUsedAt)}{profile.token ? " · pripraveno k obnove" : ""}
+                      {formatLastUsed(profile.lastUsedAt)}{profile.token ? " · připraveno k obnovení" : ""}
                     </span>
                   </button>
                   <button
@@ -220,7 +220,7 @@ function LoginScreen({
             onClick={onUseTelegram}
             className="mt-4 w-full rounded-2xl border border-cyan-300 bg-cyan-50 px-4 py-3 font-bold text-cyan-950 transition hover:bg-cyan-100"
           >
-            Pokračovat jako aktualni Telegram ucet
+            Pokračovat jako aktuální Telegram účet
           </button>
         ) : null}
 

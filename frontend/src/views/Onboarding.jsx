@@ -62,7 +62,7 @@ function Onboarding({ user, api, onJoined, onSwitchAccount }) {
         <div className="text-sm font-bold uppercase tracking-[0.35em] text-cyan-700">
           Family Quest
         </div>
-        <h1 className="mt-3 text-4xl font-black text-slate-950">Nastaveni rodiny</h1>
+        <h1 className="mt-3 text-4xl font-black text-slate-950">Nastavení rodiny</h1>
         <p className="mt-3 text-sm text-slate-700">
           Nejdřív je potřeba založit rodinu nebo se připojit pomocí kódu od rodiče.
         </p>
@@ -123,7 +123,7 @@ function Onboarding({ user, api, onJoined, onSwitchAccount }) {
         {mode === "create" ? (
           <form className="mt-6 space-y-4" onSubmit={handleCreate}>
             <label className="block">
-              <span className="mb-2 block text-sm font-semibold text-slate-700">Tvoje jmeno</span>
+              <span className="mb-2 block text-sm font-semibold text-slate-700">Tvoje jméno</span>
               <input
                 required
                 value={username}
@@ -153,7 +153,7 @@ function Onboarding({ user, api, onJoined, onSwitchAccount }) {
         ) : (
           <form className="mt-6 space-y-4" onSubmit={handleJoin}>
             <label className="block">
-              <span className="mb-2 block text-sm font-semibold text-slate-700">Tvoje jmeno</span>
+              <span className="mb-2 block text-sm font-semibold text-slate-700">Tvoje jméno</span>
               <input
                 required
                 value={username}
@@ -163,7 +163,7 @@ function Onboarding({ user, api, onJoined, onSwitchAccount }) {
               />
             </label>
             <label className="block">
-              <span className="mb-2 block text-sm font-semibold text-slate-700">Kod rodiny</span>
+              <span className="mb-2 block text-sm font-semibold text-slate-700">Kód rodiny</span>
               <input
                 required
                 value={inviteCode}

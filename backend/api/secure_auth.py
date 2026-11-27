@@ -24,7 +24,7 @@ from pin_auth import hash_pin, validate_pin_format, verify_pin
 
 PIN_MAX_FAILED_ATTEMPTS = 5
 PIN_LOCKOUT_MINUTES = 15
-GENERIC_PIN_LOGIN_ERROR = "Neplatne prihlasovaci udaje."
+GENERIC_PIN_LOGIN_ERROR = "Neplatné přihlašovací údaje."
 FAMILY_CREATE_LIMIT = 5
 FAMILY_CREATE_WINDOW_SECONDS = 3600
 _family_create_attempts: dict[str, list[float]] = {}
@@ -46,7 +46,7 @@ def _check_family_create_limit(request: Request) -> None:
         _family_create_attempts[ip] = recent
         raise HTTPException(
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-            detail="Prilis mnoho novych rodin z jedne adresy, zkus to pozdeji.",
+            detail="Příliš mnoho nových rodin z jedné adresy, zkus to později.",
         )
     recent.append(now)
     _family_create_attempts[ip] = recent
@@ -152,7 +152,7 @@ def _encode_jwt(payload: dict[str, Any]) -> str:
     if not settings.JWT_SECRET:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Na backendu chybi JWT_SECRET.",
+            detail="Na backendu chybí JWT_SECRET.",
         )
 
     header = {"alg": "HS256", "typ": "JWT"}
@@ -172,12 +172,12 @@ def _decode_jwt(token: str) -> dict[str, Any]:
     if not settings.JWT_SECRET:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Na backendu chybi JWT_SECRET.",
+            detail="Na backendu chybí JWT_SECRET.",
         )
 
     parts = token.split(".")
     if len(parts) != 3:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Neplatny format tokenu.")
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Neplatný formát tokenu.")
 
     header_b64, payload_b64, signature_b64 = parts
     signing_input = f"{header_b64}.{payload_b64}".encode("ascii")
@@ -190,23 +190,23 @@ def _decode_jwt(token: str) -> dict[str, Any]:
     try:
         received_signature = _base64url_decode(signature_b64)
     except Exception as exc:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Neplatny podpis tokenu.") from exc
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Neplatný podpis tokenu.") from exc
 
     if not hmac.compare_digest(expected_signature, received_signature):
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Neplatny podpis tokenu.")
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Neplatný podpis tokenu.")
 
     try:
         payload = json.loads(_base64url_decode(payload_b64).decode("utf-8"))
     except Exception as exc:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Neplatny obsah tokenu.") from exc
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Neplatný obsah tokenu.") from exc
 
     now = int(time.time())
     exp = int(payload.get("exp", 0))
     if exp <= now:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Platnost prihlaseni vyprsela.")
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Platnost přihlášení vypršela.")
 
     if payload.get("iss") != settings.JWT_ISSUER:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Neplatny vydavatel tokenu.")
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Neplatný vydavatel tokenu.")
 
     return payload
 
@@ -222,12 +222,12 @@ def _validate_telegram_init_data(init_data: str) -> dict[str, Any]:
     auth_date = data.get("auth_date")
 
     if not received_hash or not user_raw or not auth_date:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Chybi Telegram auth data.")
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Chybí Telegram auth data.")
 
     if not settings.TELEGRAM_BOT_TOKEN:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Na backendu chybi TELEGRAM_TOKEN.",
+            detail="Na backendu chybí TELEGRAM_TOKEN.",
         )
 
     data_check_string = "\n".join(f"{key}={value}" for key, value in sorted(data.items()))
@@ -244,21 +244,21 @@ def _validate_telegram_init_data(init_data: str) -> dict[str, Any]:
 
     if not hmac.compare_digest(computed_hash, received_hash):
         logger.warning("Odmitnute prihlaseni: neplatny Telegram podpis.")
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Neplatny Telegram podpis.")
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Neplatný Telegram podpis.")
 
     try:
         auth_ts = int(auth_date)
     except ValueError as exc:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Neplatny auth_date.") from exc
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Neplatný auth_date.") from exc
 
     age_seconds = int(time.time()) - auth_ts
     if age_seconds < 0 or age_seconds > settings.TELEGRAM_AUTH_MAX_AGE_SECONDS:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Telegram relace je prilis stara.")
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Telegram relace je příliš stará.")
 
     try:
         telegram_user = json.loads(user_raw)
     except json.JSONDecodeError as exc:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Neplatna Telegram user data.") from exc
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Neplatná Telegram user data.") from exc
 
     return telegram_user
 
@@ -306,7 +306,7 @@ def get_current_session_user(
     db: Session = Depends(get_db),
 ) -> User:
     if not credentials or credentials.scheme.lower() != "bearer":
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Chybi autorizacni token.")
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Chybí autorizační token.")
 
     payload = _decode_jwt(credentials.credentials)
     telegram_id = str(payload.get("tid") or "").strip()
@@ -315,7 +315,7 @@ def get_current_session_user(
 
     user = db.query(User).filter(User.telegram_id == telegram_id).first()
     if not user:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Uzivatel z tokenu nebyl nalezen.")
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Uživatel z tokenu nebyl nalezen.")
     return user
 
 
@@ -324,7 +324,7 @@ def auth_with_telegram(payload: AuthRequest, db: Session = Depends(get_db)):
     telegram_user = _validate_telegram_init_data(payload.initData)
     telegram_id = str(telegram_user.get("id") or "").strip()
     if not telegram_id:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Telegram identita je neplatna.")
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Telegram identita je neplatná.")
 
     user = _get_or_create_user(db, telegram_id, telegram_user)
     token, expires_in = _create_session_token(user)
@@ -341,11 +341,11 @@ def verify_auth(user: User = Depends(get_current_session_user)):
 @router.post("/family/create", response_model=FamilyCreateResponse, summary="Vytvorit novou rodinu")
 def create_family(payload: FamilyCreateRequest, db: Session = Depends(get_db), user: User = Depends(get_current_session_user)):
     if user.family_id:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Uz jsi soucasti rodiny.")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Už jsi součástí rodiny.")
 
     family_name = payload.family_name.strip()
     if len(family_name) < 2:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Nazev rodiny je prilis kratky.")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Název rodiny je příliš krátký.")
 
     family = Family(name=family_name, invite_code=_ensure_unique_family_code(db))
     db.add(family)
@@ -371,7 +371,7 @@ def create_family(payload: FamilyCreateRequest, db: Session = Depends(get_db), u
 @router.post("/family/join", response_model=FamilyJoinResponse, summary="Pripojit uzivatele do rodiny pomoci kodu")
 def join_family(payload: FamilyJoinRequest, db: Session = Depends(get_db), user: User = Depends(get_current_session_user)):
     if user.family_id:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Uz jsi soucasti rodiny.")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Už jsi součástí rodiny.")
 
     # Kod rodiny sam o sobe nesmi nikomu dat rodicovska prava: novy clen je vzdy dite
     # a rodicem ho muze udelat jen stavajici rodic v administraci.
@@ -380,7 +380,7 @@ def join_family(payload: FamilyJoinRequest, db: Session = Depends(get_db), user:
     family_code = payload.family_code.strip().upper()
     family = db.query(Family).filter(Family.invite_code == family_code).first()
     if not family:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Rodinny kod nebyl nalezen.")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Rodinný kód nebyl nalezen.")
 
     user.family_id = family.id
     user.role = role
@@ -409,7 +409,7 @@ def _require_pin_pepper() -> str:
     if not settings.PIN_PEPPER:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Na backendu chybi PIN_PEPPER.",
+            detail="Na backendu chybí PIN_PEPPER.",
         )
     return settings.PIN_PEPPER
 
@@ -439,7 +439,7 @@ def list_pin_family_members(family_code: str, db: Session = Depends(get_db)):
 )
 def register_with_pin(payload: PinRegisterRequest, db: Session = Depends(get_db)):
     if not validate_pin_format(payload.pin):
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="PIN musi mit 4 az 6 cislic.")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="PIN musí mít 4 až 6 číslic.")
 
     family = _find_family_by_code(db, payload.family_code)
 
@@ -469,11 +469,11 @@ def register_with_pin(payload: PinRegisterRequest, db: Session = Depends(get_db)
 )
 def create_family_with_pin(payload: PinCreateFamilyRequest, request: Request, db: Session = Depends(get_db)):
     if not validate_pin_format(payload.pin):
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="PIN musi mit 4 az 6 cislic.")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="PIN musí mít 4 až 6 číslic.")
     family_name = payload.family_name.strip()
     user_name = payload.name.strip()
     if len(family_name) < 2 or not user_name:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Vypln nazev rodiny a sve jmeno.")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Vyplň název rodiny a své jméno.")
 
     pepper = _require_pin_pepper()
     _check_family_create_limit(request)
@@ -533,7 +533,7 @@ def login_with_pin(payload: PinLoginRequest, db: Session = Depends(get_db)):
     if locked_until and locked_until > now:
         raise HTTPException(
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-            detail="Ucet je docasne zamceny, zkus to pozdeji.",
+            detail="Účet je dočasně zamčený, zkus to později.",
         )
 
     if not verify_pin(payload.pin, pepper, user.pin_hash):
@@ -563,9 +563,9 @@ def set_member_pin(
     current_user: User = Depends(get_current_session_user),
 ):
     if current_user.role != ROLE_PARENT:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Pouze rodic muze nastavit PIN.")
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Pouze rodič může nastavit PIN.")
     if not validate_pin_format(payload.pin):
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="PIN musi mit 4 az 6 cislic.")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="PIN musí mít 4 až 6 číslic.")
 
     member = (
         db.query(User)
@@ -573,7 +573,7 @@ def set_member_pin(
         .first()
     )
     if not member:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Clen rodiny nenalezen.")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Člen rodiny nenalezen.")
 
     pepper = _require_pin_pepper()
     member.pin_hash = hash_pin(payload.pin, pepper)
@@ -597,7 +597,7 @@ def set_own_pin(
     current_user: User = Depends(get_current_session_user),
 ):
     if not validate_pin_format(payload.pin):
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="PIN musi mit 4 az 6 cislic.")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="PIN musí mít 4 až 6 číslic.")
 
     pepper = _require_pin_pepper()
     current_user.pin_hash = hash_pin(payload.pin, pepper)

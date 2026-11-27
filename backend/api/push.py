@@ -52,7 +52,7 @@ def subscribe(
             )
         )
     db.commit()
-    return {"detail": "Odber notifikaci zapnut."}
+    return {"detail": "Odběr notifikací zapnut."}
 
 
 @router.post("/unsubscribe", summary="Odhlasit se z odberu Web Push notifikaci")
@@ -67,10 +67,10 @@ def unsubscribe(
         .first()
     )
     if not sub:
-        raise HTTPException(status_code=404, detail="Odber nenalezen.")
+        raise HTTPException(status_code=404, detail="Odběr nenalezen.")
     db.delete(sub)
     db.commit()
-    return {"detail": "Odber notifikaci vypnut."}
+    return {"detail": "Odběr notifikací vypnut."}
 
 
 @router.post("/test", summary="Poslat testovaci Web Push notifikaci na tento ucet")

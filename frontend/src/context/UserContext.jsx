@@ -248,7 +248,7 @@ export function UserProvider({ children }) {
 
   async function loginWithTelegramSession() {
     if (!telegramInitData) {
-      throw new Error("Telegram initData neni dostupne.");
+      throw new Error("Telegram initData není dostupné.");
     }
 
     const authResponse = await api("/auth", {

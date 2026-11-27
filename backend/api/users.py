@@ -45,9 +45,9 @@ def penalize_user(
 ):
     db_user = _get_user_or_404(db, user_id)
     if current_user.family_id != db_user.family_id:
-        raise HTTPException(status_code=403, detail="Nelze upravit uzivatele mimo rodinu.")
+        raise HTTPException(status_code=403, detail="Nelze upravit uživatele mimo rodinu.")
     if db_user.role != "child":
-        raise HTTPException(status_code=400, detail="XP/goldy lze odebrat jen detem.")
+        raise HTTPException(status_code=400, detail="XP/zlato lze odebrat jen dětem.")
 
     db_user.xp = max(0, db_user.xp - penalize.xp)
     db_user.gold = max(0, db_user.gold - penalize.gold)
@@ -123,9 +123,9 @@ def create_user(
     current_user=Depends(require_role(ROLE_PARENT)),
 ):
     if not current_user.family_id:
-        raise HTTPException(status_code=400, detail="Nejdriv je potreba byt soucasti rodiny.")
+        raise HTTPException(status_code=400, detail="Nejdřív je potřeba být součástí rodiny.")
     if user.role not in USER_ROLES:
-        raise HTTPException(status_code=400, detail="Role musi byt parent, child nebo pending.")
+        raise HTTPException(status_code=400, detail="Role musí být parent, child nebo pending.")
 
     new_user = User(
         telegram_id=user.telegram_id,
@@ -149,7 +149,7 @@ def update_user(
     current_user=Depends(get_current_user),
 ):
     db_user = _get_user_or_404(db, user_id)
-    _ensure_family_access(current_user, db_user, "Nelze upravit uzivatele mimo rodinu.")
+    _ensure_family_access(current_user, db_user, "Nelze upravit uživatele mimo rodinu.")
 
     updates = user.model_dump(exclude_unset=True)
     if current_user.role != ROLE_PARENT and current_user.id == db_user.id:
@@ -163,7 +163,7 @@ def update_user(
     new_role = updates.get("role")
     if new_role is not None and new_role != db_user.role:
         if new_role not in FAMILY_ROLES:
-            raise HTTPException(status_code=400, detail="Role musi byt parent nebo child.")
+            raise HTTPException(status_code=400, detail="Role musí být parent nebo child.")
         if db_user.role == ROLE_PARENT:
             other_parents = (
                 db.query(User)
@@ -175,7 +175,7 @@ def update_user(
                 .count()
             )
             if other_parents == 0:
-                raise HTTPException(status_code=400, detail="Rodina musi mit alespon jednoho rodice.")
+                raise HTTPException(status_code=400, detail="Rodina musí mít alespoň jednoho rodiče.")
 
     for key, value in updates.items():
         setattr(db_user, key, value)
@@ -192,7 +192,7 @@ def delete_user(
 ):
     db_user = _get_user_or_404(db, user_id)
     if current_user.family_id != db_user.family_id:
-        raise HTTPException(status_code=403, detail=f"Nelze smazat uzivatele {OUTSIDE_FAMILY}.")
+        raise HTTPException(status_code=403, detail=f"Nelze smazat uživatele {OUTSIDE_FAMILY}.")
     db.delete(db_user)
     db.commit()
     return {"detail": USER_DELETED}

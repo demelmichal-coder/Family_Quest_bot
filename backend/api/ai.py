@@ -38,7 +38,7 @@ def _check_ai_rate_limit(telegram_id: str):
 @router.post("/comment", summary="Vygeneruj AI komentar k situaci")
 async def ai_comment(data: dict, current_user=Depends(get_current_user)):
     if generate_ai_comment is None:
-        raise HTTPException(status_code=501, detail="AI komentare nejsou v tomto nasazeni dostupne.")
+        raise HTTPException(status_code=501, detail="AI komentáře nejsou v tomto nasazení dostupné.")
     _check_ai_rate_limit(current_user.telegram_id)
     context = data.get("context", "")
     prompt = data.get("prompt")
@@ -148,7 +148,7 @@ async def plan_family_daily(
     current_user=Depends(require_role(ROLE_PARENT)),
 ):
     if not current_user.family_id:
-        raise HTTPException(status_code=400, detail="Uzivatel neni clenem rodiny.")
+        raise HTTPException(status_code=400, detail="Uživatel není členem rodiny.")
 
     style = body.style if body.style in STYLE_PROMPTS else DEFAULT_REWRITE_STYLE
     tasks_per_child = max(1, min(5, int(body.tasks_per_child or 3)))

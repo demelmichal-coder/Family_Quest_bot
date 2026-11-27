@@ -162,7 +162,7 @@ test("tlacitko pokracovat jako telegram ucet zavola prepnuti", async () => {
 
   render(<App />);
 
-  await user.click(screen.getByRole("button", { name: "Pokračovat jako aktualni Telegram ucet" }));
+  await user.click(screen.getByRole("button", { name: "Pokračovat jako aktuální Telegram účet" }));
 
   expect(useTelegramAccountMock).toHaveBeenCalled();
 });
@@ -185,7 +185,7 @@ test("tlacitko pokracovat jako telegram ucet se neskryte nezobrazi v demo modu",
   render(<App />);
 
   expect(
-    screen.queryByRole("button", { name: "Pokračovat jako aktualni Telegram ucet" })
+    screen.queryByRole("button", { name: "Pokračovat jako aktuální Telegram účet" })
   ).not.toBeInTheDocument();
 });
 

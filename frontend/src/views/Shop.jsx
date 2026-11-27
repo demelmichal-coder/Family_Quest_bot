@@ -76,12 +76,12 @@ function Shop({ user, rewards, purchases, onBuyReward }) {
               );
             })
           ) : (
-            <div className="card text-slate-100">Obchod je zatim prazdny.</div>
+            <div className="card text-slate-100">Obchod je zatím prázdný.</div>
           )}
         </div>
 
         <aside className="brawl-accent-card rounded-[32px] border-emerald-300/70 bg-emerald-900/75 p-5 shadow-xl">
-          <h3 className="brawl-subtitle text-xl font-black text-emerald-100">Historie nakupu</h3>
+          <h3 className="brawl-subtitle text-xl font-black text-emerald-100">Historie nákupů</h3>
           <p className="mt-1 text-sm text-emerald-200/90">
             Poslední odměny, které sis už pořídil.
           </p>

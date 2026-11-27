@@ -186,7 +186,7 @@ def create_weekly_challenges():
             challenge = FamilyChallenge(
                 family_id=family.id,
                 title="🏆 Weekly Challenge",
-                description=f"Splnte spolecne ulohy a ziskejte bonus XP! Vyzva potrvava do {week_end.strftime('%a, %d.%m')}.",
+                description=f"Splňte společně úkoly a získejte bonus XP! Výzva potrvá do {week_end.strftime('%a, %d.%m')}.",
                 target=max(5, len(family.members) * 3),  # Cil = 3 ukoly na clena
                 bonus_xp=50,  # Bonus kazdy dospely clen
                 bonus_gold=0,

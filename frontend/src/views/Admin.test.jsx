@@ -144,6 +144,9 @@ test("klik na ukol otevre upravu a ulozi zmeny", async () => {
   });
   expect(await screen.findByText("Úkol byl upraven.")).toBeInTheDocument();
   expect(onDataChanged).toHaveBeenCalled();
+  // Po uložení se formulář zavře (na telefonu by jinak zakrýval spodní menu)
+  expect(screen.queryByRole("button", { name: "Uložit změny" })).not.toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "+ Přidat úkol" })).toBeInTheDocument();
 });
 
 test("vytvori novou odmenu", async () => {
@@ -170,8 +173,8 @@ test("vytvori novou odmenu", async () => {
   const rewardQueries = within(rewardSection);
   await user.type(rewardQueries.getByRole("textbox", { name: "Název" }), "Zoo");
   await user.type(rewardQueries.getByRole("textbox", { name: "Popis" }), "Vylet");
-  await user.clear(rewardQueries.getByRole("spinbutton", { name: /cena ve zlate/i }));
-  await user.type(rewardQueries.getByRole("spinbutton", { name: /cena ve zlate/i }), "12");
+  await user.clear(rewardQueries.getByRole("spinbutton", { name: /cena ve zlatě/i }));
+  await user.type(rewardQueries.getByRole("spinbutton", { name: /cena ve zlatě/i }), "12");
   await user.click(rewardQueries.getByRole("button", { name: "Vytvořit odměnu" }));
 
   expect(apiMock).toHaveBeenCalledWith("/rewards/", {
@@ -382,13 +385,16 @@ test("vygeneruje navrh odmeny pomoci AI a umi ho prevzit", async () => {
 
   expect(rewriteMock).toHaveBeenCalledWith("Vecer s filmem a popcornem", "epicke");
   expect(screen.getByText("Návrh odměny byl vygenerován.")).toBeInTheDocument();
-  expect(screen.getByText("AI navrh odmeny")).toBeInTheDocument();
+  expect(screen.getByText("AI návrh odměny")).toBeInTheDocument();
   expect(screen.getByText(/Kombo popcorn/)).toBeInTheDocument();
 
   await user.click(screen.getByRole("button", { name: "Převzít vše" }));
   expect(await screen.findByDisplayValue("Kombo popcorn")).toBeInTheDocument();
-  expect(screen.getByRole("spinbutton", { name: /cena ve zlate/i })).toHaveValue(9);
+  expect(screen.getByRole("spinbutton", { name: /cena ve zlatě/i })).toHaveValue(9);
   expect(screen.getByText("AI návrh doplnil název i cenu odměny.")).toBeInTheDocument();
+
+  await user.click(screen.getByRole("button", { name: "Zahodit návrh" }));
+  expect(screen.queryByText("AI návrh odměny")).not.toBeInTheDocument();
 });
 
 test("rodinny AI plan umi naplanovat den a rozkopirovat stejne ukoly na cely tyden", async () => {
@@ -436,8 +442,8 @@ test("rodinny AI plan umi naplanovat den a rozkopirovat stejne ukoly na cely tyd
   const plannerQueries = within(plannerSection);
   await user.clear(plannerQueries.getByRole("spinbutton", { name: /úkolů na dítě/i }));
   await user.type(plannerQueries.getByRole("spinbutton", { name: /úkolů na dítě/i }), "1");
-  await user.clear(plannerQueries.getByLabelText("Den planu"));
-  await user.type(plannerQueries.getByLabelText("Den planu"), "2026-05-27");
+  await user.clear(plannerQueries.getByLabelText("Den plánu"));
+  await user.type(plannerQueries.getByLabelText("Den plánu"), "2026-05-27");
   await user.click(plannerQueries.getByRole("button", { name: "Vygenerovat rodinný plán" }));
 
   expect(apiMock).toHaveBeenCalledWith("/ai/plan-family-daily", {
@@ -450,10 +456,10 @@ test("rodinny AI plan umi naplanovat den a rozkopirovat stejne ukoly na cely tyd
   });
 
   await waitFor(() => {
-    expect(plannerQueries.getByRole("button", { name: /Aplikovat plan \(1\)/i })).toBeEnabled();
+    expect(plannerQueries.getByRole("button", { name: /Aplikovat plán \(1\)/i })).toBeEnabled();
   });
   await user.click(plannerQueries.getByLabelText("Stejné úkoly každý den celý týden"));
-  await user.click(plannerQueries.getByRole("button", { name: /Aplikovat plan/i }));
+  await user.click(plannerQueries.getByRole("button", { name: /Aplikovat plán/i }));
 
   await waitFor(() => {
     expect(apiMock.mock.calls.find(([url]) => url === "/tasks/bulk/create")).toBeTruthy();
@@ -492,3 +498,55 @@ test("nový úkol jde zavřít tlačítkem Zrušit bez uložení", async () => {
   expect(screen.getByRole("button", { name: "+ Přidat úkol" })).toBeInTheDocument();
   expect(apiMock).not.toHaveBeenCalledWith("/tasks/", expect.anything());
 });
+
+test("odměnu jde upravit a uložit novou cenu", async () => {
+  const user = userEvent.setup();
+  apiMock.mockResolvedValueOnce({ ...rewards[0], cost: 12 });
+  render(
+    <Admin
+      user={users[0]}
+      tasks={tasks}
+      rewards={rewards}
+      onApproveTask={vi.fn()}
+      onDataChanged={vi.fn()}
+    />
+  );
+  await user.click(screen.getByRole("button", { name: "Záložka Odměny" }));
+  await user.click(screen.getByRole("button", { name: "Upravit odměnu Film" }));
+
+  expect(await screen.findByText("Upravit odměnu")).toBeInTheDocument();
+  const form = within(screen.getByText("Upravit odměnu").closest("section"));
+  expect(form.getByRole("textbox", { name: "Název" })).toHaveValue("Film");
+
+  const cost = form.getByRole("spinbutton");
+  await user.clear(cost);
+  await user.type(cost, "12");
+  await user.click(form.getByRole("button", { name: "Uložit změny" }));
+
+  expect(apiMock).toHaveBeenCalledWith("/rewards/1", {
+    method: "PUT",
+    body: { name: "Film", description: "Vyber filmu", cost: 12 },
+  });
+  expect(await screen.findByText("Odměna byla upravena.")).toBeInTheDocument();
+  expect(screen.getByText("Nová odměna")).toBeInTheDocument();
+});
+
+test("úprava odměny jde zrušit bez uložení", async () => {
+  const user = userEvent.setup();
+  render(
+    <Admin
+      user={users[0]}
+      tasks={tasks}
+      rewards={rewards}
+      onApproveTask={vi.fn()}
+      onDataChanged={vi.fn()}
+    />
+  );
+  await user.click(screen.getByRole("button", { name: "Záložka Odměny" }));
+  await user.click(screen.getByRole("button", { name: "Upravit odměnu Film" }));
+  await user.click(await screen.findByRole("button", { name: "Zrušit úpravu" }));
+
+  expect(screen.getByText("Nová odměna")).toBeInTheDocument();
+  expect(apiMock).not.toHaveBeenCalledWith("/rewards/1", expect.anything());
+});
+

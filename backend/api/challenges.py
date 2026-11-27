@@ -91,7 +91,7 @@ def create_challenge(
     current_user=Depends(require_role(ROLE_PARENT)),
 ):
     if not current_user.family_id:
-        raise HTTPException(status_code=400, detail="Uzivatel neni v rodine.")
+        raise HTTPException(status_code=400, detail="Uživatel není v rodině.")
     now = datetime.now(timezone.utc)
     challenge = FamilyChallenge(
         family_id=current_user.family_id,
@@ -117,24 +117,24 @@ def create_seasonal_challenge(
     current_user=Depends(require_role(ROLE_PARENT)),
 ):
     if not current_user.family_id:
-        raise HTTPException(status_code=400, detail="Uzivatel neni v rodine.")
+        raise HTTPException(status_code=400, detail="Uživatel není v rodině.")
 
     season_map = {
-        "jaro": "Jarni expedicni event",
-        "leto": "Letni dobrodruzna liga",
-        "podzim": "Podzimni lov vyzev",
-        "zima": "Zimni hrdinska sezona",
+        "jaro": "Jarní expediční event",
+        "leto": "Letní dobrodružná liga",
+        "podzim": "Podzimní lov výzev",
+        "zima": "Zimní hrdinská sezóna",
     }
     season_key = (body.season or "jaro").strip().lower()
-    title = season_map.get(season_key, f"Sezonni event: {body.season}")
+    title = season_map.get(season_key, f"Sezónní event: {body.season}")
 
     now = datetime.now(timezone.utc)
     challenge = FamilyChallenge(
         family_id=current_user.family_id,
         title=title,
         description=(
-            f"Sezonni event pro celou rodinu. Fokus: {season_key}. "
-            "Splnte tymovy cil a ziskejte bonus pro vsechny."
+            f"Sezónní event pro celou rodinu. Fokus: {season_key}. "
+            "Splňte týmový cíl a získejte bonus pro všechny."
         ),
         target=max(10, min(500, int(body.target))),
         bonus_xp=max(10, min(500, int(body.bonus_xp))),
@@ -157,7 +157,7 @@ def delete_challenge(
 ):
     challenge = db.query(FamilyChallenge).filter(FamilyChallenge.id == challenge_id).first()
     if not challenge or challenge.family_id != current_user.family_id:
-        raise HTTPException(status_code=404, detail="Vyzva nenalezena.")
+        raise HTTPException(status_code=404, detail="Výzva nenalezena.")
     db.delete(challenge)
     db.commit()
-    return {"detail": "Vyzva smazana."}
+    return {"detail": "Výzva smazána."}

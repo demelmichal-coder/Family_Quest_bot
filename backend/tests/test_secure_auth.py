@@ -134,7 +134,7 @@ def test_invalid_init_data_signature_is_rejected():
     invalid = "auth_date=1999999999&query_id=x&user=%7B%22id%22%3A1%7D&hash=invalid"
     response = client.post("/api/auth", json={"initData": invalid})
     assert response.status_code == 401
-    assert "Neplatny Telegram podpis" in response.json()["detail"]
+    assert "Neplatný Telegram podpis" in response.json()["detail"]
 
 
 def test_relogin_reuses_existing_user_and_keeps_progress():

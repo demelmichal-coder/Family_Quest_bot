@@ -36,9 +36,9 @@ def _validate_telegram_init_data(init_data: str) -> dict[str, object]:
     user_raw = data.get("user")
 
     if not received_hash or not user_raw:
-        raise HTTPException(status_code=401, detail="Chybi Telegram auth data.")
+        raise HTTPException(status_code=401, detail="Chybí Telegram auth data.")
     if not settings.TELEGRAM_BOT_TOKEN:
-        raise HTTPException(status_code=500, detail="Chybi TELEGRAM_TOKEN na backendu.")
+        raise HTTPException(status_code=500, detail="Chybí TELEGRAM_TOKEN na backendu.")
 
     data_check_string = "\n".join(f"{key}={value}" for key, value in sorted(data.items()))
     secret_key = hmac.new(
@@ -53,12 +53,12 @@ def _validate_telegram_init_data(init_data: str) -> dict[str, object]:
     ).hexdigest()
 
     if not hmac.compare_digest(computed_hash, received_hash):
-        raise HTTPException(status_code=401, detail="Neplatny Telegram podpis.")
+        raise HTTPException(status_code=401, detail="Neplatný Telegram podpis.")
 
     try:
         return json.loads(user_raw)
     except json.JSONDecodeError as exc:
-        raise HTTPException(status_code=401, detail="Neplatna Telegram user data.") from exc
+        raise HTTPException(status_code=401, detail="Neplatná Telegram user data.") from exc
 
 
 def _build_default_username(telegram_user: Optional[Dict[str, object]], telegram_id: str) -> str:
@@ -111,11 +111,11 @@ def _base64url_decode(value: str) -> bytes:
 
 def _decode_session_token(token: str) -> dict[str, object]:
     if not settings.JWT_SECRET:
-        raise HTTPException(status_code=500, detail="Na backendu chybi JWT_SECRET.")
+        raise HTTPException(status_code=500, detail="Na backendu chybí JWT_SECRET.")
 
     parts = token.split(".")
     if len(parts) != 3:
-        raise HTTPException(status_code=401, detail="Neplatny format session tokenu.")
+        raise HTTPException(status_code=401, detail="Neplatný formát session tokenu.")
 
     header_b64, payload_b64, signature_b64 = parts
     signing_input = f"{header_b64}.{payload_b64}".encode("ascii")
@@ -128,23 +128,23 @@ def _decode_session_token(token: str) -> dict[str, object]:
     try:
         received_signature = _base64url_decode(signature_b64)
     except Exception as exc:
-        raise HTTPException(status_code=401, detail="Neplatny podpis session tokenu.") from exc
+        raise HTTPException(status_code=401, detail="Neplatný podpis session tokenu.") from exc
 
     if not hmac.compare_digest(expected_signature, received_signature):
-        raise HTTPException(status_code=401, detail="Neplatny podpis session tokenu.")
+        raise HTTPException(status_code=401, detail="Neplatný podpis session tokenu.")
 
     try:
         payload = json.loads(_base64url_decode(payload_b64).decode("utf-8"))
     except Exception as exc:
-        raise HTTPException(status_code=401, detail="Neplatny obsah session tokenu.") from exc
+        raise HTTPException(status_code=401, detail="Neplatný obsah session tokenu.") from exc
 
     now = int(time.time())
     exp = int(payload.get("exp", 0))
     if exp <= now:
-        raise HTTPException(status_code=401, detail="Session token vyprsel.")
+        raise HTTPException(status_code=401, detail="Session token vypršel.")
 
     if payload.get("iss") != settings.JWT_ISSUER:
-        raise HTTPException(status_code=401, detail="Neplatny issuer session tokenu.")
+        raise HTTPException(status_code=401, detail="Neplatný issuer session tokenu.")
 
     return payload
 
@@ -178,7 +178,7 @@ def get_current_user(
 
         user = db.query(User).filter(User.telegram_id == token_telegram_id).first()
         if not user:
-            raise HTTPException(status_code=401, detail="Uzivatel ze session tokenu nebyl nalezen.")
+            raise HTTPException(status_code=401, detail="Uživatel ze session tokenu nebyl nalezen.")
         return user
 
     # Prefer upper-case, fallback to lower-case if needed
@@ -201,12 +201,12 @@ def get_current_user(
         logger.warning("Using insecure demo auth fallback.")
         resolved_telegram_id = telegram_id_val
     else:
-        logger.error("Chybi overena identita uzivatele.")
-        raise HTTPException(status_code=401, detail="Chybi overena identita uzivatele.")
+        logger.error("Chybí ověřená identita uživatele.")
+        raise HTTPException(status_code=401, detail="Chybí ověřená identita uživatele.")
 
     if not resolved_telegram_id:
-        logger.error("Telegram identita je neplatna.")
-        raise HTTPException(status_code=401, detail="Telegram identita je neplatna.")
+        logger.error("Telegram identita je neplatná.")
+        raise HTTPException(status_code=401, detail="Telegram identita je neplatná.")
 
     logger.info(f"Resolved telegram_id: {resolved_telegram_id}")
     return _get_or_create_user(db, resolved_telegram_id, telegram_user)
