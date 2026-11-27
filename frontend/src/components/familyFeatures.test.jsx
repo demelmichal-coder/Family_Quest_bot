@@ -3,11 +3,8 @@ import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import WishesPanel from "./WishesPanel";
 import WishInbox from "./WishInbox";
-import OffersBoard from "./OffersBoard";
-import OffersManager from "./OffersManager";
 import FamilyGoalCard from "./FamilyGoalCard";
 import QuietHoursSettings from "./QuietHoursSettings";
-import TaskTemplates from "./TaskTemplates";
 import WeeklyOverview, { badgesFor, buildDayLabels } from "./WeeklyOverview";
 import WeekCalendar from "./WeekCalendar";
 import DataPrivacyPanel from "./DataPrivacyPanel";
@@ -120,64 +117,6 @@ test("rodič bez čekajících přání vidí prázdný stav", async () => {
   expect(await screen.findByText("Žádná čekající přání.")).toBeInTheDocument();
 });
 
-// ---------- Volné úkoly ----------
-
-test("dítě si vezme volný úkol a tabule se obnoví", async () => {
-  const onClaimed = vi.fn();
-  routeApi({
-    "GET /offers/": [{ id: 7, title: "Umýt auto", xp: 30, gold: 5 }],
-    "POST /offers/7/claim": { id: 7 },
-  });
-  const user = userEvent.setup();
-  render(<OffersBoard onClaimed={onClaimed} />);
-
-  expect(await screen.findByText("Umýt auto")).toBeInTheDocument();
-  await user.click(screen.getByRole("button", { name: "Vzít si úkol Umýt auto" }));
-  await waitFor(() => expect(apiMock).toHaveBeenCalledWith("/offers/7/claim", { method: "POST" }));
-  expect(onClaimed).toHaveBeenCalled();
-});
-
-test("když si úkol vzal sourozenec, dítě uvidí chybu", async () => {
-  routeApi({
-    "GET /offers/": [{ id: 7, title: "Umýt auto", xp: 30, gold: 0 }],
-    "POST /offers/7/claim": new Error("Tenhle úkol si už vzal někdo jiný."),
-  });
-  const user = userEvent.setup();
-  render(<OffersBoard />);
-
-  await user.click(await screen.findByRole("button", { name: "Vzít si úkol Umýt auto" }));
-  expect(await screen.findByText("Tenhle úkol si už vzal někdo jiný.")).toBeInTheDocument();
-});
-
-test("bez volných úkolů se tabule vůbec nezobrazí", async () => {
-  routeApi({ "GET /offers/": [] });
-  const { container } = render(<OffersBoard />);
-  await waitFor(() => expect(apiMock).toHaveBeenCalled());
-  expect(container).toBeEmptyDOMElement();
-});
-
-test("rodič vystaví a stáhne volný úkol", async () => {
-  routeApi({
-    "GET /offers/": [{ id: 9, title: "Sekání", xp: 20, gold: 0 }],
-    "POST /offers/": { id: 10 },
-    "DELETE /offers/9": { detail: "ok" },
-  });
-  const user = userEvent.setup();
-  render(<OffersManager />);
-
-  await user.type(screen.getByLabelText("Název volného úkolu"), "Umýt okna");
-  await user.click(screen.getByRole("button", { name: "Vystavit" }));
-  await waitFor(() =>
-    expect(apiMock).toHaveBeenCalledWith("/offers/", {
-      method: "POST",
-      body: { title: "Umýt okna", xp: 20, gold: 0 },
-    })
-  );
-
-  await user.click(await screen.findByRole("button", { name: "Stáhnout volný úkol Sekání" }));
-  await waitFor(() => expect(apiMock).toHaveBeenCalledWith("/offers/9", { method: "DELETE" }));
-});
-
 // ---------- Rodinný cíl ----------
 
 test("rodič založí rodinný cíl", async () => {
@@ -257,24 +196,6 @@ test("tichý režim se načte, uloží a jde vypnout", async () => {
     expect(apiMock).toHaveBeenCalledWith("/push/quiet-hours", { method: "PUT", body: { start: null, end: null } })
   );
   expect(await screen.findByText("Tichý režim je vypnutý.")).toBeInTheDocument();
-});
-
-// ---------- Šablony ----------
-
-test("šablona podle věku předá úkol do formuláře", async () => {
-  const onPick = vi.fn();
-  const user = userEvent.setup();
-  render(<TaskTemplates onPick={onPick} />);
-
-  await user.click(screen.getByRole("tab", { name: "11+ let" }));
-  await user.click(screen.getByRole("button", { name: /Vysát pokoj/ }));
-
-  expect(onPick).toHaveBeenCalledWith(
-    expect.objectContaining({ title: "Vysát pokoj", xp: 18, gold: 2 })
-  );
-
-  await user.click(screen.getByRole("tab", { name: "Do 6 let" }));
-  expect(screen.getByRole("button", { name: /Uklidit hračky/ })).toBeInTheDocument();
 });
 
 // ---------- Týdenní přehled ----------

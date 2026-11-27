@@ -10,7 +10,6 @@ from api.challenges import router as challenges_router
 from api.families import router as families_router
 from api.game import router as game_router
 from api.goals import router as goals_router
-from api.offers import router as offers_router
 from api.push import router as push_router
 from api.rewards import router as rewards_router
 from api.secure_auth import router as secure_auth_router
@@ -53,7 +52,6 @@ app.include_router(challenges_router)
 app.include_router(secure_auth_router)
 app.include_router(push_router)
 app.include_router(wishes_router)
-app.include_router(offers_router)
 app.include_router(goals_router)
 
 # Keep legacy routes and expose the same API under /api for Mini App clients.
@@ -66,7 +64,6 @@ app.include_router(game_router, prefix="/api")
 app.include_router(challenges_router, prefix="/api")
 app.include_router(push_router, prefix="/api")
 app.include_router(wishes_router, prefix="/api")
-app.include_router(offers_router, prefix="/api")
 app.include_router(goals_router, prefix="/api")
 
 

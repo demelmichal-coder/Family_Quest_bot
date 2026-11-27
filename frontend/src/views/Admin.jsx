@@ -7,9 +7,7 @@ import { getErrorMessage } from "../utils/errors";
 import ChangePinPanel from "../components/ChangePinPanel";
 import DataPrivacyPanel from "../components/DataPrivacyPanel";
 import FamilyGoalCard from "../components/FamilyGoalCard";
-import OffersManager from "../components/OffersManager";
 import QuietHoursSettings from "../components/QuietHoursSettings";
-import TaskTemplates from "../components/TaskTemplates";
 import WeekCalendar from "../components/WeekCalendar";
 import WeeklyOverview from "../components/WeeklyOverview";
 import WishInbox from "../components/WishInbox";
@@ -947,34 +945,6 @@ function Admin({
     }
   }
 
-  async function handleReviewProof(taskId, approved) {
-    setBusyTaskId(taskId);
-    setError("");
-    setMessage("");
-
-    try {
-      const response = await api(`/game/review-proof/${taskId}`, {
-        method: "POST",
-        body: {
-          approved,
-          note: approved ? "Rodič schválil důkaz." : "Rodič požaduje přesvědčivější důkaz.",
-        },
-      });
-      setMessage(
-        approved
-          ? "Důkaz byl rodičem schválen."
-          : "Důkaz byl vrácen k doplnění."
-      );
-      await onDataChanged();
-      return response;
-    } catch (reviewError) {
-      setError(getErrorMessage(reviewError, "Hodnocení důkazu se nepodařilo uložit."));
-      return null;
-    } finally {
-      setBusyTaskId(null);
-    }
-  }
-
   async function handleResetDaily() {
     setError("");
     setMessage("");
@@ -1064,19 +1034,6 @@ function Admin({
     } finally {
       setBusyMemberId(null);
     }
-  }
-
-  function handleTemplatePick(template) {
-    setEditingTaskId(null);
-    setTaskForm({
-      ...initialTaskForm,
-      title: template.title,
-      description: template.description,
-      xp: template.xp,
-      gold: template.gold,
-    });
-    setTaskFormOpen(true);
-    document.getElementById("task-create")?.scrollIntoView?.({ behavior: "smooth", block: "start" });
   }
 
   return (
@@ -1387,10 +1344,6 @@ function Admin({
               </div>
             </section>
               )}
-
-            {adminTab === "tasks" && <TaskTemplates onPick={handleTemplatePick} />}
-
-            {adminTab === "tasks" && <OffersManager />}
 
             {adminTab === "tasks" && (
             <section id="task-create" className="scroll-mt-6 rounded-3xl border border-slate-800 bg-slate-900 p-5 shadow-xl">
@@ -2031,32 +1984,6 @@ function Admin({
                               >
                                 {busyTaskId === task.id ? "Schvaluji..." : "Schválit"}
                               </button>
-                            ) : null}
-                            {needsProofReview ? (
-                              <>
-                                <button
-                                  type="button"
-                                  onClick={(event) => {
-                                    event.stopPropagation();
-                                    handleReviewProof(task.id, true);
-                                  }}
-                                  disabled={busyTaskId === task.id}
-                                  className="rounded-2xl border border-cyan-500/40 bg-cyan-500/10 px-4 py-2 text-sm font-semibold text-cyan-100 transition hover:bg-cyan-500/20 disabled:cursor-not-allowed disabled:opacity-60"
-                                >
-                                  {busyTaskId === task.id ? "Ukládám..." : "Schválit důkaz"}
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={(event) => {
-                                    event.stopPropagation();
-                                    handleReviewProof(task.id, false);
-                                  }}
-                                  disabled={busyTaskId === task.id}
-                                  className="rounded-2xl border border-orange-500/40 bg-orange-500/10 px-4 py-2 text-sm font-semibold text-orange-100 transition hover:bg-orange-500/20 disabled:cursor-not-allowed disabled:opacity-60"
-                                >
-                                  {busyTaskId === task.id ? "Ukládám..." : "Vrátit důkaz"}
-                                </button>
-                              </>
                             ) : null}
                             <button
                               type="button"

@@ -15,7 +15,6 @@ import PushSubscribeButton from "../components/PushSubscribeButton";
 import TaskCard from "../components/TaskCard";
 import ChangePinPanel from "../components/ChangePinPanel";
 import FamilyGoalCard from "../components/FamilyGoalCard";
-import OffersBoard from "../components/OffersBoard";
 import QuietHoursSettings from "../components/QuietHoursSettings";
 import WeekCalendar from "../components/WeekCalendar";
 import WeeklyOverview from "../components/WeeklyOverview";
@@ -583,8 +582,6 @@ function Dashboard({
             {error}
           </div>
         ) : null}
-
-        {tab === DASHBOARD_TAB_MISSIONS ? <OffersBoard onClaimed={onDataChanged} /> : null}
 
         {tab === DASHBOARD_TAB_MISSIONS ? (
           <section className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">

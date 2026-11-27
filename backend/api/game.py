@@ -237,8 +237,6 @@ def approve_task(
         raise HTTPException(status_code=400, detail="Úkol už je schválený.")
     if not task.is_completed:
         raise HTTPException(status_code=400, detail="Úkol ještě nebyl dítětem označen jako splněný.")
-    if task.requires_proof and task.ai_flagged:
-        raise HTTPException(status_code=400, detail="Nejdřív je potřeba zkontrolovat důkaz splnění.")
 
     user = db.query(User).filter(User.id == task.user_id).first()
     if not user:
@@ -246,6 +244,8 @@ def approve_task(
     if user.family_id != current_user.family_id:
         raise HTTPException(status_code=403, detail="Nelze schválit úkol mimo vlastní rodinu.")
 
+    # Schválení rodičem zároveň potvrzuje důkaz, takže AI příznak spadne.
+    task.ai_flagged = False
     task.approved = True
     task.approved_at = datetime.now(timezone.utc)
     streak, bonus_xp, challenge_completed_titles = _grant_task_rewards(db, user, task)

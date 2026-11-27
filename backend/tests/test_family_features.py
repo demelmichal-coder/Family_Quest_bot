@@ -167,46 +167,6 @@ def test_wish_permissions_and_limits():
     assert client.delete(f"/wishes/{wish['id']}", headers=auth("kid-1")).status_code == 200
 
 
-# ---------- Volné úkoly ----------
-
-def test_offer_can_be_claimed_by_only_one_child():
-    _, _, kid_id, _ = basic_family()
-
-    created = client.post("/offers/", headers=auth("parent-1"), json={"title": "Umýt auto", "xp": 30, "gold": 5})
-    assert created.status_code == 200
-    offer = created.json()
-    assert offer["user_id"] is None
-
-    assert [o["title"] for o in client.get("/offers/", headers=auth("kid-1")).json()] == ["Umýt auto"]
-    # Volný úkol nepatří do běžného seznamu úkolů
-    assert client.get("/tasks/", headers=auth("kid-1")).json() == []
-
-    claimed = client.post(f"/offers/{offer['id']}/claim", headers=auth("kid-1"))
-    assert claimed.status_code == 200
-    assert claimed.json()["user_id"] == kid_id
-
-    second = client.post(f"/offers/{offer['id']}/claim", headers=auth("kid-2"))
-    assert second.status_code == 409
-
-    assert client.get("/offers/", headers=auth("kid-2")).json() == []
-    assert [t["title"] for t in client.get("/tasks/", headers=auth("kid-1")).json()] == ["Umýt auto"]
-
-
-def test_offer_permissions():
-    basic_family()
-    other_family = seed_family("Cizí", "OTHER02")
-    seed_user("kid-x", "child", "Cizí dítě", other_family)
-
-    assert client.post("/offers/", headers=auth("kid-1"), json={"title": "Nic"}).status_code == 403
-    offer = client.post("/offers/", headers=auth("parent-1"), json={"title": "Sekání"}).json()
-
-    assert client.post(f"/offers/{offer['id']}/claim", headers=auth("kid-x")).status_code == 404
-    assert client.post(f"/offers/{offer['id']}/claim", headers=auth("parent-1")).status_code == 403
-    assert client.delete(f"/offers/{offer['id']}", headers=auth("kid-1")).status_code == 403
-    assert client.delete(f"/offers/{offer['id']}", headers=auth("parent-1")).status_code == 200
-    assert client.get("/offers/", headers=auth("kid-1")).json() == []
-
-
 # ---------- Rodinný cíl ----------
 
 def _approve_xp(child_id, xp):
@@ -355,7 +315,6 @@ def test_family_deletion_requires_confirmation_and_keeps_other_families():
     finally:
         db.close()
     client.post("/wishes/", headers=auth("kid-1"), json={"title": "Pizza"})
-    client.post("/offers/", headers=auth("parent-1"), json={"title": "Volný"})
     client.post("/goals/", headers=auth("parent-1"), json={"title": "Cíl", "target_xp": 50})
 
     assert client.post("/families/me/delete", headers=auth("kid-1"), json={"confirm": "SMAZAT RODINU"}).status_code == 403
@@ -404,14 +363,10 @@ def test_child_proof_completes_task_and_waits_for_parent():
     assert body["approved"] is False
     assert body["ai_flagged"] is True
 
-    # Druhé odeslání splnění už nejde a rodič nejdřív musí důkaz zkontrolovat.
+    # Druhé odeslání splnění už nejde.
     assert client.post(f"/game/complete-task/{task_id}", headers=auth("kid-1")).status_code == 400
-    assert client.post(f"/game/approve-task/{task_id}", headers=auth("parent-1")).status_code == 400
-    reviewed = client.post(
-        f"/game/review-proof/{task_id}", headers=auth("parent-1"), json={"approved": True}
-    )
-    assert reviewed.status_code == 200
 
+    # Rodič schválí jedním kliknutím, i když je důkaz označený jako slabý.
     approved = client.post(f"/game/approve-task/{task_id}", headers=auth("parent-1"))
     assert approved.status_code == 200
 
@@ -420,5 +375,6 @@ def test_child_proof_completes_task_and_waits_for_parent():
         stored = db.query(Task).filter(Task.id == task_id).first()
         assert stored.approved is True
         assert stored.is_completed is True
+        assert stored.ai_flagged is False
     finally:
         db.close()
