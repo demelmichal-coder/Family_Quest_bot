@@ -465,7 +465,18 @@ test("rodic se muze prepinat mezi admin a dashboard pohledem", async () => {
   render(<App />);
 
   expect(await screen.findByText("Admin for Parent (1/1)")).toBeInTheDocument();
-  expect(screen.queryByRole("button", { name: "Přepnout na dashboard" })).not.toBeInTheDocument();
+
+  await user.click(screen.getByRole("button", { name: "Přepnout na dashboard" }));
+
+  await waitFor(() => {
+    expect(screen.getByText("Dashboard for Parent (1/1)")).toBeInTheDocument();
+  });
+
+  await user.click(screen.getByRole("button", { name: "Přepnout na administraci" }));
+
+  await waitFor(() => {
+    expect(screen.getByText("Admin for Parent (1/1)")).toBeInTheDocument();
+  });
 });
 
 test("zobrazi banner kdyz nacitani app dat selze", async () => {

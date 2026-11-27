@@ -1020,6 +1020,7 @@ function Admin({
   return (
     <div className="min-h-screen bg-slate-950 px-4 pb-28 pt-4 text-slate-100">
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-6">
+        {adminTab === "overview" && (
         <section className="rounded-3xl border border-cyan-500/30 bg-gradient-to-br from-slate-900 via-slate-900 to-cyan-950 p-6 shadow-2xl">
           <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
             <div>
@@ -1065,6 +1066,7 @@ function Admin({
             </div>
           </div>
         </section>
+        )}
 
 
         {error ? (

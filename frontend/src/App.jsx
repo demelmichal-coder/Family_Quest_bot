@@ -16,6 +16,7 @@ import PinLoginScreen from "./components/PinLoginScreen";
 import { APP_MESSAGES } from "./constants/messages";
 import Onboarding from "./views/Onboarding";
 import { ROLE_PARENT, ROLE_PENDING } from "./constants/roles";
+import { APP_VIEW_ADMIN, APP_VIEW_DASHBOARD } from "./constants/ui";
 import { useUser } from "./context/UserContext";
 import { getErrorMessage } from "./utils/errors";
 import "./index.css";
@@ -293,6 +294,7 @@ function App() {
   const [seasonProgress, setSeasonProgress] = useState(null);
   const [challenges, setChallenges] = useState([]);
   const [engagementSummary, setEngagementSummary] = useState(null);
+  const [view, setView] = useState(APP_VIEW_DASHBOARD);
   const [showProfileLogin, setShowProfileLogin] = useState(false);
   const [dataLoading, setDataLoading] = useState(false);
   const [dataError, setDataError] = useState("");
@@ -332,6 +334,14 @@ function App() {
   function handleClearProfiles() {
     clearSavedProfiles();
   }
+
+  useEffect(() => {
+    if (user?.role === ROLE_PARENT) {
+      setView(APP_VIEW_ADMIN);
+      return;
+    }
+    setView(APP_VIEW_DASHBOARD);
+  }, [user?.role]);
 
   async function loadInsights() {
     const requestId = ++insightsRequestIdRef.current;
@@ -590,7 +600,18 @@ function App() {
 
       {user.role === ROLE_PARENT ? (
         <>
-          <div className="sticky top-0 z-40 grid grid-cols-2 items-center gap-2 border-b border-slate-800 bg-slate-950/95 px-3 py-2 backdrop-blur md:flex md:flex-wrap md:justify-end md:px-4">
+          <div className="sticky top-0 z-40 grid grid-cols-3 items-center gap-2 border-b border-slate-800 bg-slate-950/95 px-3 py-2 backdrop-blur md:flex md:flex-wrap md:justify-end md:px-4">
+            <button
+              type="button"
+              onClick={() =>
+                setView((current) =>
+                  current === APP_VIEW_ADMIN ? APP_VIEW_DASHBOARD : APP_VIEW_ADMIN
+                )
+              }
+              className="max-w-full rounded-full border border-slate-900/10 bg-white/85 px-3 py-2 text-xs font-bold text-slate-900 shadow-lg backdrop-blur transition hover:bg-white sm:px-4 sm:text-sm"
+            >
+              {view === APP_VIEW_ADMIN ? "Přepnout na dashboard" : "Přepnout na administraci"}
+            </button>
             <button
               type="button"
               onClick={handleSwitchProfileMode}
@@ -608,14 +629,29 @@ function App() {
               </button>
             ) : null}
           </div>
-          <Admin
-            user={user}
-            tasks={tasks}
-            rewards={rewards}
-            engagementSummary={engagementSummary}
-            onApproveTask={handleApproveTask}
-            onDataChanged={loadAppData}
-          />
+          {view === APP_VIEW_ADMIN ? (
+            <Admin
+              user={user}
+              tasks={tasks}
+              rewards={rewards}
+              engagementSummary={engagementSummary}
+              onApproveTask={handleApproveTask}
+              onDataChanged={loadAppData}
+            />
+          ) : (
+            <Dashboard
+              user={user}
+              tasks={tasks}
+              rewards={rewards}
+              purchases={purchases}
+              familyStats={familyStats}
+              achievements={achievements}
+              seasonProgress={seasonProgress}
+              challenges={challenges}
+              onCompleteTask={handleCompleteTask}
+              onBuyReward={handleBuyReward}
+            />
+          )}
         </>
       ) : (
         <>
