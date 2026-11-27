@@ -470,3 +470,25 @@ test("rodinny AI plan umi naplanovat den a rozkopirovat stejne ukoly na cely tyd
   expect(bulkCreateCall[1].body.tasks[6].due_date).toBe("2026-06-02");
   expect(onDataChanged).toHaveBeenCalled();
 });
+
+test("nový úkol jde zavřít tlačítkem Zrušit bez uložení", async () => {
+  render(
+    <Admin
+      user={users[0]}
+      tasks={tasks}
+      rewards={rewards}
+      onApproveTask={vi.fn()}
+      onDataChanged={vi.fn()}
+    />
+  );
+  const user = userEvent.setup();
+  await user.click(screen.getByRole("button", { name: "Záložka Úkoly" }));
+  await user.click(screen.getByRole("button", { name: "+ Přidat úkol" }));
+
+  await user.type(screen.getByRole("textbox", { name: /Název/ }), "Rozdělaný úkol");
+  await user.click(screen.getByRole("button", { name: "Zrušit" }));
+
+  expect(screen.queryByRole("button", { name: "Vytvořit úkol" })).not.toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "+ Přidat úkol" })).toBeInTheDocument();
+  expect(apiMock).not.toHaveBeenCalledWith("/tasks/", expect.anything());
+});

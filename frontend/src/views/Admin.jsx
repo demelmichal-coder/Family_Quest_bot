@@ -305,6 +305,13 @@ function Admin({
     document.getElementById("task-create")?.scrollIntoView?.({ behavior: "smooth", block: "start" });
   }
 
+  function handleCloseNewTask() {
+    resetTaskEditor(taskForm.user_id);
+    setTaskFormOpen(false);
+    setMessage("");
+    setError("");
+  }
+
   function handleCancelTaskEdit() {
     resetTaskEditor(taskForm.user_id);
     setMessage("Režim úpravy úkolu byl zrušen.");
@@ -1587,7 +1594,15 @@ function Admin({
                     >
                       Zrušit úpravu
                     </button>
-                  ) : null}
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={handleCloseNewTask}
+                      className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 font-semibold text-slate-200 transition hover:border-cyan-400 hover:text-white"
+                    >
+                      Zrušit
+                    </button>
+                  )}
                 </div>
               </form>
               ) : null}
