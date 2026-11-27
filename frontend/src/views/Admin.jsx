@@ -1408,14 +1408,6 @@ function Admin({
               <form className="space-y-4 max-md:fixed max-md:inset-x-0 max-md:bottom-0 max-md:z-50 max-md:max-h-[85vh] max-md:overflow-y-auto max-md:rounded-t-3xl max-md:border-t max-md:border-cyan-400/40 max-md:bg-slate-900 max-md:p-5 max-md:shadow-2xl" onSubmit={handleCreateTask}>
                 <div className="sticky top-0 z-10 -mx-5 -mt-5 mb-1 flex items-center justify-between border-b border-slate-700 bg-slate-900 px-5 py-3 md:hidden">
                   <span className="text-base font-bold text-white">{editingTaskId ? "Úprava úkolu" : "Přidání úkolu"}</span>
-                  <button
-                    type="button"
-                    onClick={editingTaskId ? handleCancelTaskEdit : handleCloseNewTask}
-                    aria-label="Zavřít"
-                    className="rounded-full border border-slate-600 px-3 py-1 text-sm font-bold text-slate-200 hover:bg-slate-800"
-                  >
-                    ✕ Zavřít
-                  </button>
                 </div>
                 <label className="block">
                   <span className="mb-2 block text-sm font-medium text-slate-200">Název</span>
