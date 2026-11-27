@@ -274,6 +274,7 @@ def approve_task(
 def submit_task_proof(
     task_id: int,
     body: TaskProofSubmit,
+    background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user),
 ):
@@ -282,18 +283,46 @@ def submit_task_proof(
         raise HTTPException(status_code=404, detail="Úkol nenalezen.")
     if task.user_id != current_user.id and current_user.role != ROLE_PARENT:
         raise HTTPException(status_code=403, detail="Nelze odeslat důkaz k cizímu úkolu.")
+    if task.approved:
+        raise HTTPException(status_code=400, detail="Úkol už je schválený.")
+    if task.recurrence and task.parent_task_id is None:
+        raise HTTPException(status_code=400, detail="Šablonu opakujícího se úkolu nelze odeslat.")
+
+    # Dítě důkazem úkol rovnou označí jako splněný a předá ho rodiči ke schválení.
+    child_completes = task.user_id == current_user.id and not task.is_completed
+    if child_completes:
+        today_local = datetime.now(timezone.utc).astimezone(APP_TIMEZONE).date()
+        if task.due_date and task.due_date != today_local:
+            raise HTTPException(
+                status_code=400,
+                detail="Úkol lze splnit jen v den, na který byl naplánovaný.",
+            )
 
     score, flagged, note = _score_task_proof(task, body.proof_text, body.proof_media_url)
     try:
         stored_media = store_proof_media((body.proof_media_url or "").strip() or None, task.id)
     except ProofMediaError as exc:
         raise HTTPException(status_code=400, detail=str(exc))
+    now = datetime.now(timezone.utc)
     task.proof_text = body.proof_text.strip()
     task.proof_media_url = stored_media
-    task.proof_submitted_at = datetime.now(timezone.utc)
+    task.proof_submitted_at = now
     task.ai_review_score = score
     task.ai_review_note = note
     task.ai_flagged = flagged
+
+    if child_completes:
+        task.is_completed = True
+        task.completed_at = now
+        task.approval_requested_at = now
+        owner = db.query(User).filter(User.id == task.user_id).first()
+        if owner:
+            child_name = owner.username or owner.telegram_id
+            parent_message = (
+                f"✅ {child_name} odeslal/a důkaz u úkolu <b>{task.title}</b>. "
+                f"Čeká na tvé schválení."
+            )
+            _notify_family_parents(db, owner.family_id, parent_message, background_tasks)
 
     db.commit()
     db.refresh(task)

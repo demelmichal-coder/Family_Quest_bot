@@ -141,12 +141,11 @@ test("prepne se do shopu", async () => {
 
 test("u ukolu s dukazem umozni odeslat text dukazu a dokoncit ukol", async () => {
   const appUser = userEvent.setup();
-  const onCompleteTask = vi.fn().mockResolvedValue({
-    detail: "Ukol byl odeslan rodici ke schvaleni.",
-    task: { approved: false },
-  });
+  const onCompleteTask = vi.fn();
+  const onDataChanged = vi.fn().mockResolvedValue(undefined);
   apiMock.mockResolvedValue({
     id: 4,
+    is_completed: true,
     proof_submitted_at: "2026-05-27T19:00:00Z",
   });
 
@@ -172,6 +171,7 @@ test("u ukolu s dukazem umozni odeslat text dukazu a dokoncit ukol", async () =>
       rewards={rewards}
       purchases={purchases}
       onCompleteTask={onCompleteTask}
+      onDataChanged={onDataChanged}
       onBuyReward={vi.fn()}
     />
   );
@@ -191,5 +191,8 @@ test("u ukolu s dukazem umozni odeslat text dukazu a dokoncit ukol", async () =>
       },
     });
   });
-  expect(onCompleteTask).toHaveBeenCalledWith(4);
+  // Důkaz už úkol označí jako splněný, takže se nevolá complete-task a data se jen obnoví.
+  expect(onCompleteTask).not.toHaveBeenCalled();
+  expect(await screen.findByText("Důkaz byl odeslán. Úkol čeká na schválení rodičem.")).toBeInTheDocument();
+  expect(onDataChanged).toHaveBeenCalled();
 });

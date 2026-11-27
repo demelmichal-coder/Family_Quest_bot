@@ -377,3 +377,48 @@ def test_family_deletion_requires_confirmation_and_keeps_other_families():
         assert db.query(User).filter(User.telegram_id == "parent-x").count() == 1
     finally:
         db.close()
+
+
+# ---------- Důkaz jako splnění úkolu ----------
+
+def test_child_proof_completes_task_and_waits_for_parent():
+    _, _, kid_id, _ = basic_family()
+    db = SessionLocal()
+    try:
+        task = Task(title="Uklidit pokoj", xp=10, gold=2, user_id=kid_id, requires_proof=True)
+        db.add(task)
+        db.commit()
+        task_id = task.id
+    finally:
+        db.close()
+
+    # Slabý důkaz se označí jako sporný, ale úkol přesto čeká na rodiče (ne na tlačítko "splnit").
+    submitted = client.post(
+        f"/game/submit-proof/{task_id}",
+        headers=auth("kid-1"),
+        json={"proof_text": "ok", "proof_media_url": None},
+    )
+    assert submitted.status_code == 200
+    body = submitted.json()
+    assert body["is_completed"] is True
+    assert body["approved"] is False
+    assert body["ai_flagged"] is True
+
+    # Druhé odeslání splnění už nejde a rodič nejdřív musí důkaz zkontrolovat.
+    assert client.post(f"/game/complete-task/{task_id}", headers=auth("kid-1")).status_code == 400
+    assert client.post(f"/game/approve-task/{task_id}", headers=auth("parent-1")).status_code == 400
+    reviewed = client.post(
+        f"/game/review-proof/{task_id}", headers=auth("parent-1"), json={"approved": True}
+    )
+    assert reviewed.status_code == 200
+
+    approved = client.post(f"/game/approve-task/{task_id}", headers=auth("parent-1"))
+    assert approved.status_code == 200
+
+    db = SessionLocal()
+    try:
+        stored = db.query(Task).filter(Task.id == task_id).first()
+        assert stored.approved is True
+        assert stored.is_completed is True
+    finally:
+        db.close()

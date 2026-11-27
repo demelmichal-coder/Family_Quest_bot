@@ -346,6 +346,7 @@ function Dashboard({
     setMessage("");
 
     try {
+      // Backend důkazem úkol rovnou označí jako splněný (čeká na schválení rodičem).
       await api(`/game/submit-proof/${taskId}`, {
         method: "POST",
         body: {
@@ -354,7 +355,10 @@ function Dashboard({
         },
       });
       closeProofComposer();
-      await executeTaskCompletion(taskId);
+      setMessage("Důkaz byl odeslán. Úkol čeká na schválení rodičem.");
+      if (onDataChanged) {
+        await onDataChanged();
+      }
     } catch (proofError) {
       setError(getErrorMessage(proofError, DASHBOARD_MESSAGES.completeTaskError));
     } finally {
