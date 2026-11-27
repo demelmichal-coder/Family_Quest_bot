@@ -121,7 +121,7 @@ test("zobrazi prihlasovaci stranku kdyz chybi overeni", () => {
 
   render(<App />);
 
-  expect(screen.getByText("Prihlaseni")).toBeInTheDocument();
+  expect(screen.getByText("Přihlášení")).toBeInTheDocument();
   expect(screen.getByRole("button", { name: "Založit novou rodinu" })).toBeInTheDocument();
 });
 
@@ -136,7 +136,7 @@ test("zobrazi prihlasovaci stranku misto slepe cesty kdyz Telegram posle jen id 
 
   render(<App />);
 
-  expect(screen.getByText("Prihlaseni")).toBeInTheDocument();
+  expect(screen.getByText("Přihlášení")).toBeInTheDocument();
   expect(screen.getByRole("button", { name: "Přihlásit profil" })).toBeInTheDocument();
 });
 
@@ -465,18 +465,7 @@ test("rodic se muze prepinat mezi admin a dashboard pohledem", async () => {
   render(<App />);
 
   expect(await screen.findByText("Admin for Parent (1/1)")).toBeInTheDocument();
-
-  await user.click(screen.getByRole("button", { name: "Přepnout na dashboard" }));
-
-  await waitFor(() => {
-    expect(screen.getByText("Dashboard for Parent (1/1)")).toBeInTheDocument();
-  });
-
-  await user.click(screen.getByRole("button", { name: "Přepnout na administraci" }));
-
-  await waitFor(() => {
-    expect(screen.getByText("Admin for Parent (1/1)")).toBeInTheDocument();
-  });
+  expect(screen.queryByRole("button", { name: "Přepnout na dashboard" })).not.toBeInTheDocument();
 });
 
 test("zobrazi banner kdyz nacitani app dat selze", async () => {

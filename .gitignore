@@ -33,3 +33,6 @@ Caddyfile.local
 # OS
 .DS_Store
 Thumbs.db
+
+# Frontend build output (generuje se pri nasazeni)
+frontend/dist/

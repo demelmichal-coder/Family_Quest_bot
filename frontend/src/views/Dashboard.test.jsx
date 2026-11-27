@@ -178,7 +178,7 @@ test("u ukolu s dukazem umozni odeslat text dukazu a dokoncit ukol", async () =>
 
   await appUser.click(screen.getByRole("button", { name: "Odeslat důkaz a splnit" }));
 
-  expect(await screen.findByText("Důkaz splnění ukolu")).toBeInTheDocument();
+  expect(await screen.findByText("Důkaz splnění úkolu")).toBeInTheDocument();
   await appUser.type(screen.getByRole("textbox", { name: "Co jsi splnil/a" }), "Pokoj je uklizeny a stul je cisty.");
   await appUser.click(screen.getByRole("button", { name: "Odeslat důkaz a dokončit úkol" }));
 

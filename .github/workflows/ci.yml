@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [master, pwa-web-app]
   pull_request:
-    branches: [main]
+    branches: [master]
 
 jobs:
   backend:
@@ -58,6 +58,9 @@ jobs:
 
       - name: Run frontend tests
         run: npm test
+
+      - name: Build frontend
+        run: npm run build
 
       - name: Build frontend
         run: npm run build

@@ -2,7 +2,9 @@
 from datetime import date, datetime
 from typing import Optional, List
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
+
+from media_store import resolve_proof_media
 
 
 class ORMModel(BaseModel):
@@ -75,6 +77,12 @@ class TaskRead(ORMModel):
     ai_review_note: Optional[str] = None
     ai_flagged: bool = False
     last_reminded_at: Optional[datetime] = None
+
+    @field_validator("proof_media_url", mode="after")
+    @classmethod
+    def _resolve_media(cls, value: Optional[str]) -> Optional[str]:
+        # Fotky v Cloud Storage se ukladaji jako "gcs:<objekt>", klientovi posilame podepsanou URL.
+        return resolve_proof_media(value)
 
 
 class RewardRead(ORMModel):

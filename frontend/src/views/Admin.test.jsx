@@ -426,8 +426,8 @@ test("rodinny AI plan umi naplanovat den a rozkopirovat stejne ukoly na cely tyd
   await screen.findByText("AI denní plán pro celou rodinu");
   const plannerSection = screen.getByText("AI denní plán pro celou rodinu").closest("section");
   const plannerQueries = within(plannerSection);
-  await user.clear(plannerQueries.getByRole("spinbutton", { name: /ukolu na dite/i }));
-  await user.type(plannerQueries.getByRole("spinbutton", { name: /ukolu na dite/i }), "1");
+  await user.clear(plannerQueries.getByRole("spinbutton", { name: /úkolů na dítě/i }));
+  await user.type(plannerQueries.getByRole("spinbutton", { name: /úkolů na dítě/i }), "1");
   await user.clear(plannerQueries.getByLabelText("Den planu"));
   await user.type(plannerQueries.getByLabelText("Den planu"), "2026-05-27");
   await user.click(plannerQueries.getByRole("button", { name: "Vygenerovat rodinný plán" }));

@@ -1,7 +1,29 @@
 /* eslint-disable no-restricted-globals */
-import { precacheAndRoute } from "workbox-precaching";
+import { precacheAndRoute, createHandlerBoundToURL } from "workbox-precaching";
+import { registerRoute, NavigationRoute } from "workbox-routing";
+import { NetworkFirst } from "workbox-strategies";
+import { ExpirationPlugin } from "workbox-expiration";
+import { CacheableResponsePlugin } from "workbox-cacheable-response";
 
 precacheAndRoute(self.__WB_MANIFEST);
+
+// Offline: aplikacni shell se otevre i bez signalu (SPA navigace -> index.html z precache).
+registerRoute(new NavigationRoute(createHandlerBoundToURL("index.html"), { denylist: [/^\/api\//] }));
+
+// Offline: GET odpovedi API se ukladaji. Pri vypadku site se ukazou posledni nactena data.
+// Zapisy (POST/PUT/DELETE) se necachuji - offline selzou a aplikace to ukaze uzivateli.
+// Cache se maze pri odhlaseni (src/utils/offlineCache.js).
+registerRoute(
+  ({ url, request }) => request.method === "GET" && url.pathname.startsWith("/api/"),
+  new NetworkFirst({
+    cacheName: "fq-api-cache",
+    networkTimeoutSeconds: 5,
+    plugins: [
+      new CacheableResponsePlugin({ statuses: [200] }),
+      new ExpirationPlugin({ maxEntries: 60, maxAgeSeconds: 24 * 60 * 60 }),
+    ],
+  })
+);
 
 self.addEventListener("push", (event) => {
   let data = {};

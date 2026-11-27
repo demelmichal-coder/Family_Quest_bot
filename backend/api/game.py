@@ -12,6 +12,7 @@ from sqlalchemy.orm import Session
 from api import get_current_user, require_role
 from constants import ROLE_CHILD, ROLE_PARENT
 from database import SessionLocal
+from media_store import ProofMediaError, store_proof_media
 from models import ChallengeProgress, Family, FamilyChallenge, Reward, RewardPurchase, Task, User
 from notify import send_telegram_message
 from push_notify import send_push_to_user_by_id
@@ -276,8 +277,12 @@ def submit_task_proof(
         raise HTTPException(status_code=403, detail="Nelze odeslat dukaz k cizimu ukolu.")
 
     score, flagged, note = _score_task_proof(task, body.proof_text, body.proof_media_url)
+    try:
+        stored_media = store_proof_media((body.proof_media_url or "").strip() or None, task.id)
+    except ProofMediaError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
     task.proof_text = body.proof_text.strip()
-    task.proof_media_url = (body.proof_media_url or "").strip() or None
+    task.proof_media_url = stored_media
     task.proof_submitted_at = datetime.now(timezone.utc)
     task.ai_review_score = score
     task.ai_review_note = note

@@ -3,6 +3,7 @@ import { USER_MESSAGES } from "../constants/messages";
 import { useApi } from "../hooks/useApi";
 import { useTelegram } from "../hooks/useTelegram";
 import { getErrorMessage } from "../utils/errors";
+import { clearOfflineApiCache } from "../utils/offlineCache";
 
 const SESSION_TOKEN_KEY = "fq_jwt_token";
 const ACCOUNT_VAULT_KEY = "familyquest_saved_profiles";
@@ -118,6 +119,8 @@ export function UserProvider({ children }) {
 
   function clearSessionToken() {
     window.localStorage.removeItem(SESSION_TOKEN_KEY);
+    // Offline kopie dat patri konkretnimu uzivateli - pri odhlaseni ji smazeme.
+    clearOfflineApiCache();
   }
 
   function hasSessionToken() {

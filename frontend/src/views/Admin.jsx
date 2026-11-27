@@ -403,7 +403,7 @@ function Admin({
       const response = await api("/ai/plan-weekly", {
         method: "POST",
         body: {
-          child_name: selectedChild?.username || "Dite",
+          child_name: selectedChild?.username || "Dítě",
           mode: plannerForm.mode,
           goal: plannerForm.goal,
           style: rewriteStyle,
@@ -546,7 +546,7 @@ function Admin({
         body: { tasks: payload },
       });
 
-      setMessage(`Rodinny AI plan aplikovan. Vytvoreno ${payload.length} ukolu.`);
+      setMessage(`Rodinný AI plán aplikován. Vytvořeno ${payload.length} úkolů.`);
       setFamilyPlannerChildren([]);
       setSelectedFamilyPlannerTasks(new Set());
       setFamilyPlannerSchedule({});
@@ -998,7 +998,7 @@ function Admin({
   async function handleDeleteMember(memberId) {
     const member = users.find((item) => item.id === memberId);
     const memberName = member?.username || "tohoto člena";
-    if (!window.confirm(`Opravdu odebrat "${memberName}" z rodiny? Smazou se tim vsechna jeho data (XP, zlato, historie ukolu) a jde to vratit jen znovupripojenim.`)) {
+    if (!window.confirm(`Opravdu odebrat "${memberName}" z rodiny? Smažou se tím všechna jeho data (XP, zlato, historie úkolů) a jde to vrátit jen znovupřipojením.`)) {
       return;
     }
     setBusyMemberId(memberId);
@@ -1066,28 +1066,6 @@ function Admin({
           </div>
         </section>
 
-        <nav className="rounded-3xl border border-slate-800 bg-slate-900/80 p-4 shadow-lg backdrop-blur">
-          <div className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
-            Rychlý přesun v menu
-          </div>
-          <div className="flex flex-wrap gap-2">
-            <a href="#family-planner" className="rounded-full border border-fuchsia-400/30 bg-fuchsia-400/10 px-4 py-2 text-sm font-semibold text-fuchsia-100 transition hover:bg-fuchsia-400/20">
-              AI denní plán
-            </a>
-            <a href="#task-create" className="rounded-full border border-cyan-400/30 bg-cyan-400/10 px-4 py-2 text-sm font-semibold text-cyan-100 transition hover:bg-cyan-400/20">
-              Formulář úkolu
-            </a>
-            <a href="#task-list" className="rounded-full border border-slate-700 bg-slate-950 px-4 py-2 text-sm font-semibold text-slate-200 transition hover:border-cyan-400 hover:text-white">
-              Aktivní úkoly
-            </a>
-            <a href="#reward-create" className="rounded-full border border-emerald-400/30 bg-emerald-400/10 px-4 py-2 text-sm font-semibold text-emerald-100 transition hover:bg-emerald-400/20">
-              Formulář odměn
-            </a>
-            <a href="#reward-list" className="rounded-full border border-yellow-400/30 bg-yellow-400/10 px-4 py-2 text-sm font-semibold text-yellow-100 transition hover:bg-yellow-400/20">
-              Odměny v obchodě
-            </a>
-          </div>
-        </nav>
 
         {error ? (
           <div className="rounded-2xl border border-rose-400/40 bg-rose-400/10 px-4 py-3 text-sm text-rose-100">
@@ -1105,9 +1083,9 @@ function Admin({
             <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
               <div>
                 <div className="text-xs uppercase tracking-widest text-cyan-300">Engagement report</div>
-                <h2 className="mt-1 text-xl font-bold text-white">Poslednich {engagementSummary.period_days} dni</h2>
+                <h2 className="mt-1 text-xl font-bold text-white">Posledních {engagementSummary.period_days} dní</h2>
                 <p className="mt-1 text-xs text-cyan-100/80">
-                  Obdobi {engagementSummary.period_start} az {engagementSummary.period_end}
+                  Období {engagementSummary.period_start} až {engagementSummary.period_end}
                 </p>
               </div>
               <div className="rounded-2xl border border-emerald-400/40 bg-emerald-400/10 px-3 py-2 text-sm font-semibold text-emerald-200">
@@ -1123,7 +1101,7 @@ function Admin({
                 </div>
               </div>
               <div className="rounded-2xl border border-white/10 bg-white/5 p-3">
-                <div className="text-xs uppercase tracking-[0.2em] text-slate-400">Pridelene ukoly</div>
+                <div className="text-xs uppercase tracking-[0.2em] text-slate-400">Přidělené úkoly</div>
                 <div className="mt-1 text-2xl font-bold text-white">{engagementSummary.assigned_tasks_7d}</div>
               </div>
               <div className="rounded-2xl border border-white/10 bg-white/5 p-3">
@@ -1146,7 +1124,7 @@ function Admin({
                   <thead>
                     <tr className="border-b border-white/10 text-xs uppercase tracking-[0.2em] text-slate-400">
                       <th className="py-2 pr-3">Dítě</th>
-                      <th className="py-2 pr-3">Pridelene</th>
+                      <th className="py-2 pr-3">Přidělené</th>
                       <th className="py-2 pr-3">Dokončené</th>
                       <th className="py-2 pr-3">Dokonceni</th>
                       <th className="py-2 pr-3">Ceka schvaleni</th>
@@ -1195,7 +1173,7 @@ function Admin({
                     />
                   </label>
                   <label className="block">
-                    <span className="mb-2 block text-sm font-medium text-slate-200">Ukolu na dite</span>
+                    <span className="mb-2 block text-sm font-medium text-slate-200">Úkolů na dítě</span>
                     <input
                       name="tasks_per_child"
                       type="number"
@@ -1700,7 +1678,7 @@ function Admin({
               <div className="mb-4 flex items-center justify-between gap-4">
                 <div>
                   <h2 className="text-xl font-bold text-white">Aktivní úkoly</h2>
-                  <p className="mt-1 text-sm text-slate-400">Prehled vsech ukolu v rodine.</p>
+                  <p className="mt-1 text-sm text-slate-400">Přehled všech úkolů v rodině.</p>
                 </div>
                 <button
                   type="button"
@@ -1728,7 +1706,7 @@ function Admin({
                 </label>
                 <label className="block">
                   <span className="mb-2 block text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
-                    Dite
+                    Dítě
                   </span>
                   <select
                     value={taskChildFilter}
@@ -1893,7 +1871,7 @@ function Admin({
                                 {String(task.proof_media_url).startsWith("data:image") ? (
                                   <img
                                     src={task.proof_media_url}
-                                    alt={`Dukaz k ukolu ${task.title}`}
+                                    alt={`Důkaz k úkolu ${task.title}`}
                                     className="mt-2 max-h-72 w-full rounded-xl object-contain"
                                   />
                                 ) : (

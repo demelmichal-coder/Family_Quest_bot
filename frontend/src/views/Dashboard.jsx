@@ -326,7 +326,7 @@ function Dashboard({
       return;
     }
 
-    const normalizedProofText = proofDraft.text.trim() || (proofDraft.mediaDataUrl ? `Fotodukaz k ukolu: ${task.title}` : "");
+    const normalizedProofText = proofDraft.text.trim() || (proofDraft.mediaDataUrl ? `Fotodůkaz k úkolu: ${task.title}` : "");
     if (!normalizedProofText) {
       setError("U tohoto úkolu vyplň alespoň krátký popis nebo přidej fotku důkazu.");
       return;
@@ -423,7 +423,7 @@ function Dashboard({
         {proofDraft.taskId ? (
           <div className="fixed inset-0 z-30 flex items-center justify-center bg-slate-950/80 px-4 py-6 backdrop-blur-sm">
             <div className="w-full max-w-xl rounded-3xl border border-cyan-300/60 bg-slate-900 p-5 shadow-2xl">
-              <h2 className="text-xl font-black text-cyan-100">Důkaz splnění ukolu</h2>
+              <h2 className="text-xl font-black text-cyan-100">Důkaz splnění úkolu</h2>
               <p className="mt-1 text-sm text-slate-300">Mise: {proofDraft.title}</p>
 
               <label className="mt-4 block text-xs font-semibold uppercase tracking-[0.2em] text-cyan-200">
@@ -704,7 +704,7 @@ function Dashboard({
                     <div className="mt-3 rounded-xl border-2 border-slate-900 bg-fuchsia-950/80 px-3 py-3">
                       <div className="text-sm font-black text-fuchsia-100">{challenges[0].title}</div>
                       <div className="mt-2 text-xs text-fuchsia-200/85">
-                        Cil: {challenges[0].current_progress || 0} / {challenges[0].target} ukolu
+                        Cíl: {challenges[0].current_progress || 0} / {challenges[0].target} úkolů
                       </div>
                       <div className="mt-2 h-2 rounded-full bg-fuchsia-950 border border-slate-900">
                         <div

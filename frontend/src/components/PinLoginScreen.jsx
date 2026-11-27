@@ -193,7 +193,7 @@ export default function PinLoginScreen({ onShowSavedProfiles, hasSavedProfiles }
     <div className="min-h-screen bg-[radial-gradient(circle_at_top,#bae6fd,transparent_30%),linear-gradient(180deg,#f8fafc_0%,#fef3c7_55%,#fde68a_100%)] px-4 py-6">
       <div className="mx-auto max-w-md rounded-[32px] border border-slate-200 bg-white/90 p-6 shadow-2xl backdrop-blur">
         <div className="text-sm font-bold uppercase tracking-[0.35em] text-cyan-700">Family Quest</div>
-        <h1 className="mt-3 text-3xl font-black text-slate-950">Prihlaseni</h1>
+        <h1 className="mt-3 text-3xl font-black text-slate-950">Přihlášení</h1>
         <p className="mt-3 text-sm text-slate-700">
           Zadej kód rodiny a přihlas se jménem a PINem. Ještě rodinu nemáš? Založ novou.
         </p>
@@ -279,7 +279,7 @@ export default function PinLoginScreen({ onShowSavedProfiles, hasSavedProfiles }
         {step === STEP_PIN_ENTRY ? (
           <form className="mt-6 space-y-4" onSubmit={handlePinSubmit}>
             <p className="text-sm text-slate-700">
-              Prihlasujes se jako <span className="font-bold">{selectedMember?.name}</span>.
+              Přihlašuješ se jako <span className="font-bold">{selectedMember?.name}</span>.
             </p>
             <label className="block">
               <span className="mb-2 block text-sm font-semibold text-slate-700">PIN</span>

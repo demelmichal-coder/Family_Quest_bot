@@ -12,6 +12,7 @@ from sqlalchemy.orm import Session
 from database import SessionLocal
 from models import FamilyChallenge, Task, User
 from notify import send_telegram_message
+from digest import send_daily_digests, send_weekly_parent_summaries
 from push_notify import send_push_to_user_by_id
 
 logger = logging.getLogger(__name__)
@@ -133,11 +134,11 @@ async def send_due_task_reminders(now_utc: datetime | None = None):
             user = db.query(User).filter(User.id == task.user_id).first()
             if not user:
                 continue
-            reminder_text = f"Pripominka: v {task.due_time} mas ukol {task.title}"
+            reminder_text = f"Připomínka: v {task.due_time} máš úkol {task.title}"
             if user.telegram_id and not user.telegram_id.startswith("pwa-"):
                 await send_telegram_message(
                     user.telegram_id,
-                    f"⏰ Pripominka: v {task.due_time} mas ukol <b>{task.title}</b>",
+                    f"⏰ Připomínka: v {task.due_time} máš úkol <b>{task.title}</b>",
                 )
             # Web Push jde i uzivatelum bez Telegramu (PWA ucty).
             await asyncio.to_thread(
@@ -224,6 +225,8 @@ async def recurring_scheduler():
                     last_weekly_challenge_date = now_local.date()
 
             await send_due_task_reminders(now_utc)
+            await send_daily_digests(now_utc)
+            await send_weekly_parent_summaries(now_utc)
             wait_seconds = 60 - now_utc.second
             await asyncio.sleep(max(1, wait_seconds))
         except asyncio.CancelledError:
