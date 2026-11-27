@@ -23,6 +23,7 @@ class User(Base):
     gold = Column(Integer, default=0, nullable=False)
     family_id = Column(Integer, ForeignKey("families.id"), nullable=True)
     avatar = Column(String, nullable=True)
+    age = Column(Integer, nullable=True)
 
     current_streak = Column(Integer, default=0, nullable=False)
     last_active_date = Column(Date, nullable=True)

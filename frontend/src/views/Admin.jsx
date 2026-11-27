@@ -107,6 +107,60 @@ const ADMIN_TABS = [
   { id: "family", label: "Rodina", icon: "🛡️" },
 ];
 
+function ChildAgeField({ api, childId, childName, initialAge, onSaved }) {
+  const [value, setValue] = useState(initialAge ?? "");
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState("");
+
+  useEffect(() => {
+    setValue(initialAge ?? "");
+  }, [initialAge]);
+
+  async function handleSave() {
+    const age = Number(value);
+    if (!Number.isInteger(age) || age < 3 || age > 18) {
+      setSaveError("Zadej věk v rozmezí 3 až 18 let.");
+      return;
+    }
+    setSaving(true);
+    setSaveError("");
+    try {
+      await api(`/users/${childId}`, { method: "PUT", body: { age } });
+      onSaved(age);
+    } catch (error) {
+      setSaveError(getErrorMessage(error, "Věk se nepodařilo uložit."));
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <div className="mb-3 flex flex-wrap items-end gap-2">
+      <label className="text-xs font-semibold text-fuchsia-200">
+        Věk
+        <input
+          type="number"
+          min="3"
+          max="18"
+          value={value}
+          onChange={(event) => setValue(event.target.value)}
+          aria-label={`Věk dítěte ${childName}`}
+          className="mt-1 block w-24 rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-white outline-none focus:border-cyan-400"
+        />
+      </label>
+      <button
+        type="button"
+        onClick={handleSave}
+        disabled={saving}
+        className="rounded-xl border border-fuchsia-400/40 bg-fuchsia-400/10 px-3 py-2 text-sm font-semibold text-fuchsia-100 transition hover:bg-fuchsia-400/20 disabled:cursor-not-allowed disabled:opacity-60"
+      >
+        {saving ? "Ukládám..." : "Uložit věk"}
+      </button>
+      {saveError ? <p className="w-full text-xs text-rose-300">{saveError}</p> : null}
+    </div>
+  );
+}
+
 function Admin({
   user,
   tasks,
@@ -516,6 +570,9 @@ function Admin({
       });
       const children = response.children || [];
       setFamilyPlannerChildren(children);
+      if (response.ai_enabled === false) {
+        setMessage("AI není na serveru zapnutá (chybí GROQ_API_KEY). Úkoly jsou ze šablon podle věku.");
+      }
       const preselect = [];
       const nextSchedule = {};
       children.forEach((child) => {
@@ -1318,9 +1375,29 @@ function Admin({
                     <div className="space-y-3">
                       {familyPlannerChildren.map((child) => (
                         <div key={child.user_id} className="rounded-xl border border-fuchsia-300/20 bg-slate-950/40 p-3">
-                          <div className="mb-2 text-sm font-bold text-fuchsia-100">
-                            {child.child_name} • vekovy hint {child.age_hint} • 14d splneno {child.history?.completed_last_14_days ?? 0}
+                          <div className="mb-2 flex flex-wrap items-center gap-2 text-sm font-bold text-fuchsia-100">
+                            <span>
+                              {child.child_name} • 14d splněno {child.history?.completed_last_14_days ?? 0}
+                            </span>
+                            {child.age_known ? null : (
+                              <span className="rounded-full bg-amber-400/20 px-2 py-0.5 text-xs text-amber-200">
+                                věk není zadán
+                              </span>
+                            )}
                           </div>
+                          <ChildAgeField
+                            api={api}
+                            childId={child.user_id}
+                            childName={child.child_name}
+                            initialAge={child.age}
+                            onSaved={(age) =>
+                              setFamilyPlannerChildren((current) =>
+                                current.map((item) =>
+                                  item.user_id === child.user_id ? { ...item, age, age_known: true } : item
+                                )
+                              )
+                            }
+                          />
                           <div className="space-y-2">
                             {(child.tasks || []).map((taskItem, idx) => {
                               const key = `${child.user_id}:${idx}`;

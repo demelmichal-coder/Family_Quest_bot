@@ -6,6 +6,7 @@ from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from api import get_current_user, get_db, require_role
+from ai import groq_client
 from ai.groq_client import (
     DEFAULT_REWRITE_STYLE,
     STYLE_PROMPTS,
@@ -141,6 +142,42 @@ async def plan_weekly(data: dict, current_user=Depends(require_role(ROLE_PARENT)
     }
 
 
+FAMILY_TEMPLATES = {
+    "young": [
+        "ranní příprava bez připomínek",
+        "uklidit si hračky a pokoj",
+        "pomoc doma podle instrukcí",
+        "krátký pohyb nebo kreslení",
+        "večerní rutina včas",
+    ],
+    "middle": [
+        "samostatná ranní příprava",
+        "uklidit si pokoj a věci na místo",
+        "pomoc s vysáváním nebo utíráním prachu",
+        "pohyb nebo sport aspoň 30 minut",
+        "připravit si věci do školy na zítřek",
+    ],
+    "older": [
+        "samostatně připravit snídani nebo svačinu",
+        "uklidit a vynést koš",
+        "uvařit jednoduché jídlo",
+        "připravit se na test nebo si přečíst kapitolu",
+        "pomoc s nákupem nebo domácí prací",
+    ],
+}
+FAMILY_BASE_XP = {"young": 15, "middle": 20, "older": 25}
+
+
+def _age_band(age: int | None) -> str:
+    if age is None:
+        return "middle"
+    if age <= 8:
+        return "young"
+    if age <= 12:
+        return "middle"
+    return "older"
+
+
 @router.post("/plan-family-daily", summary="AI denni plan pro celou rodinu")
 async def plan_family_daily(
     body: FamilyDailyPlanRequest,
@@ -152,9 +189,10 @@ async def plan_family_daily(
 
     style = body.style if body.style in STYLE_PROMPTS else DEFAULT_REWRITE_STYLE
     tasks_per_child = max(1, min(5, int(body.tasks_per_child or 3)))
-    age_hints = body.age_hints or {}
+    age_overrides = body.age_hints or {}
     now = datetime.now(timezone.utc)
     two_weeks_ago = now - timedelta(days=14)
+    ai_enabled = bool(groq_client.GROQ_API_KEY)
 
     _check_ai_rate_limit(current_user.telegram_id)
 
@@ -168,16 +206,9 @@ async def plan_family_daily(
             "goal": body.goal,
             "style": style,
             "tasks_per_child": tasks_per_child,
+            "ai_enabled": ai_enabled,
             "children": [],
         }
-
-    templates = [
-        "ranni priprava bez pripominek",
-        "poradek ve svem prostoru",
-        "pomoc doma podle instrukci",
-        "kratsi pohybova nebo kreativni aktivita",
-        "vecerni rutina vcas",
-    ]
 
     result_children = []
     for child in children:
@@ -192,9 +223,10 @@ async def plan_family_daily(
             or 0
         )
 
-        age_hint = age_hints.get(str(child.id))
-        if age_hint is None:
-            age_hint = max(6, min(16, 6 + int(completed_14d // 8)))
+        # Věk se bere z profilu dítěte (nebo z hodnoty zadané v plánovači), nikdy se nevymýšlí.
+        age = age_overrides.get(str(child.id), child.age)
+        band = _age_band(age)
+        templates = FAMILY_TEMPLATES[band]
 
         history_weight = 1.0
         if completed_14d >= 24:
@@ -208,15 +240,21 @@ async def plan_family_daily(
         for idx in range(tasks_per_child):
             template = templates[idx % len(templates)]
             difficulty_hint = "lehci" if history_weight < 1 else "stredni" if history_weight < 1.3 else "narocnejsi"
+            plain_title = template[:1].upper() + template[1:]
+            xp = FAMILY_BASE_XP[band]
+            title = plain_title
             base_text = (
-                f"{child.username or 'Dite'} ({age_hint} let): {template}; "
-                f"cil: {body.goal}; obtiznost: {difficulty_hint}."
+                f"{child.username or 'Dítě'} ({age} let): {template}; "
+                f"cíl: {body.goal}; obtížnost: {difficulty_hint}."
+                if age is not None
+                else f"{child.username or 'Dítě'}: {template}; cíl: {body.goal}; obtížnost: {difficulty_hint}."
             )
 
-            try:
-                title, xp = await rewrite_task_to_game(base_text, style=style)
-            except Exception:
-                title, xp = (f"Mise: {template}", 20)
+            if ai_enabled:
+                try:
+                    title, xp = await rewrite_task_to_game(base_text, style=style)
+                except Exception:
+                    title, xp = plain_title, FAMILY_BASE_XP[band]
 
             xp_scaled = int(max(8, min(80, round(xp * history_weight))))
             generated_tasks.append(
@@ -235,7 +273,8 @@ async def plan_family_daily(
             {
                 "user_id": child.id,
                 "child_name": child.username or child.telegram_id,
-                "age_hint": int(age_hint),
+                "age": age,
+                "age_known": age is not None,
                 "history": {
                     "completed_last_14_days": int(completed_14d),
                     "current_streak": int(child.current_streak or 0),
@@ -249,5 +288,6 @@ async def plan_family_daily(
         "goal": body.goal,
         "style": style,
         "tasks_per_child": tasks_per_child,
+        "ai_enabled": ai_enabled,
         "children": result_children,
     }

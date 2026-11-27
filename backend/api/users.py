@@ -88,6 +88,7 @@ class UserUpdate(BaseModel):
     xp: int | None = None
     gold: int | None = None
     avatar: str | None = None
+    age: int | None = None
 
 
 @router.get("/", summary="Seznam uzivatelu", response_model=list[UserRead])
@@ -176,6 +177,9 @@ def update_user(
             )
             if other_parents == 0:
                 raise HTTPException(status_code=400, detail="Rodina musí mít alespoň jednoho rodiče.")
+
+    if updates.get("age") is not None and not 3 <= updates["age"] <= 18:
+        raise HTTPException(status_code=400, detail="Věk dítěte musí být mezi 3 a 18 lety.")
 
     for key, value in updates.items():
         setattr(db_user, key, value)

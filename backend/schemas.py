@@ -24,6 +24,7 @@ class UserRead(ORMModel):
     gold: int
     family_id: Optional[int] = None
     avatar: Optional[str] = None
+    age: Optional[int] = None
     current_streak: int = 0
 
 

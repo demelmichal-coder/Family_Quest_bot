@@ -18,6 +18,7 @@ BACKEND_DIR = Path(__file__).resolve().parents[1]
 
 import push_notify
 from database import SessionLocal
+from ai import groq_client
 from main import app
 from models import (
     ChallengeProgress,
@@ -378,3 +379,36 @@ def test_child_proof_completes_task_and_waits_for_parent():
         assert stored.ai_flagged is False
     finally:
         db.close()
+
+
+# ---------- Věk dětí a denní plán ----------
+
+def test_child_age_is_stored_validated_and_used_in_daily_plan():
+    _, _, kid_id, _ = basic_family()
+
+    too_young = client.put(f"/users/{kid_id}", headers=auth("parent-1"), json={"age": 2})
+    assert too_young.status_code == 400
+    assert client.put(f"/users/{kid_id}", headers=auth("parent-1"), json={"age": 13}).json()["age"] == 13
+
+    # Bez GROQ klíče se AI nevolá: úkoly jsou ze šablon a nemají vymyšlený prompt v názvu.
+    with patch.object(groq_client, "GROQ_API_KEY", ""):
+        response = client.post(
+            "/ai/plan-family-daily",
+            headers=auth("parent-1"),
+            json={"goal": "zodpovednost", "tasks_per_child": 2},
+        )
+    assert response.status_code == 200
+    data = response.json()
+    assert data["ai_enabled"] is False
+    by_name = {child["child_name"]: child for child in data["children"]}
+
+    kuba = by_name["Kuba"]
+    assert kuba["age"] == 13 and kuba["age_known"] is True
+    assert "(13 let)" in kuba["tasks"][0]["description"]
+    assert "Mise hrdiny" not in kuba["tasks"][0]["title"]
+    assert kuba["tasks"][0]["title"].startswith("Samostatně připravit")
+
+    anicka = by_name["Anička"]
+    assert anicka["age"] is None and anicka["age_known"] is False
+    assert "let)" not in anicka["tasks"][0]["description"]
+
